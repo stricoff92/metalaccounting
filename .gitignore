@@ -1,0 +1,6 @@
+
+__pycache__/
+applocals.py
+*.log
+*.sqlite3
+env/
