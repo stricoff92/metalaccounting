@@ -7,7 +7,6 @@ from api import views
 urlpatterns = [
 
     # Company Routes
-    path('company/list/', views.company_list, name="company-list"),
     path('company/new/', views.company_new, name="company-new"),
     path('company/edit/<slug:slug>/', views.company_edit, name="company-edit"),
     path('company/delete/<slug:slug>/', views.company_delete, name="company-delete"),
