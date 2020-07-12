@@ -8,7 +8,7 @@ from api.models import UserProfile
 
 class UserProfileSerializer(serializers.ModelSerializer):
 
-    id = serializers.ReadOnlyField()
+    slug = serializers.ReadOnlyField()
     object_limit_companies = serializers.ReadOnlyField()
     object_limit_periods_per_company = serializers.ReadOnlyField()
     object_limit_entries_per_period = serializers.ReadOnlyField()
