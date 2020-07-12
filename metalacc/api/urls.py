@@ -27,5 +27,6 @@ urlpatterns = [
 
     # Account Routes
     path('account/new/', views.account_new, name="account-new"),
+    path('account/edit/<slug:slug>/', views.account_edit, name="account-edit"),
 
 ]
