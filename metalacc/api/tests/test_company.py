@@ -6,7 +6,7 @@ from .base import BaseTestBase
 from api.models import Company
 
 
-class TestCompanyViewTests(BaseTestBase):
+class CompanyViewTests(BaseTestBase):
 
     def setUp(self):
         super().setUp()
