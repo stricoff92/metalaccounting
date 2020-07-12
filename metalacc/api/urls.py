@@ -15,6 +15,6 @@ urlpatterns = [
     # Period Routes
     path('period/new/', views.period_new, name="period-new"),
     path('period/edit/<slug:slug>/', views.period_edit, name="period-edit"),
-
+    path('period/delete/<slug:slug>/', views.period_delete, name="period-delete"),
 
 ]

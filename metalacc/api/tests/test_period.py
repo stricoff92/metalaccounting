@@ -301,3 +301,34 @@ class PeriodViewTests(BaseTestBase):
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+    def test_user_can_delete_own_period(self):
+        """ Test that a user can delete their own period
+        """
+        company = self.factory.create_company(self.user)
+        period1 = self.factory.create_period(company, dt.date(2020, 3, 1), dt.date(2020, 3, 31))
+        self.assertEqual(Period.objects.count(), 1)
+
+        url = reverse("period-delete", kwargs={'slug':period1.slug})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Period.objects.count(), 0)
+
+
+    def test_user_cannot_delete_other_users_period(self):
+        """ Test that a user cant delete another users period
+        """
+        company = self.factory.create_company(self.other_user)
+        period1 = self.factory.create_period(company, dt.date(2020, 3, 1), dt.date(2020, 3, 31))
+        self.assertEqual(Period.objects.count(), 1)
+
+        url = reverse("period-delete", kwargs={'slug':period1.slug})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Period.objects.count(), 1)
+
+        self.client.force_login(self.other_user)
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Period.objects.count(), 0)

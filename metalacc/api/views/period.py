@@ -98,3 +98,12 @@ def period_edit(request, slug):
         'slug':period.slug,
     }
     return Response(data, status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def period_delete(request, slug):
+    period = get_object_or_404(Period, slug=slug, company__user=request.user)
+    period.delete()
+    return Response({}, status.HTTP_204_NO_CONTENT)
+    
