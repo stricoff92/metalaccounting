@@ -5,15 +5,13 @@ from rest_framework import routers
 
 from api import views
 
-# Register viewsets
 router = routers.DefaultRouter()
+
+# 
 router.register(r'userprofile', views.UserProfileViewSet, 'userprofile')
 
 urlpatterns = [
     url(r'^', include(router.urls)),
-
-
-    # Register function based views
 
     # Company Routes
     path('company/new/', views.company_new, name="company-new"),
@@ -28,5 +26,6 @@ urlpatterns = [
     # Account Routes
     path('account/new/', views.account_new, name="account-new"),
     path('account/edit/<slug:slug>/', views.account_edit, name="account-edit"),
+    path('account/delete/<slug:slug>/', views.account_delete, name="account-delete"),
 
 ]

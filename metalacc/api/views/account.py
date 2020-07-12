@@ -85,3 +85,11 @@ def account_edit(request, slug):
         'is_current':account.is_current,
     }
     return Response(data, status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def account_delete(request, slug):
+    account = get_object_or_404(Account, slug=slug, user=request.user)
+    account.delete()
+    return Response({}, status.HTTP_204_NO_CONTENT)

@@ -360,3 +360,31 @@ class AccountViewTests(BaseTestBase):
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+
+    def test_that_a_user_can_delete_their_own_account(self):
+        """ Test that a user can delete their own account
+        """
+        account = self.factory.create_account(
+            self.company, 'foobar', Account.TYPE_ASSET, 1500,
+            is_current=True, is_contra=False)
+        self.assertEqual(Account.objects.count(), 1)
+        
+        url = reverse("account-delete", kwargs={'slug':account.slug})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Account.objects.count(), 0)
+
+
+    def test_that_a_user_cant_delete_other_users_account(self):
+        """ Test that a user cant delete another users account
+        """
+        account = self.factory.create_account(
+            self.other_company, 'foobar', Account.TYPE_ASSET, 1500,
+            is_current=True, is_contra=False)
+        self.assertEqual(Account.objects.count(), 1)
+        
+        url = reverse("account-delete", kwargs={'slug':account.slug})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Account.objects.count(), 1)
+    
