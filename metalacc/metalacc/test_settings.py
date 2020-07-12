@@ -9,7 +9,7 @@ CSRF_COOKIE_SECURE = False
 AUTH_PASSWORD_VALIDATORS = []
 
 
-# Faster, less secure hashing for testing only
+# Faster insecure hashing for testing only
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.MD5PasswordHasher',
 ]
