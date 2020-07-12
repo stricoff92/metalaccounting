@@ -1,10 +1,19 @@
 
 from django.conf.urls import url, include
 from django.urls import path
+from rest_framework import routers
 
 from api import views
 
+# Register viewsets
+router = routers.DefaultRouter()
+router.register(r'userprofile', views.UserProfileViewSet, 'userprofile')
+
 urlpatterns = [
+    url(r'^', include(router.urls)),
+
+
+    # Register function based views
 
     # Company Routes
     path('company/new/', views.company_new, name="company-new"),
