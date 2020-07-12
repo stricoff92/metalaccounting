@@ -13,6 +13,7 @@ class UserProfile(models.Model):
 
     use_nightmode = models.BooleanField(default=False)
 
+    object_limit_accounts = models.PositiveIntegerField(default=300)
     object_limit_companies = models.PositiveIntegerField(default=15)
     object_limit_periods_per_company = models.PositiveIntegerField(default=20)
     object_limit_entries_per_period = models.PositiveIntegerField(default=200)
