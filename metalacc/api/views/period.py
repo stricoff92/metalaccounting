@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from api.models import Company, Period
+from api.models import Company, Period, JournalEntry
 from api.forms.company import CompanySelectionForm
 from api.forms.period import PeriodForm
 
@@ -40,7 +40,7 @@ def period_new(request):
 
     period_form = PeriodForm(request.data)
     if not period_form.is_valid():
-        return Response(period_form.errors.as_json(), status.HTTP_400_NOT_FOUND)
+        return Response(period_form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
     
     period = period_form.save(commit=False)
     period.company = company
@@ -60,3 +60,32 @@ def period_new(request):
         'slug':period.slug,
     }
     return Response(data, status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def period_edit(request, slug):
+
+    period = get_object_or_404(Period, slug=slug, company__user=request.user)
+    form = PeriodForm(request.data, instance=period)
+    if not form.is_valid():
+        return Response(form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
+    
+    # Check that no journal entries exist outside the new start/end
+    new_start = form.cleaned_data['start']
+    new_end = form.cleaned_data['end']
+    je_conflicts = JournalEntry.objects.filter(
+        Q(period=period)
+        & (Q(date__gt=new_end) | Q(date__lt=new_start)))
+    if je_conflicts.exists():
+        return Response(
+            "Journal Entry exists outside start/end",
+            status.HTTP_400_BAD_REQUEST)
+    
+    period = form.save()
+    data = {
+        'start':period.start,
+        'end':period.end,
+        'slug':period.slug,
+    }
+    return Response(data, status.HTTP_200_OK)

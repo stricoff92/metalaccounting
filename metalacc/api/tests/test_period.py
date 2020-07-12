@@ -44,6 +44,28 @@ class PeriodViewTests(BaseTestBase):
         self.assertEqual(period.user, self.user)
 
 
+    def test_start_must_be_before_end_when_creating_a_new_period(self):
+        """ Test that the start date must come before the end date when creating a new period
+        """
+        company = self.factory.create_company(self.user)
+        self.assertEqual(Period.objects.count(), 0)
+        url = reverse('period-new')
+        data = {
+            'company':company.slug,
+            'start':dt.date(2020, 2, 1),
+            'end':dt.date(2020, 2, 1),
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = {
+            'company':company.slug,
+            'start':dt.date(2020, 2, 10),
+            'end':dt.date(2020, 2, 1),
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
     def test_user_cannot_add_a_period_for_another_users_company(self):
         """ Test that a user cannot add periods to another user's company
         """
@@ -186,3 +208,96 @@ class PeriodViewTests(BaseTestBase):
         self.assertTrue(self.is_timeconflict_response(response))
 
         self.assertEqual(Period.objects.count(), 1)
+
+
+    def test_user_can_edit_own_period_start_end_date(self):
+        """ Test that a user can edit their own period
+        """
+        company = self.factory.create_company(self.user)
+        period1 = self.factory.create_period(company, dt.date(2020, 3, 1), dt.date(2020, 3, 31))
+
+        url = reverse('period-edit', kwargs={'slug':period1.slug})
+        data = {
+            'start':dt.date(2020, 3, 15),
+            'end':dt.date(2020, 6, 15),
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        period1.refresh_from_db()
+        self.assertEqual(period1.start,  dt.date(2020, 3, 15))
+        self.assertEqual(period1.end,  dt.date(2020, 6, 15))
+
+
+    def test_user_cant_edit_to_have_start_after_end(self):
+        """ Test that a user cant edit a period such that start date is after the end date.
+        """
+        company = self.factory.create_company(self.user)
+        period1 = self.factory.create_period(company, dt.date(2020, 3, 1), dt.date(2020, 3, 31))
+
+        url = reverse('period-edit', kwargs={'slug':period1.slug})
+        data = {
+            'start':dt.date(2020, 3, 15),
+            'end':dt.date(2020, 3, 15),
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = {
+            'start':dt.date(2020, 3, 25),
+            'end':dt.date(2020, 3, 15),
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_user_cannot_edit_other_users_period_start_end_date(self):
+        """ Test that a user cant edit another users period
+        """
+        company = self.factory.create_company(self.other_user)
+        period1 = self.factory.create_period(company, dt.date(2020, 3, 1), dt.date(2020, 3, 31))
+
+        url = reverse('period-edit', kwargs={'slug':period1.slug})
+        data = {
+            'start':dt.date(2020, 3, 15),
+            'end':dt.date(2020, 6, 15),
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        self.client.force_login(self.other_user)
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+    def test_user_cannot_edit_period_dates_if_it_abandons_a_journal_entry(self):
+        """ Test that a user cant edit start/end dates in such a way that
+            journal entries exist outside that start/end dates.
+        """
+        company = self.factory.create_company(self.user)
+        period1 = self.factory.create_period(company, dt.date(2020, 3, 1), dt.date(2020, 3, 31))
+        journal_entry = self.factory.create_journal_entry(
+            period1, dt.date(2020, 3, 20))
+
+        url = reverse('period-edit', kwargs={'slug':period1.slug})
+        data = {
+            'start':dt.date(2020, 2, 15),
+            'end':dt.date(2020, 3, 15),
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue("Journal Entry exists outside start/end" in response.data)
+
+        data = {
+            'start':dt.date(2020, 3, 25),
+            'end':dt.date(2020, 5, 15),
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue("Journal Entry exists outside start/end" in response.data)
+
+        data = {
+            'start':dt.date(2020, 2, 15),
+            'end':dt.date(2020, 3, 20),
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
