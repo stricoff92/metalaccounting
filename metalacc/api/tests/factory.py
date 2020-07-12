@@ -1,5 +1,6 @@
 
 from api.models import (
+    Account,
     Company,
     Period,
     JournalEntry,
@@ -19,3 +20,8 @@ class TestObjectFactory:
             date=date,
             memo=memo,
             is_adjusting_entry=is_adjusting_entry)
+
+    def create_account(self, company, name, acctype, number, is_current=None, is_contra=False):
+        return Account.objects.create(
+            company=company, user=company.user, name=name, type=acctype, number=number,
+            is_current=is_current, is_contra=is_contra)

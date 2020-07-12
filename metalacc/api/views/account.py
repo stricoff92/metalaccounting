@@ -73,7 +73,10 @@ def account_edit(request, slug):
     if duplicate_accounts.exclude(id=account.id).exists():
         return Response('duplicate account found', status.HTTP_400_BAD_REQUEST)
 
-    account = form.save()
+    try:
+        account = form.save()
+    except ValidationError as e:
+        return Response(e, status.HTTP_400_BAD_REQUEST)
     data = {
         'name':account.name,
         'number':account.number,

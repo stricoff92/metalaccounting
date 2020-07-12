@@ -1,5 +1,6 @@
 
 from django.urls import reverse
+from django.core.exceptions import ValidationError
 from rest_framework import status
 
 from .base import BaseTestBase
@@ -254,6 +255,9 @@ class AccountViewTests(BaseTestBase):
 
 
     def test_user_cannot_create_duplicate_accounts(self):
+        """ Test that a user cannot create an account with the exact same
+            name, number company
+        """
         self.assertEqual(Account.objects.count(), 0)
         url = reverse("account-new")
         data = {
@@ -271,3 +275,88 @@ class AccountViewTests(BaseTestBase):
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Account.objects.count(), 1)
+
+    def test_that_a_user_can_edit_their_own_account(self):
+        """ Test that a user can edit their own account
+        """
+        account = self.factory.create_account(
+            self.company, 'foobar', Account.TYPE_ASSET, 1500,
+            is_current=True, is_contra=False)
+        
+        url = reverse("account-edit", kwargs={'slug':account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1900,
+            "is_current":False
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        account.refresh_from_db()
+        self.assertEqual(account.name, "cold hard cash")
+        self.assertEqual(account.number, 1900)
+        self.assertFalse(account.is_current)
+
+
+    def test_that_a_user_can_edit_their_own_temporary_account(self):
+        """ Test that a user can edit their own account
+        """
+        account = self.factory.create_account(
+            self.company, 'foobar', Account.TYPE_REVENUE, 1500,
+            is_current=None, is_contra=False)
+        
+        url = reverse("account-edit", kwargs={'slug':account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1900,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        account.refresh_from_db()
+        self.assertEqual(account.name, "cold hard cash")
+        self.assertEqual(account.number, 1900)
+        self.assertIsNone(account.is_current)
+
+
+    def test_that_a_user_cant_attach_is_current_value_to_temporary_accounts(self):
+        """ Test that a user cant attach an is_current value to a non current account
+        """
+        account = self.factory.create_account(
+            self.company, 'foobar', Account.TYPE_REVENUE, 1500,
+            is_current=None, is_contra=False)
+        
+        url = reverse("account-edit", kwargs={'slug':account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1900,
+            "is_current":False,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        data['is_current'] = False
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_that_a_user_cant_edit_others_account(self):
+        """ Test that a user cant edit another users account
+        """
+        account = self.factory.create_account(
+            self.other_company, 'foobar', Account.TYPE_ASSET, 1500,
+            is_current=True, is_contra=False)
+        
+        url = reverse("account-edit", kwargs={'slug':account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1900,
+            "is_current":False
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        self.client.force_login(self.other_user)
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+

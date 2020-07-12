@@ -64,12 +64,12 @@ class AccountManager(models.Manager):
 class Account(models.Model):
 
     objects = AccountManager()
-
-    slug = models.SlugField(unique=True, editable=False)
-    user =  models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     
-    name = models.CharField(max_length=100)
+    user =  models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     company =  models.ForeignKey('api.Company', on_delete=models.CASCADE)
+
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, editable=False)
 
     TYPE_ASSET = 'asset'
     TYPE_LIABILITY = 'liability'
@@ -119,6 +119,7 @@ class Account(models.Model):
         if self.is_current is not None and self.type not in self.CURRENT_TYPES:
             raise ValidationError("is_current cannot be assigned to this accoount type")
         
+        if self.type in self.CURRENT_TYPES and self.is_current is None:
+            raise ValidationError("is_current cannot be None for this accoount type")
 
-        
         return super().save(*args, **kwargs)
