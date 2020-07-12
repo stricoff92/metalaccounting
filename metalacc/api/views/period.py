@@ -67,13 +67,15 @@ def period_new(request):
 def period_edit(request, slug):
 
     period = get_object_or_404(Period, slug=slug, company__user=request.user)
+    company = period.company
     form = PeriodForm(request.data, instance=period)
     if not form.is_valid():
         return Response(form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
-    
-    # Check that no journal entries exist outside the new start/end
+
     new_start = form.cleaned_data['start']
     new_end = form.cleaned_data['end']
+
+    # Check that no journal entries exist outside the new start/end
     je_conflicts = JournalEntry.objects.filter(
         Q(period=period)
         & (Q(date__gt=new_end) | Q(date__lt=new_start)))
@@ -81,6 +83,13 @@ def period_edit(request, slug):
         return Response(
             "Journal Entry exists outside start/end",
             status.HTTP_400_BAD_REQUEST)
+
+    # Verify the period's start/end does not conflict.
+    conflicting_periods = Period.objects.filter(
+        Q(company=company)
+        & _get_date_conflict_Q(new_start, new_end))
+    if conflicting_periods.exclude(id=period.id).exists():
+        return Response('start/end conflict', status.HTTP_400_BAD_REQUEST)
     
     period = form.save()
     data = {
