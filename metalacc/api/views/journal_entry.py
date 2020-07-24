@@ -8,9 +8,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status, serializers
 
-from api.models import JournalEntry, JournalEntryLine
+from api.models import JournalEntry, JournalEntryLine, Period
 from api.forms.journal_entry import NewJournalEntryForm, NewJournalEntryLineForm
 
+
+# Serializers for these views
 
 class JournalEntryLineSerializer(serializers.ModelSerializer):
 
@@ -33,23 +35,29 @@ class JournalEntryLineSerializer(serializers.ModelSerializer):
     def get_account_number(self, obj):
         return obj.account.number
 
+class PeriodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Period
+        fields = ('start', 'end', 'slug',)
 
 class JournalEntrySerializer(serializers.ModelSerializer):
 
     lines = JournalEntryLineSerializer(many=True)
+    period = PeriodSerializer()
 
     class Meta:
         model = JournalEntry
         fields = (
             "slug",
             "date",
+            "period",
             "memo",
             "lines",
             'dr_total',
             'cr_total',
         )
 
-
+# Function based views
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -59,6 +67,13 @@ def journal_entry_new(request):
         return Response(
             je_form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
     
+    period = je_form.cleaned_data['period']
+    company = period.company
+
+    if company.user != request.user:
+        return Response(
+            "period not found", status.HTTP_404_NOT_FOUND)
+    
     dr_total = 0
     cr_total = 0
     jel_forms = []
@@ -67,9 +82,20 @@ def journal_entry_new(request):
         if not jel_form.is_valid():
             return Response(
                 jel_form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
+        
+        # Verify account is owned by this user
         if jel_form.cleaned_data['account'].user != request.user:
             return Response(
                 "account not found", status.HTTP_404_NOT_FOUND)
+
+        # Verify the account belongs to the company
+        if jel_form.cleaned_data['account'].company != company:
+            return Response(
+                "account belongs to another company", status.HTTP_400_BAD_REQUEST)
+
+        
+        # Verify 
+
         jel_forms.append(jel_form)
 
         if jel_form.cleaned_data['type'] == JournalEntryLine.TYPE_DEBIT:

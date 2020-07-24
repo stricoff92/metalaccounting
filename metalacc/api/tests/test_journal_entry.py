@@ -38,7 +38,7 @@ class JournalEntryViewTests(BaseTestBase):
                     "amount":50000,
                     "account":Account.objects.get(name='Cash').slug,
                 }, {
-                    "type":'c',
+                    "type":"c",
                     "amount":50000,
                     "account":Account.objects.get(name='Common Stock').slug,
                 }
@@ -46,10 +46,5 @@ class JournalEntryViewTests(BaseTestBase):
         }
         response = self.client.post(url, json.dumps(data), content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        print(response.data)
+        journal_entry = JournalEntry.objects.get(slug=response.data['slug'])
         
-
-
-
-
-
