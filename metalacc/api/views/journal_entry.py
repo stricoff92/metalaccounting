@@ -70,6 +70,9 @@ def journal_entry_new(request):
     period = je_form.cleaned_data['period']
     company = period.company
 
+    if period.user != request.user:
+        return Response(
+            "period not found", status.HTTP_404_NOT_FOUND)
     if company.user != request.user:
         return Response(
             "period not found", status.HTTP_404_NOT_FOUND)
@@ -93,11 +96,9 @@ def journal_entry_new(request):
             return Response(
                 "account belongs to another company", status.HTTP_400_BAD_REQUEST)
 
-        
-        # Verify 
-
         jel_forms.append(jel_form)
 
+        # Track debit/credit totals
         if jel_form.cleaned_data['type'] == JournalEntryLine.TYPE_DEBIT:
             dr_total += jel_form.cleaned_data['amount']
         elif jel_form.cleaned_data['type'] == JournalEntryLine.TYPE_CREDIT:
@@ -112,17 +113,15 @@ def journal_entry_new(request):
         return Response(
             "debits dont match credits", status.HTTP_400_BAD_REQUEST)
     
-    period = je_form.cleaned_data['period']
     je_count = period.journalentry_set.count()
     if je_count >= request.user.userprofile.object_limit_entries_per_period:
         return Response(
             "cannot create additional entries for this period",
             status.HTTP_400_BAD_REQUEST)
 
-    if period.user != request.user:
-        return Response(
-            "period not found", status.HTTP_404_NOT_FOUND) 
+
     
+    # Save changes to the database
     with transaction.atomic():
         journal_entry = je_form.save()
         for jel_form in jel_forms:
