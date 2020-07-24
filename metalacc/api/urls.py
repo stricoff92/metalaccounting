@@ -28,4 +28,7 @@ urlpatterns = [
     path('account/edit/<slug:slug>/', views.account_edit, name="account-edit"),
     path('account/delete/<slug:slug>/', views.account_delete, name="account-delete"),
 
+    # Journal Entry Routes
+    path('je/new/', views.journal_entry_new, name="je-new"),
+
 ]

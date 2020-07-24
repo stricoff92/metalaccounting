@@ -4,8 +4,9 @@ from itertools import chain
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.db import transaction
 
-from api.utils import generate_slug
+from api.utils import generate_slug, generate_slugs_batch
 
 
 DEFAULT_ACCOUNTS = (
@@ -52,13 +53,16 @@ DEFAULT_ACCOUNTS = (
 
 
 class AccountManager(models.Manager):
-    def create_default_accounts(self, user, company=None):
+    def create_default_accounts(self, company):
         accounts = []
-        for row in DEFAULT_ACCOUNTS:
-            accoounts.append(Account(
-                user=user, company=company, type=row[0], is_current=row[1],
-                is_contra=row[2], number=row[3], name=row[4]))
-        return Account.objects.bulk_create(accoounts)
+        with transaction.atomic():
+            slugs = list(generate_slugs_batch(Account, len(DEFAULT_ACCOUNTS)))
+            for ix, row in enumerate(DEFAULT_ACCOUNTS):
+                accounts.append(Account(
+                    user=company.user, company=company, type=row[0], is_current=row[1],
+                    is_contra=row[2], number=row[3], name=row[4], slug=slugs[ix]))
+            accounts = Account.objects.bulk_create(accounts)
+        return accounts
 
 
 class Account(models.Model):

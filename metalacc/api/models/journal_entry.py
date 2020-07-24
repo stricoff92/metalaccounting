@@ -2,6 +2,7 @@
 from itertools import chain
 
 from django.db import models
+from django.db.models import Sum
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
@@ -21,6 +22,15 @@ class JournalEntry(models.Model):
     def __str__(self):
         return f"<JournalEntry {self.pk} {self.name} ({self.user})>"
 
+    @property
+    def dr_total(self):
+        value = self.lines.filter(type='d').aggregate(s=Sum('amount'))['s']
+        return value or 0
+
+    @property
+    def cr_total(self):
+        value = self.lines.filter(type='c').aggregate(s=Sum('amount'))['s']
+        return value or 0
 
     def save(self, *args, **kwargs):
         if not self.slug:
