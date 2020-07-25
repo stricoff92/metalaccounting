@@ -47,7 +47,7 @@
 
         {% csrf_token %}
         <script>
-            $(document).ready(function(){
+            window.onload = ()=>{
                 window.csrftoken = document.querySelector("input[name=csrfmiddlewaretoken]").value;
                 function csrfSafeMethod(method) {
                     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
@@ -59,7 +59,7 @@
                         }
                     }
                 });
-            });
+            }
             function postJson(url, data, successCb, errorCb) {
                 $.ajax({
                     url,
