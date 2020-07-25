@@ -103,6 +103,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ] if not DEBUG else []
 
+LOGIN_URL = '/'
+
+AUTHENTICATION_BACKENDS = [
+    'metalacc.email_backend.EmailBackend'
+]
+
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
