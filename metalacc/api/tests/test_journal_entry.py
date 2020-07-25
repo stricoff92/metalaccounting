@@ -25,13 +25,14 @@ class JournalEntryViewTests(BaseTestBase):
     
 
     def test_user_can_create_entry(self):
+        """ Test that a user can create journal entry with 1 DR account and 1 CR account
+        """
         Account.objects.create_default_accounts(self.company)
         url = reverse('je-new')
         data = {
             'date':"2020-01-15",
             'memo':'investing in biz with common stock',
             'period':self.period.slug,
-            'is_adjusting_entry':False,
             'journal_entry_lines':[
                 {
                     "type":"d",
@@ -48,3 +49,15 @@ class JournalEntryViewTests(BaseTestBase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         journal_entry = JournalEntry.objects.get(slug=response.data['slug'])
         
+        self.assertEqual(journal_entry.date, dt.date(2020, 1, 15))
+        self.assertEqual(journal_entry.memo, 'investing in biz with common stock')
+        self.assertEqual(journal_entry.period, self.period)
+        self.assertFalse(journal_entry.is_adjusting_entry)
+        self.assertEqual(journal_entry.dr_total, 50000)
+        self.assertEqual(journal_entry.cr_total, 50000)  
+
+        self.assertEqual(journal_entry.lines.count(), 2)
+        cr_line = journal_entry.lines.get(type=JournalEntryLine.TYPE_CREDIT)
+        dr_line = journal_entry.lines.get(type=JournalEntryLine.TYPE_DEBIT)
+        self.assertEqual(cr_line.amount, 50000)
+        self.assertEqual(dr_line.amount, 50000)

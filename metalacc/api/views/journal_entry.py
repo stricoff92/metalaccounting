@@ -70,12 +70,9 @@ def journal_entry_new(request):
     period = je_form.cleaned_data['period']
     company = period.company
 
-    if period.user != request.user:
-        return Response(
-            "period not found", status.HTTP_404_NOT_FOUND)
     if company.user != request.user:
         return Response(
-            "period not found", status.HTTP_404_NOT_FOUND)
+            {"period":"period not found"} , status.HTTP_404_NOT_FOUND)
     
     dr_total = 0
     cr_total = 0
@@ -89,12 +86,12 @@ def journal_entry_new(request):
         # Verify account is owned by this user
         if jel_form.cleaned_data['account'].user != request.user:
             return Response(
-                "account not found", status.HTTP_404_NOT_FOUND)
+                {"account":"account not found"}, status.HTTP_404_NOT_FOUND)
 
         # Verify the account belongs to the company
         if jel_form.cleaned_data['account'].company != company:
             return Response(
-                "account belongs to another company", status.HTTP_400_BAD_REQUEST)
+                {"account":"account belongs to another company"}, status.HTTP_400_BAD_REQUEST)
 
         jel_forms.append(jel_form)
 
@@ -108,15 +105,15 @@ def journal_entry_new(request):
         
     if not dr_total or not cr_total:
         return Response(
-            "zero changes in balance", status.HTTP_400_BAD_REQUEST)  
+            {"dr/cr balance":"zero changes in balance"}, status.HTTP_400_BAD_REQUEST)  
     if dr_total != cr_total:
         return Response(
-            "debits dont match credits", status.HTTP_400_BAD_REQUEST)
+            {"dr/cr balance":"debits dont match credits"}, status.HTTP_400_BAD_REQUEST)
     
     je_count = period.journalentry_set.count()
     if je_count >= request.user.userprofile.object_limit_entries_per_period:
         return Response(
-            "cannot create additional entries for this period",
+            {"object limit":"cannot create additional entries for this period"},
             status.HTTP_400_BAD_REQUEST)
 
 

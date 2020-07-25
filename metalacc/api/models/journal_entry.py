@@ -17,6 +17,7 @@ class JournalEntry(models.Model):
     date = models.DateField()
     memo = models.CharField(max_length=1000, blank=True, null=True, default=None)
     is_adjusting_entry = models.BooleanField(blank=True, default=False)
+    is_closing_entry = models.BooleanField(blank=True, default=False)
 
 
     def __str__(self):
