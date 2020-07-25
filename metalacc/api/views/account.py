@@ -13,13 +13,7 @@ from api.forms.company import CompanySelectionForm
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def account_new(request):
-    # Check object limit.
-    max_accounts = request.user.userprofile.object_limit_accounts
-    if Account.objects.filter(user=request.user).count() >= max_accounts:
-        return Response(
-            "user cannot add additional accounts", status.HTTP_400_BAD_REQUEST)
-    
+def account_new(request):    
     form = NewAccountForm(request.data)
     if not form.is_valid():
         return Response(form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
@@ -30,6 +24,12 @@ def account_new(request):
     company = comapany_form.cleaned_data['company']
     if company.user != request.user:
         return Response("company not found", status.HTTP_404_NOT_FOUND)
+
+    # Check object limit.
+    max_accounts = request.user.userprofile.object_limit_accounts
+    if Account.objects.filter(user=request.user, company=company).count() >= max_accounts:
+        return Response(
+            "user cannot add additional accounts", status.HTTP_400_BAD_REQUEST)
 
     duplicate_accounts = Account.objects.filter(
         name=form.cleaned_data['name'], number=form.cleaned_data['number'],

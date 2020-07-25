@@ -2,6 +2,7 @@
 from itertools import chain
 
 from django.db import models
+from django.db.models import Sum
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
@@ -16,11 +17,21 @@ class JournalEntry(models.Model):
     date = models.DateField()
     memo = models.CharField(max_length=1000, blank=True, null=True, default=None)
     is_adjusting_entry = models.BooleanField(blank=True, default=False)
+    is_closing_entry = models.BooleanField(blank=True, default=False)
 
 
     def __str__(self):
         return f"<JournalEntry {self.pk} {self.name} ({self.user})>"
 
+    @property
+    def dr_total(self):
+        value = self.lines.filter(type='d').aggregate(s=Sum('amount'))['s']
+        return value or 0
+
+    @property
+    def cr_total(self):
+        value = self.lines.filter(type='c').aggregate(s=Sum('amount'))['s']
+        return value or 0
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -43,8 +54,8 @@ class JournalEntryLine(models.Model):
     journal_entry = models.ForeignKey(JournalEntry, on_delete=models.CASCADE, related_name='lines')
     account = models.ForeignKey('api.Account', on_delete=models.CASCADE)
 
-    TYPE_DEBIT = 'c'
-    TYPE_CREDIT = 'd'
+    TYPE_DEBIT = 'd'
+    TYPE_CREDIT = 'c'
     TYPE_CHOICES = (
         (TYPE_DEBIT, 'Debit',),
         (TYPE_CREDIT, 'Credit',),
