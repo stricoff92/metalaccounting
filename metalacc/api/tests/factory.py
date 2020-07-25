@@ -4,6 +4,7 @@ from api.models import (
     Company,
     Period,
     JournalEntry,
+    JournalEntryLine,
 )
 
 class TestObjectFactory:
@@ -20,6 +21,13 @@ class TestObjectFactory:
             date=date,
             memo=memo,
             is_adjusting_entry=is_adjusting_entry)
+    
+    def create_journal_entry_line(self, journal_entry, account, type, amount):
+        return JournalEntryLine.objects.create(
+            journal_entry=journal_entry,
+            account=account,
+            type=type,
+            amount=amount)
 
     def create_account(self, company, name, acctype, number, is_current=None, is_contra=False):
         return Account.objects.create(

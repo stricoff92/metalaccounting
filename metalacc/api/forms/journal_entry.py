@@ -12,8 +12,7 @@ class NewJournalEntryForm(forms.ModelForm):
         model = JournalEntry
         fields = (
             'period', 'date', 'memo', 
-            'is_adjusting_entry')
-
+            'is_adjusting_entry', 'is_closing_entry',)
 
 
 class NewJournalEntryLineForm(forms.ModelForm):

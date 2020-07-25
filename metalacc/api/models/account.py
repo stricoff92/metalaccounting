@@ -10,7 +10,7 @@ from api.utils import generate_slug, generate_slugs_batch
 
 
 DEFAULT_ACCOUNTS = (
-    # type    curr  contra  name  
+    # type    curr  contra number name  
     ('asset', True, False, 1000, 'Cash',),
     ('asset', True, False, 1100, 'Office Supplies',),
     ('asset', True, False, 1500, 'A/R', '1500',),

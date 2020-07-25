@@ -74,6 +74,12 @@ def journal_entry_new(request):
         return Response(
             {"period":"period not found"} , status.HTTP_404_NOT_FOUND)
     
+    entry_date = je_form.cleaned_data['date']
+    if not period.start <= entry_date <= period.end:
+        return Response(
+            {"date":"entry date does not fall within period"},
+            status.HTTP_400_BAD_REQUEST)
+    
     dr_total = 0
     cr_total = 0
     jel_forms = []
@@ -128,3 +134,13 @@ def journal_entry_new(request):
 
     data = JournalEntrySerializer(journal_entry).data
     return Response(data, status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def journal_entry_delete(request, slug):
+    je = get_object_or_404(
+        JournalEntry,
+        period__company__user=request.user)
+    je.delete()
+    return Response({}, status.HTTP_204_NO_CONTENT)

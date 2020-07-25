@@ -30,5 +30,5 @@ urlpatterns = [
 
     # Journal Entry Routes
     path('je/new/', views.journal_entry_new, name="je-new"),
-
+    path('je/delete/<slug:slug>/', views.journal_entry_delete, name="je-delete"),
 ]

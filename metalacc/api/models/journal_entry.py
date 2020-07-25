@@ -54,8 +54,8 @@ class JournalEntryLine(models.Model):
     journal_entry = models.ForeignKey(JournalEntry, on_delete=models.CASCADE, related_name='lines')
     account = models.ForeignKey('api.Account', on_delete=models.CASCADE)
 
-    TYPE_DEBIT = 'c'
-    TYPE_CREDIT = 'd'
+    TYPE_DEBIT = 'd'
+    TYPE_CREDIT = 'c'
     TYPE_CHOICES = (
         (TYPE_DEBIT, 'Debit',),
         (TYPE_CREDIT, 'Credit',),
