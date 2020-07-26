@@ -13,6 +13,12 @@
         
         {% load static %}
         <link rel="stylesheet" href="{% static 'basestyles.css' %}">
+        {% if user.userprofile.use_nightmode %}
+            <link rel="stylesheet" href="{% static 'nightmode.css' %}">
+        {% else %}
+            <link rel="stylesheet" href="{% static 'daymode.css' %}">
+        {% endif %}
+
         <link
             rel="stylesheet"
             href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
@@ -34,11 +40,11 @@
 
     <body>
         <div class="container">
-            <div class="jumbotron mt-2 pt-2 pb-3">
+            <div id="app-heading" class="jumbotron mt-2 pt-2 pb-3">
                 <p class="heading-2 mt-2 mb-2 text-center">
                     <strong>Metal Accounting</strong>
                 </p>
-                <div style="display:flex;justify-content:flex-end;">
+                <div style="display:flex;justify-content:flex-start;">
                     <span>
                         Logged in as
                         <a href="{% url 'app-profile' %}"><strong>{{ user.email }}</strong></a>,
