@@ -1,4 +1,35 @@
 {% extends 'base_app.html' %} 
 {% block 'body' %}
+<div class="mt-3">
+    <p class="heading-1">Companies</p>
+</div>
+<div id="new-company-form-container" class="mt-3">
+    <button class="btn btn-primary">
+        <i class="fas fa-plus-square"></i>
+        New Company
+    </button>
+    <div id="new-company-form" style="display:none">
 
-{% endblock %} 
+    </div>
+</div>
+<div id="companies-list" class="mt-3">
+    
+</div>
+<script>
+$(document).ready(()=>{
+    $.get(companyListUrl, (companies, status, xhr)=>{
+        if(xhr.status != 200) {
+            return alert("An Error Occured: " + status)
+        }
+        if (companies.length == 0) {
+            const noCompaniesMsg = document.createElement("div");
+            $(noCompaniesMsg).addClass("alert");
+            $(noCompaniesMsg).addClass("alert-info");
+            $(noCompaniesMsg).text("You have not created any companies yet.")
+            $("#companies-list").append(noCompaniesMsg)
+            return
+        }
+    })
+})
+</script>
+{% endblock %}

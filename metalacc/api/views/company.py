@@ -9,6 +9,15 @@ from api.models import Company
 from api.forms.company import CompanyForm
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def company_list(request):
+    companies = (Company.objects
+        .filter(user=request.user)
+        .values("name"))
+    return Response(companies, status.HTTP_200_OK) 
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def company_new(request):
