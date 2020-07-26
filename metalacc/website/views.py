@@ -16,6 +16,10 @@ def anon_landing(request):
 def app_landing(request):
     return render(request, "app_landing.html", {})
 
+@login_required
+def app_profile(request):
+    return render(request, "app_profile.html", {})
+
 
 def login_user(request):
     if request.method == 'GET':

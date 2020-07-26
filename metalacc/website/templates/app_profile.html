@@ -1,0 +1,78 @@
+{% extends 'base_app.html' %} 
+{% block 'body' %}
+<style>
+    .setting-key {
+        font-weight:bold;
+    }
+    .setting-value {
+        padding-left:15px;
+    }
+</style>
+
+<div>
+    <div class="mt-5">
+        <p class="heading-2">User Settings</p>
+        <table>
+            <tr>
+                <td class="setting-key">Email</td>
+                <td class="setting-value">{{ user.email }}</td>
+            </tr>
+            <tr>
+                <td class="setting-key">Display Theme</td>
+                <td class="setting-value">
+                    <select id="theme-select">
+                        <option value="0">
+                            Light Mode
+                        </option>
+                        <option value="1" {% if user.userprofile.use_nightmode %}selected{% endif %}>
+                            Dark Mode
+                        </option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="mt-5">
+        <p class="heading-2">Object Limits</p>
+        <table>
+            <tr>
+                <td class="setting-key">Max Companies</td>
+                <td class="setting-value">{{ user.userprofile.object_limit_companies }}</td>
+            </tr>
+            <tr>
+                <td class="setting-key">Max Periods per Company</td>
+                <td class="setting-value">{{ user.userprofile.object_limit_periods_per_company }}</td>
+            </tr>
+            <tr>
+                <td class="setting-key">Max Accounts per Company</td>
+                <td class="setting-value">{{ user.userprofile.object_limit_accounts }}</td>
+            </tr>
+            <tr>
+                <td class="setting-key">Max Journal Entries per Period</td>
+                <td class="setting-value">{{ user.userprofile.object_limit_entries_per_period }}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script>
+    $(document).ready(()=>{
+        $("#theme-select").change(()=>{
+            const use_nightmode = Boolean($("#theme-select").val() - 0)
+            const data = {use_nightmode}
+            $.ajax({
+                url:profileEditUrl,
+                type:'PUT',
+                data:JSON.stringify(data),
+                contentType: 'application/json',
+                success:() => {
+                    location.reload()
+                },
+                error:() => {
+                    alert("An Error Occured")
+                }
+            })  
+        })
+    })
+</script>
+{% endblock %}

@@ -1,169 +1,168 @@
 {% extends 'base_anon.html' %} 
 {% block 'body' %}
-    <div class='container'>
-        <div class="jumbotron pt-3 pb-3 mt-3 mb-3 text-center">
-            <p class="heading-1">Metal Accounting</p>
-        </div>
-        <div class="login-register-container">
-            <div class="card p-3">
-                <div>
-                    <p class="heading-2">
-                        Returning User?
-                        <a href="#" id="open-login-form-link">
-                            <strong>Login</strong>
-                        </a>
-                    </p>
-                    {% if loginerror %}
-                        <div class="card bg-danger text-white mt-2 mb-2 p-2">
-                            {{ loginerror }}
-                        </div>
-                    {% endif %}
-                    <form 
-                        id="login-form"
-                        style="{% if not loginerror %}display:none{% endif %}"
-                        method="POST"
-                        action="/login/"
-                        onsubmit="return validateLoginForm()"
-                    >
-                        {% csrf_token %}
-                        <div>
-                            <p class="mb-1 mt-1">
-                                Email
-                            </p>
-                            <div
-                                class="card bg-danger text-white mt-2 mb-2 p-2"
-                                style="display:none;"
-                                id="login-email-error"
-                            >
-                            </div>
-                            <input
-                                type="text"
-                                name="email"
-                                id="login-form-input-email"
-                                value="{% if loginemail %}{{ loginemail }}{% endif %}"
-                            >
-                        </div>
-                        <div>
-                            <p class="mb-1 mt-3">
-                                Password
-                            </p>
-                            <div
-                                class="card bg-danger text-white mt-2 mb-2 p-2"
-                                style="display:none;"
-                                id="login-password-error"
-                            >
-                            </div>
-                            <input type="password" name="password" id="login-form-input-password">
-                        </div>
-                        <div class="mt-3">
-                            <input class="btn btn-primary" type="submit" value="login">
-                        </div>
-                    </form>
-                </div>
-            </div>
-            <div class="card p-3 mt-3">
-                <div>
-                    <p class="heading-2">
-                        New User?
-                        <a href="#" id="open-register-form-link">
-                            <strong>Register for Free</strong>
-                        </a>
-                    </p>
-                    <form id="register-form" style="display:none;" method="POST", action="/register/">
-                        {% csrf_token %}
-                        <div>
-                            <p class="mb-1 mt-1">
-                                Email
-                            </p>
-                            <input type="text">
-                        </div>
-                        <div>
-                            <p class="mb-1 mt-3">
-                                Password
-                            </p>
-                            <input type="password">
-                        </div>
-                        <div>
-                            <p class="mb-1 mt-3">
-                                Password Again
-                            </p>
-                            <input type="password">
-                        </div>
-                        <div class="mt-3">
-                            <input class="btn btn-primary" type="submit" value="register">
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <script>
-            window.onload = ()=>{
-                $("#open-login-form-link").click(()=>{
-                    if ($("#login-form").css("display") === "none") {
-                        $("#login-form").slideDown(350);
-                    }
-                })
-                $("#open-register-form-link").click(()=>{
-                    if ($("#register-form").css("display") === "none") {
-                        $("#register-form").slideDown(350);
-                    }
-                })
-            }
-            function isValidEmail(email) {
-                if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
-                    return true
-                }
-                return false
-            }
-            function validateLoginForm() {
-                $("#login-email-error").text("");
-                $("#login-password-error").text("");
-                $("#login-email-error").css("display", "none")
-                $("#login-password-error").css("display", "none")
-                const loginEmail = $("#login-form-input-email").val()
-                const loginPassword = $("#login-form-input-password").val()
-                let formIsValid = true
-                if (!isValidEmail(loginEmail)) {
-                    $("#login-email-error").text("This Email is not Valid")
-                    $("#login-email-error").slideDown(200)
-                    formIsValid = false
-                }
-                if (loginPassword.length < 6) {
-                    $("#login-password-error").text("This Password is not Valid")
-                    $("#login-password-error").slideDown(200)
-                    formIsValid = false
-                }
-                return formIsValid
-            }
-        </script>
-
-        <div class="marketing-container">
-            <div class="card p-3 mt-3 mb-3">
+<div class='container'>
+    <div class="jumbotron pt-3 pb-3 mt-3 mb-3 text-center">
+        <p class="heading-1">Metal Accounting</p>
+    </div>
+    <div class="login-register-container">
+        <div class="card p-3">
+            <div>
                 <p class="heading-2">
-                    About Metal Accounting
+                    Returning User?
+                    <a href="#" id="open-login-form-link">
+                        <strong>Login</strong>
+                    </a>
                 </p>
-                <p>
-                    Metal Accounting is a <strong>free</strong> online tool for students and educators.
+                {% if loginerror %}
+                    <div class="alert alert-danger mt-2 mb-2 p-2">
+                        {{ loginerror }}
+                    </div>
+                {% endif %}
+                <form 
+                    id="login-form"
+                    style="{% if not loginerror %}display:none{% endif %}"
+                    method="POST"
+                    action="/login/"
+                    onsubmit="return validateLoginForm()"
+                >
+                    {% csrf_token %}
+                    <div>
+                        <p class="mb-1 mt-1">
+                            Email
+                        </p>
+                        <div
+                            class="alert alert-danger mt-2 mb-2 p-2"
+                            style="display:none;"
+                            id="login-email-error"
+                        >
+                        </div>
+                        <input
+                            type="text"
+                            name="email"
+                            id="login-form-input-email"
+                            value="{% if loginemail %}{{ loginemail }}{% endif %}"
+                        >
+                    </div>
+                    <div>
+                        <p class="mb-1 mt-3">
+                            Password
+                        </p>
+                        <div
+                            class="alert alert-danger mt-2 mb-2 p-2"
+                            style="display:none;"
+                            id="login-password-error"
+                        >
+                        </div>
+                        <input type="password" name="password" id="login-form-input-password">
+                    </div>
+                    <div class="mt-3">
+                        <input class="btn btn-primary" type="submit" value="login">
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="card p-3 mt-3">
+            <div>
+                <p class="heading-2">
+                    New User?
+                    <a href="#" id="open-register-form-link">
+                        <strong>Register for Free</strong>
+                    </a>
                 </p>
-                <p>
-                    Generate financial statements on the fly from journal entries.
-                </p>
-                <p>
-                    Create templates that can easily be share with others.
-                </p>
-                <p>
-                    Metal Accounting is for <strong>educational purposes only</strong>.
-                </p>
-                <p>
-                    Data you enter is kept private and not shared with any 3rd parties.
-                    This site does not utilize online advertising or 3rd party cookies.
-                    Check out our <a href="#">privacy policy</a> and <a href="#">terms of service</a> (in plain english).
-                </p>
-                <p>
-                    Check out our <a href="#">guide</a> for using Metal Accounting.
-                </p>
+                <form id="register-form" style="display:none;" method="POST", action="/register/">
+                    {% csrf_token %}
+                    <div>
+                        <p class="mb-1 mt-1">
+                            Email
+                        </p>
+                        <input type="text">
+                    </div>
+                    <div>
+                        <p class="mb-1 mt-3">
+                            Password
+                        </p>
+                        <input type="password">
+                    </div>
+                    <div>
+                        <p class="mb-1 mt-3">
+                            Password Again
+                        </p>
+                        <input type="password">
+                    </div>
+                    <div class="mt-3">
+                        <input class="btn btn-primary" type="submit" value="register">
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+    <script>
+        window.onload = ()=>{
+            $("#open-login-form-link").click(()=>{
+                if ($("#login-form").css("display") === "none") {
+                    $("#login-form").slideDown(350);
+                }
+            })
+            $("#open-register-form-link").click(()=>{
+                if ($("#register-form").css("display") === "none") {
+                    $("#register-form").slideDown(350);
+                }
+            })
+        }
+        function isValidEmail(email) {
+            if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+                return true
+            }
+            return false
+        }
+        function validateLoginForm() {
+            $("#login-email-error").text("");
+            $("#login-password-error").text("");
+            $("#login-email-error").css("display", "none")
+            $("#login-password-error").css("display", "none")
+            const loginEmail = $("#login-form-input-email").val()
+            const loginPassword = $("#login-form-input-password").val()
+            let formIsValid = true
+            if (!isValidEmail(loginEmail)) {
+                $("#login-email-error").text("This Email is not Valid")
+                $("#login-email-error").slideDown(200)
+                formIsValid = false
+            }
+            if (loginPassword.length < 6) {
+                $("#login-password-error").text("This Password is not Valid")
+                $("#login-password-error").slideDown(200)
+                formIsValid = false
+            }
+            return formIsValid
+        }
+    </script>
 
+    <div class="marketing-container">
+        <div class="card p-3 mt-3 mb-3">
+            <p class="heading-2">
+                About Metal Accounting
+            </p>
+            <p>
+                Metal Accounting is a <strong>free</strong> online tool for students and educators.
+            </p>
+            <p>
+                Generate financial statements on the fly from journal entries.
+            </p>
+            <p>
+                Create templates that can easily be share with others.
+            </p>
+            <p>
+                Metal Accounting is for <strong>educational purposes only</strong>.
+            </p>
+            <p>
+                Data you enter is kept private and not shared with any 3rd parties.
+                This site does not utilize online advertising or 3rd party cookies.
+                Check out our <a href="#">privacy policy</a> and <a href="#">terms of service</a> (in plain english).
+            </p>
+            <p>
+                Check out our <a href="#">guide</a> for using Metal Accounting.
+            </p>
+        </div>
+    </div>
+</div>
 {% endblock %}
