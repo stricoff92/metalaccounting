@@ -23,8 +23,10 @@ DEBUG = ENV != 'PROD'
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 
-
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost'] + ADDITIONAL_ALLOWED_HOSTS
+if DEBUG:
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost'] + ADDITIONAL_ALLOWED_HOSTS
+else:
+    ALLOWED_HOSTS = []
 
 
 # Application definition
