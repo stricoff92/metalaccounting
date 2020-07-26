@@ -4,17 +4,64 @@
     <p class="heading-1">Companies</p>
 </div>
 <div id="new-company-form-container" class="mt-3">
-    <button class="btn btn-primary">
+    <button class="btn btn-primary" id="open-new-company-form-btn">
         <i class="fas fa-plus-square"></i>
         New Company
     </button>
-    <div id="new-company-form" style="display:none">
-
+    <div id="new-company-form" style="display:none" class="card mt-4 mb-3 p-3">
+        <p class="heading-2">Create a New Company</p>
+        <div
+            id="new-company-form-errors"
+            class="mt-2 mb-2 p-2 alert alert-danger"
+            style="display:none"
+        >
+        </div>
+        <p class="mb-1 mt-1">Comapny Name</p>
+        <input
+            id="new-company-name-field"
+            type="text"
+            class="form-control text-input-max-400"
+        >
+        <div class="mt-3">
+            <button class="btn btn-success" id="save-new-company-btn">
+                <i class="fas fa-save"></i> Save
+            </button>
+        </div>
     </div>
 </div>
+<script>
+function drawFormError(error) {
+    $("#new-company-form-errors").text(error)
+    $("#new-company-form-errors").css("display", "block")
+}
+$("#open-new-company-form-btn").click(()=>{
+    $("#new-company-form").slideDown(350)
+    $("#open-new-company-form-btn").attr("disabled", true)
+})
+$("#save-new-company-btn").click(()=>{
+    $("#new-company-form-errors").css("display", "none")
+    $("#new-company-form-errors").html("")
+    const newCompanyName = $("#new-company-name-field").val()
+    if(newCompanyName.length < 3) {
+        drawFormError("Company name must be between 3 and 100 characters.")
+        return
+    }
+    postJson(companyNewUrl, {name: newCompanyName}, 
+        (data, status, xhr)=>{
+            console.log("success")
+            console.log({data, status, xhr})
+        }, 
+        (data, status, xhr)=>{
+            console.log(data)
+            drawFormError(errorToString(data.responseJSON))
+        }
+    )
+})
+</script>
+
 <div id="companies-list" class="mt-3">
-    
 </div>
+
 <script>
 $(document).ready(()=>{
     $.get(companyListUrl, (companies, status, xhr)=>{
@@ -23,13 +70,57 @@ $(document).ready(()=>{
         }
         if (companies.length == 0) {
             const noCompaniesMsg = document.createElement("div");
-            $(noCompaniesMsg).addClass("alert");
-            $(noCompaniesMsg).addClass("alert-info");
+            $(noCompaniesMsg).addClass(["alert", "alert-info"]);
             $(noCompaniesMsg).text("You have not created any companies yet.")
+            $(noCompaniesMsg).attr("id", "no-companies-msg")
             $("#companies-list").append(noCompaniesMsg)
             return
         }
+        return companies.forEach(addCompanyToList)
     })
 })
+function addCompanyToList (companyData) {
+    const companyContainerDiv = document.createElement("div");
+    $(companyContainerDiv).addClass(
+        ["card", "pt-3", "pb-3", "pl-1", "pr-1", "mt-2"]);
+
+    const companyDiv = document.createElement("div");
+    $(companyDiv).css({"display":"flex", "justify-content":"space-between"})
+    $(companyContainerDiv).append(companyDiv)
+    
+    const companyNameDiv = document.createElement("div");
+    $(companyNameDiv).text(companyData.name)
+    $(companyDiv).append(companyNameDiv)
+
+    const companyActionsDiv = document.createElement("div");
+    $(companyActionsDiv).html(`
+        <div>
+            <button class="btn btn-success" id="open-company-btn-${companyData.slug}">
+                <i class="fas fa-hand-point-right"></i>
+                Open
+            </button>
+            <button class="btn btn-danger ml-1" id="delete-company-btn-${companyData.slug}">
+                <i class="fas fa-trash-alt"></i>
+                Delete
+            </button>
+        </div>
+    `)
+    $(companyDiv).append(companyActionsDiv)
+    $("#companies-list").append(companyContainerDiv)
+
+    $(`#delete-company-btn-${companyData.slug}`).click(() => {
+        if(!confirm("Are you sure you want to delete " + companyData.name + "? All associated accounts, periods, and entries will be deleted.")) {
+            return
+        }
+        const url = companyDeleteUrl(companyData.slug)
+        postJson(url, {}, (data, status, xhr)=>{
+            if(xhr.status == 204) {
+                $(companyContainerDiv).remove()
+            }
+        }, (data, status, xhr) => {
+            alert('An Error Occured')
+        })
+    })
+}
 </script>
 {% endblock %}
