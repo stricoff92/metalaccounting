@@ -37,7 +37,8 @@
                         >
                         </div>
                         <input
-                            type="text"
+                            type="email"
+                            class="form-control text-input-max-400"
                             name="email"
                             id="login-form-input-email"
                             value="{% if loginemail %}{{ loginemail }}{% endif %}"
@@ -53,7 +54,12 @@
                             id="login-password-error"
                         >
                         </div>
-                        <input type="password" name="password" id="login-form-input-password">
+                        <input
+                            type="password"
+                            class="form-control text-input-max-400"
+                            name="password"
+                            id="login-form-input-password"
+                        >
                     </div>
                     <div class="mt-3">
                         <input class="btn btn-primary" type="submit" value="login">
@@ -75,19 +81,19 @@
                         <p class="mb-1 mt-1">
                             Email
                         </p>
-                        <input type="text">
+                        <input type="email" class="form-control text-input-max-400">
                     </div>
                     <div>
                         <p class="mb-1 mt-3">
                             Password
                         </p>
-                        <input type="password">
+                        <input type="password" class="form-control text-input-max-400">
                     </div>
                     <div>
                         <p class="mb-1 mt-3">
                             Password Again
                         </p>
-                        <input type="password">
+                        <input type="password" class="form-control text-input-max-400">
                     </div>
                     <div class="mt-3">
                         <input class="btn btn-primary" type="submit" value="register">
@@ -161,6 +167,20 @@
             </p>
             <p>
                 Check out our <a href="#">guide</a> for using Metal Accounting.
+            </p>
+        </div>
+        <div class="card p-3 mt-3 mb-3">
+            <p class="heading-2">
+                Thanks to
+            </p>
+            <p>
+                <a href="https://bootswatch.com" target="_blank">bootswatch</a> for CSS themes
+            </p>
+            <p>
+                <a href="https://fontawesome.com" target="_blank">fontawesome</a> for icons
+            </p>
+            <p>
+                All the open-source developers who made this site possible
             </p>
         </div>
     </div>

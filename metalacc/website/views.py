@@ -14,11 +14,11 @@ def anon_landing(request):
 
 @login_required
 def app_landing(request):
-    return render(request, "app_landing.html", {})
+    return render(request, "app_landing.html", {'skip_moment_import':True})
 
 @login_required
 def app_profile(request):
-    return render(request, "app_profile.html", {})
+    return render(request, "app_profile.html", {'skip_moment_import':True})
 
 
 def login_user(request):
