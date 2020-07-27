@@ -57,8 +57,14 @@ def company_edit(request, slug):
     form = CompanyForm(request.data, instance=company)
     if not form.is_valid():
         return Response(form.errors, status.HTTP_400_BAD_REQUEST)
-    company = form.save()
+    
+    company_name = form.cleaned_data['name']
+    if Company.objects.filter(user=request.user, name=company_name).exclude(id=company.id).exists():
+        return Response(
+            "a company with that name already exists",
+            status.HTTP_400_BAD_REQUEST) 
 
+    company = form.save()
     data = {
         'slug':company.slug,
         'name':company.name,
