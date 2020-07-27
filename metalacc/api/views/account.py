@@ -82,6 +82,25 @@ def account_new(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+def account_add_default_accounts(request):
+    form = CompanySelectionForm(request.data)
+    if not form.is_valid():
+        return Response(form.errors.as_json())
+    company = form.cleaned_data['company']
+    if company.user != request.user:
+        return Response("company not found", status.HTTP_404_NOT_FOUND)
+
+    if company.account_set.exists():
+        return Response(
+            "this company already has accounts associated",
+            status.HTTP_400_BAD_REQUEST)
+    
+    Account.objects.create_default_accounts(company)
+    return Response({}, status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def account_edit(request, slug):
     account = get_object_or_404(Account, slug=slug, user=request.user)
 

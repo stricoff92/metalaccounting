@@ -30,7 +30,10 @@
     <div class="alert alert-info" id="no-accounts-yet-msg" style="display:none;">
         You don't have any accounts for this company yet.
         <div class="mt-3">
-            <button class="btn btn-primary">
+            <button 
+                class="btn btn-primary"
+                onclick="window.location='/app/company/{{ company.slug }}/default-account/'"
+            >
                 <i class="fas fa-bolt"></i>
                 Add Default Accounts
             </button>

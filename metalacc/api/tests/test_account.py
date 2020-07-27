@@ -5,6 +5,7 @@ from rest_framework import status
 
 from .base import BaseTestBase
 from api.models import Company, Account
+from api.models.account import DEFAULT_ACCOUNTS
 
 
 class AccountViewTests(BaseTestBase):
@@ -387,4 +388,53 @@ class AccountViewTests(BaseTestBase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(Account.objects.count(), 1)
+
+
+    def test_user_can_add_default_accounts(self):
+        """ Test that a user can add default accounts to their own company if they dont
+            already have any accounts associated with the company
+        """
+        self.assertEqual(self.company.account_set.count(), 0)
+        url = reverse("account-add-default-accounts")
+        data = {
+            'company':self.company.slug
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.company.account_set.count(), len(DEFAULT_ACCOUNTS))
+
+
+    def test_user_cant_add_default_accounts_to_a_company_if_the_company_already_has_accounts(self):
+        """ Test that a user cant add default accounts to their own company if the company
+            already has accounts associated
+        """
+        self.factory.create_account(
+            self.company, 'cash', 'asset', 1000, is_current=True, is_contra=False)
+        self.assertEqual(self.company.account_set.count(), 1)
     
+        url = reverse("account-add-default-accounts")
+        data = {
+            'company':self.company.slug
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, "this company already has accounts associated")
+
+
+    def test_user_cant_add_default_accounts_to_another_users_company(self):
+        """ Test that a user cant add default accounts to another user's company
+        """
+        self.assertEqual(self.other_company.account_set.count(), 0)
+        url = reverse("account-add-default-accounts")
+        data = {
+            'company':self.other_company.slug
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+    def test_default_account_names_and_numbers_are_unique(self):
+        numbers = [r[3] for r in DEFAULT_ACCOUNTS]
+        names = [r[4] for r in DEFAULT_ACCOUNTS]
+        self.assertEqual(len(numbers), len(set(numbers)))
+        self.assertEqual(len(names), len(set(names)))
