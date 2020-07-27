@@ -26,7 +26,7 @@
     </div>
 </div>
 
-<div id="accounts-list" class="mt-3">
+<div id="accounts-list" class="mt-3 mb-3">
     <div class="alert alert-info" id="no-accounts-yet-msg" style="display:none;">
         You don't have any accounts for this company yet.
         <div class="mt-3">
@@ -45,8 +45,51 @@
             </button>
         </div>
     </div>
+
+
 </div>
 <script>
+function addAccountToList(accountData) {
+    const accountRowDiv = document.createElement("div");
+    $(accountRowDiv).addClass(['card', 'p-2', 'mt-1'])
+
+    const accountRowInnerDivTop = document.createElement("div");
+    $(accountRowInnerDivTop).css(
+        {'display':'flex', 'justify-content': 'space-between'})
+    $(accountRowInnerDivTop).html(`
+        <div>
+            <strong>
+                <span id="account-name-span-${accountData.slug}"></span>
+            </strong>
+            (${accountData.number})
+        </div>
+        <div style="display:flex; flex-wrap:nowrap;">
+            <button class="btn btn-success">
+                <i class="fas fa-hand-point-right"></i>
+                Open
+            </button>
+            <button class="btn btn-danger">
+                <i class="fas fa-trash-alt"></i>
+                Delete
+            </button>
+        </div>
+    `)
+    $(accountRowDiv).append(accountRowInnerDivTop)
+
+    const accountRowInnerDivBottom = document.createElement("div");
+    $(accountRowInnerDivBottom).append(`<span>${accountData.type}</span>`)
+    if(accountData.is_contra){
+        $(accountRowInnerDivBottom).append(`
+            <span class="badge badge-pill badge-info">
+                contra
+            </span>
+        `)
+    }
+    $(accountRowDiv).append(accountRowInnerDivBottom)
+
+    $("#accounts-list").append(accountRowDiv)
+    $(`#account-name-span-${accountData.slug}`).text(accountData.name)
+}
 $(document).ready(()=>{
     const url = "{% url 'account-list' %}?company={{ company.slug }}"
     $.get(url, (accounts, status, xhr)=>{
@@ -57,6 +100,7 @@ $(document).ready(()=>{
             $("#no-accounts-yet-msg").css("display", "block")
             return
         }
+        accounts.forEach(addAccountToList)
     })
 })
 </script>
