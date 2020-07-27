@@ -1,5 +1,13 @@
 {% extends 'base_app.html' %} 
 {% block 'body' %}
+<style>
+    .company-info-key {
+        font-weight:bold;
+    }
+    .company-info-value {
+        padding-left:15px;
+    }
+</style>
 <div>
     <div id="company-name-container" class="mb-3">
         <span class="heading-1" id="page-title-company-name">
@@ -77,7 +85,32 @@ $("#save-company-name-btn").click(()=>{
             Company Information
         </div>
         <div class="card-body">
-
+            <table>
+                <tr>
+                    <td class="company-info-key">Accounts</td>
+                    <td class="company-info-value">{{ account_count }}</td>
+                    <td class="company-info-value">
+                        <button class="btn btn-success">
+                            <i class="fas fa-hand-point-right"></i>
+                            Open
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="company-info-key pt-3">Periods</td>
+                    <td class="company-info-value pt-3">{{ period_count }}</td>
+                    <td class="company-info-value pt-3">
+                        <button class="btn btn-success">
+                            <i class="fas fa-hand-point-right"></i>
+                            Open
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="company-info-key pt-3">Journal Entries</td>
+                    <td class="company-info-value pt-3">{{ period_count }}</td>
+                </tr>
+            </table>
         </div>
     </div>
 </div>

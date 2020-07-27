@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.urls import reverse
 
-from api.models import Company
+from api.models import Company, Account, Period, JournalEntry
 from website.forms import LoginForm
 
 
@@ -30,6 +30,9 @@ def app_landing(request):
 @login_required
 def app_company(request, slug):
     company = get_object_or_404(Company, user=request.user, slug=slug)
+    account_count = Account.objects.filter(company=company).count()
+    period_count = Period.objects.filter(company=company).count()
+    journal_entry_count = JournalEntry.objects.filter(period__company=company).count()
     breadcrumbs = [
         {
             'value':'companies',
@@ -42,6 +45,9 @@ def app_company(request, slug):
     data = {
         'company':company,
         'breadcrumbs':breadcrumbs,
+        'account_count':account_count,
+        'period_count':period_count,
+        'journal_entry_count':journal_entry_count,
     }
     print(data)
     return render(request, "app_company.html", data)
