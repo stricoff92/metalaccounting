@@ -4,8 +4,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.urls import reverse
+from django.http import HttpResponseNotAllowed
 
-from api.models import Company
+from api.models import Company, Account, Period, JournalEntry
 from website.forms import LoginForm
 
 
@@ -16,9 +17,22 @@ def anon_landing(request):
 
 
 @login_required
+def app_main_menu(request):
+    data = {
+        'skip_moment_import':True,
+    }
+    return render(request, "app_main_menu.html", data)
+
+
+@login_required
 def app_landing(request):
     breadcrumbs = [
-        {'value':'companies'},
+        {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
+            'value':'companies',
+        },
     ]
     data = {
         'skip_moment_import':True,
@@ -30,8 +44,14 @@ def app_landing(request):
 @login_required
 def app_company(request, slug):
     company = get_object_or_404(Company, user=request.user, slug=slug)
+    account_count = Account.objects.filter(company=company).count()
+    period_count = Period.objects.filter(company=company).count()
+    journal_entry_count = JournalEntry.objects.filter(period__company=company).count()
     breadcrumbs = [
         {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
             'value':'companies',
             'href':reverse("app-landing"),
         }, {
@@ -42,14 +62,28 @@ def app_company(request, slug):
     data = {
         'company':company,
         'breadcrumbs':breadcrumbs,
+        'account_count':account_count,
+        'period_count':period_count,
+        'journal_entry_count':journal_entry_count,
     }
-    print(data)
     return render(request, "app_company.html", data)
 
 
 @login_required
 def app_profile(request):
-    return render(request, "app_profile.html", {'skip_moment_import':True})
+    breadcrumbs = [
+        {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
+            'value':'settings',
+        },
+    ]
+    data = {
+        'breadcrumbs':breadcrumbs,
+        'skip_moment_import':True,
+    }
+    return render(request, "app_profile.html", data)
 
 
 def login_user(request):
@@ -57,7 +91,7 @@ def login_user(request):
         return redirect("anon-landing")
 
     if request.user.is_authenticated:
-        raise NotImplementedError()
+        return HttpResponseNotAllowed()
 
     form = LoginForm(request.POST)
     if not form.is_valid():

@@ -1,0 +1,28 @@
+{% extends 'base_app.html' %} 
+{% block 'body' %}
+<div class="card">
+    <div class="card-header">
+        Main Menu
+    </div>
+    <div class="card-body">
+        <div>
+            <button 
+                class="btn btn-success"
+                onclick="location.href='/app/company/'"
+            >
+                <i class="fas fa-hand-point-right"></i>
+                Companies
+            </button>
+        </div>
+        <div class="mt-3">
+            <button
+                class="btn btn-success"
+                onclick="location.href='/app/profile/'"
+            >
+                <i class="fas fa-hand-point-right"></i>
+                Settings
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
