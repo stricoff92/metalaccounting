@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.urls import reverse
+from django.http import HttpResponseNotAllowed
 
 from api.models import Company, Account, Period, JournalEntry
 from website.forms import LoginForm
@@ -90,7 +91,7 @@ def login_user(request):
         return redirect("anon-landing")
 
     if request.user.is_authenticated:
-        raise NotImplementedError()
+        return HttpResponseNotAllowed()
 
     form = LoginForm(request.POST)
     if not form.is_valid():
