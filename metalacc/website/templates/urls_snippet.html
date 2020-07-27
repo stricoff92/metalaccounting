@@ -1,5 +1,6 @@
 <script>
     const companyListUrl = "{% url 'company-list' %}"
     const companyNewUrl = "{% url 'company-new' %}"
+    const companyDeleteUrl = (slug) => "/api/v1/company/delete/" + slug + "/"
     const profileEditUrl = "/api/v1/userprofile/{{ user.userprofile.slug }}/"
 </script>

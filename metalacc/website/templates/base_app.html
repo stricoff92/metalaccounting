@@ -11,19 +11,20 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         
-        {% load static %}
-        <link rel="stylesheet" href="{% static 'basestyles.css' %}">
-        <link
-            rel="stylesheet"
-            href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-            integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
-            crossorigin="anonymous">
+
         <link
             rel="stylesheet"
             href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
             integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
             crossorigin="anonymous"
         >
+        {% load static %}
+        <link rel="stylesheet" href="{% static 'basestyles.css' %}">
+        {% if user.userprofile.use_nightmode %}
+            <link rel="stylesheet" href="{% static 'nightmode.css' %}">
+        {% else %}
+            <link rel="stylesheet" href="{% static 'daymode.css' %}">
+        {% endif %}
         <script
             src="https://code.jquery.com/jquery-3.5.1.min.js"
             integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
@@ -34,11 +35,11 @@
 
     <body>
         <div class="container">
-            <div class="jumbotron mt-2 pt-2 pb-3">
+            <div id="app-heading" class="jumbotron mt-2 pt-2 pb-3">
                 <p class="heading-2 mt-2 mb-2 text-center">
                     <strong>Metal Accounting</strong>
                 </p>
-                <div style="display:flex;justify-content:flex-end;">
+                <div style="display:flex;justify-content:flex-start;">
                     <span>
                         Logged in as
                         <a href="{% url 'app-profile' %}"><strong>{{ user.email }}</strong></a>,
@@ -46,6 +47,11 @@
                     <span class="ml-1">
                         <a href="{% url 'logout' %}">logout</a>
                     </span>
+                    {% if user.is_superuser %}
+                        <span class="ml-1">
+                            <a href="/admin/">admin</a>
+                        </span>
+                    {% endif %}
                 </div>
             </div>
             {% block 'body' %}
@@ -92,6 +98,77 @@
                     success:successCb,
                     error:errorCb,
                 })
+            }
+
+            // Object.keys polyfill
+            if (!Object.keys) {
+                Object.keys = (function() {
+                    'use strict';
+                    var hasOwnProperty = Object.prototype.hasOwnProperty,
+                        hasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString'),
+                        dontEnums = [
+                        'toString',
+                        'toLocaleString',
+                        'valueOf',
+                        'hasOwnProperty',
+                        'isPrototypeOf',
+                        'propertyIsEnumerable',
+                        'constructor'
+                        ],
+                        dontEnumsLength = dontEnums.length;
+
+                    return function(obj) {
+                    if (typeof obj !== 'function' && (typeof obj !== 'object' || obj === null)) {
+                        throw new TypeError('Object.keys called on non-object');
+                    }
+
+                    var result = [], prop, i;
+
+                    for (prop in obj) {
+                        if (hasOwnProperty.call(obj, prop)) {
+                        result.push(prop);
+                        }
+                    }
+
+                    if (hasDontEnumBug) {
+                        for (i = 0; i < dontEnumsLength; i++) {
+                        if (hasOwnProperty.call(obj, dontEnums[i])) {
+                            result.push(dontEnums[i]);
+                        }
+                        }
+                    }
+                    return result;
+                    };
+                }());
+            }
+
+            // Array.isArray polyfill
+            if (!Array.isArray) {
+                Array.isArray = function(arg) {
+                    return Object.prototype.toString.call(arg) === '[object Array]';
+                };
+            }
+
+            function errorToString(error) {
+                if (typeof error == "string") {
+                    return error
+                }
+                else if (typeof error == "object") {
+                    let errorParts = []
+                    Object.keys(error).forEach(key => {
+                        let errorMsg = `${key}: `
+                        let errorVal = error[key]
+                        if(Array.isArray(errorVal)) {
+                            errorVal.forEach(errValPart => {
+                                errorMsg += (errValPart + " ")
+                            })
+                        } else {
+                            errorMsg += errorVal
+                        }
+                        errorParts.push(errorMsg)
+                    })
+                    return errorParts.join(" ")
+                }
             }
         </script>
     </body>

@@ -14,7 +14,8 @@ from api.forms.company import CompanyForm
 def company_list(request):
     companies = (Company.objects
         .filter(user=request.user)
-        .values("name"))
+        .order_by("name")
+        .values("name", "slug"))
     return Response(companies, status.HTTP_200_OK) 
 
 
@@ -24,11 +25,19 @@ def company_new(request):
     # Check object limit.
     max_companies = request.user.userprofile.object_limit_companies
     if Company.objects.filter(user=request.user).count() >= max_companies:
-        return Response("user cannot add additional companies", status.HTTP_400_BAD_REQUEST)
+        return Response(
+            "user cannot add additional companies",
+            status.HTTP_400_BAD_REQUEST)
 
     form = CompanyForm(request.data)
     if not form.is_valid():
         return Response(form.errors, status.HTTP_400_BAD_REQUEST)
+    
+    new_company_name = form.cleaned_data['name']
+    if Company.objects.filter(user=request.user, name=new_company_name).exists():
+        return Response(
+            "a company with that name already exists",
+            status.HTTP_400_BAD_REQUEST) 
 
     company = form.save(commit=False)
     company.user = request.user
@@ -48,8 +57,14 @@ def company_edit(request, slug):
     form = CompanyForm(request.data, instance=company)
     if not form.is_valid():
         return Response(form.errors, status.HTTP_400_BAD_REQUEST)
-    company = form.save()
+    
+    company_name = form.cleaned_data['name']
+    if Company.objects.filter(user=request.user, name=company_name).exclude(id=company.id).exists():
+        return Response(
+            "a company with that name already exists",
+            status.HTTP_400_BAD_REQUEST) 
 
+    company = form.save()
     data = {
         'slug':company.slug,
         'name':company.name,

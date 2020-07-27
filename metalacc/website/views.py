@@ -1,10 +1,12 @@
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 
+from api.models import Company
 from website.forms import LoginForm
+
 
 def anon_landing(request):
     if request.user.is_authenticated:
@@ -14,11 +16,18 @@ def anon_landing(request):
 
 @login_required
 def app_landing(request):
-    return render(request, "app_landing.html", {})
+    return render(request, "app_landing.html", {'skip_moment_import':True})
+
+
+@login_required
+def app_company(request, slug):
+    company = get_object_or_404(Company, user=request.user, slug=slug)
+    return render(request, "app_company.html", {'company':company})
+
 
 @login_required
 def app_profile(request):
-    return render(request, "app_profile.html", {})
+    return render(request, "app_profile.html", {'skip_moment_import':True})
 
 
 def login_user(request):
