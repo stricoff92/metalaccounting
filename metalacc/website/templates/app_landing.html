@@ -48,8 +48,11 @@ $("#save-new-company-btn").click(()=>{
     }
     postJson(companyNewUrl, {name: newCompanyName}, 
         (data, status, xhr)=>{
-            console.log("success")
-            console.log({data, status, xhr})
+            if (xhr.status == 201) {
+                window.location = "/app/company/" + data.slug + "/"
+            } else {
+                drawFormError("An Error Occured")
+            }
         }, 
         (data, status, xhr)=>{
             console.log(data)

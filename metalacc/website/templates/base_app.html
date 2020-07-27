@@ -35,9 +35,10 @@
 
     <body>
         <div class="container">
-            <div id="app-heading" class="jumbotron mt-2 pt-2 pb-3">
+            <div id="app-heading" class="jumbotron mt-2 pt-2 pb-3 mb-2">
                 <p class="heading-2 mt-2 mb-2 text-center">
                     <strong>Metal Accounting</strong>
+                    <i class="fas fa-balance-scale"></i>
                 </p>
                 <div style="display:flex;justify-content:flex-start;">
                     <span>
@@ -54,6 +55,25 @@
                     {% endif %}
                 </div>
             </div>
+            {% if breadcrumbs %}
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        {% for breadcrumb in breadcrumbs %}
+                            {% if breadcrumb.href %}
+                                <li class="breadcrumb-item">
+                                    <a href="{{ breadcrumb.href }}">
+                                        {{ breadcrumb.value }}
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="breadcrumb-item active" aria-current="page">
+                                    {{ breadcrumb.value }}
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ol>
+                </nav>
+            {% endif %}
             {% block 'body' %}
             {% endblock %}
         </div>
