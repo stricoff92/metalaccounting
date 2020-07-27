@@ -1,7 +1,16 @@
-solid style
+solid style icons
 
 NEW     <i class="fas fa-plus-square"></i>
 OPEN    <i class="fas fa-hand-point-right"></i>
 DELETE  <i class="fas fa-trash-alt"></i>
 EDIT    <i class="fas fa-pen"></i>
 SAVE    <i class="fas fa-save"></i>
+HELP    <i class="fas fa-question-circle"></i>
+WARN    <i class="fas fa-exclamation-triangle"></i>
+MACRO   <i class="fas fa-bolt"></i>
+
+
+CONTRA ACCOUNT
+<span class="badge badge-pill badge-info">
+    contra
+</span>

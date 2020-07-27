@@ -1,4 +1,5 @@
 
+import re
 import uuid
 
 from django.conf import settings
@@ -26,3 +27,8 @@ def generate_slugs_batch(model, count:int):
             slugs.add(uuid.uuid4().hex[:settings.SLUG_LENGTH])
     
     return slugs
+
+
+VALID_SLUG_PATT = re.compile(r'^[a-zA-Z0-9]{10,}$')
+def is_valid_slug(slug:str) -> bool:
+    return bool(VALID_SLUG_PATT.match(slug))

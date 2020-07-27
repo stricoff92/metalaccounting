@@ -90,7 +90,7 @@ $("#save-company-name-btn").click(()=>{
                     <td class="company-info-key">Accounts</td>
                     <td class="company-info-value">{{ account_count }}</td>
                     <td class="company-info-value">
-                        <button class="btn btn-success">
+                        <button class="btn btn-success" id="open-accounts-btn">
                             <i class="fas fa-hand-point-right"></i>
                             Open
                         </button>
@@ -114,4 +114,11 @@ $("#save-company-name-btn").click(()=>{
         </div>
     </div>
 </div>
+<script>
+$(document).ready(()=>{
+    $("#open-accounts-btn").click(()=>{
+        window.location = "/app/company/{{company.slug}}/account/"
+    })
+})
+</script>
 {% endblock %}

@@ -9,6 +9,30 @@ from rest_framework import status
 from api.models import Company, Account
 from api.forms.account import NewAccountForm, EditAccountForm
 from api.forms.company import CompanySelectionForm
+from api.utils import is_valid_slug
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def account_list(request):
+    company_slug = request.query_params.get('company')
+    if not company_slug:
+        return Response(
+            "company param required", status.HTTP_400_BAD_REQUEST)
+    if not is_valid_slug(company_slug):
+        return Response(
+            "invalid company slug", status.HTTP_400_BAD_REQUEST)
+
+    company = get_object_or_404(Company, user=request.user, slug=company_slug)
+
+    account_fields = (
+        "slug", "number", "name", "type", 
+        "is_current", "is_contra")
+    accounts = (Account.objects
+        .filter(company=company)
+        .order_by("number")
+        .values(*account_fields))
+    return Response(accounts, status.HTTP_200_OK)
 
 
 @api_view(['POST'])
