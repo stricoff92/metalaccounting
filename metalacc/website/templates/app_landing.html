@@ -37,12 +37,13 @@ function drawFormError(error) {
 $("#open-new-company-form-btn").click(()=>{
     $("#new-company-form").slideDown(350)
     $("#open-new-company-form-btn").attr("disabled", true)
+    $("#new-company-name-field").focus()
 })
 $("#save-new-company-btn").click(()=>{
     $("#new-company-form-errors").css("display", "none")
     $("#new-company-form-errors").html("")
     const newCompanyName = $("#new-company-name-field").val()
-    if(newCompanyName.length < 3) {
+    if(newCompanyName.length < 3 || newCompanyName.length > 100) {
         drawFormError("Company name must be between 3 and 100 characters.")
         return
     }
@@ -55,7 +56,7 @@ $("#save-new-company-btn").click(()=>{
             }
         }, 
         (data, status, xhr)=>{
-            console.log(data)
+            console.error(data)
             drawFormError(errorToString(data.responseJSON))
         }
     )

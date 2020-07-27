@@ -36,6 +36,7 @@ def app_company(request, slug):
             'href':reverse("app-landing"),
         }, {
             'value':company.name,
+            'elementid':'breadcrum-company-name',
         }
     ]
     data = {
