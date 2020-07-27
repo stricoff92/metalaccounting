@@ -107,7 +107,11 @@ function addCompanyToList (companyData) {
     `)
     $(companyDiv).append(companyActionsDiv)
     $("#companies-list").append(companyContainerDiv)
-
+    
+    $(`#open-company-btn-${companyData.slug}`).click(() => {
+        const url = "/app/company/" + companyData.slug + "/"
+        window.location = url
+    })
     $(`#delete-company-btn-${companyData.slug}`).click(() => {
         if(!confirm("Are you sure you want to delete " + companyData.name + "? All associated accounts, periods, and entries will be deleted.")) {
             return
