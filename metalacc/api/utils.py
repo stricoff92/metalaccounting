@@ -26,4 +26,3 @@ def generate_slugs_batch(model, count:int):
             slugs.add(uuid.uuid4().hex[:settings.SLUG_LENGTH])
     
     return slugs
-        
