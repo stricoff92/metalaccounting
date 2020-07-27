@@ -4,7 +4,7 @@ from django.test import TestCase, override_settings
 from api.utils import generate_slugs_batch
 from api.models import Company
 
-class BaseTestBase(TestCase):
+class TestGenerateSlugTestCases(TestCase):
 
     @override_settings(SLUG_LENGTH=4)
     def test_generate_slugs_batch(self):
