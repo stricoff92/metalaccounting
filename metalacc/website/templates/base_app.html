@@ -61,12 +61,23 @@
                         {% for breadcrumb in breadcrumbs %}
                             {% if breadcrumb.href %}
                                 <li class="breadcrumb-item">
-                                    <a href="{{ breadcrumb.href }}">
+                                    <a
+                                        href="{{ breadcrumb.href }}"
+                                        {% if breadcrumb.elementid %}
+                                            id="{{ breadcrumb.elementid }}"
+                                        {% endif %}
+                                    >
                                         {{ breadcrumb.value }}
                                     </a>
                                 </li>
                             {% else %}
-                                <li class="breadcrumb-item active" aria-current="page">
+                                <li 
+                                    class="breadcrumb-item active"
+                                    aria-current="page"
+                                    {% if breadcrumb.elementid %}
+                                        id="{{ breadcrumb.elementid }}"
+                                    {% endif %}
+                                >
                                     {{ breadcrumb.value }}
                                 </li>
                             {% endif %}

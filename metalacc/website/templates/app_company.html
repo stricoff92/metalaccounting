@@ -1,8 +1,84 @@
 {% extends 'base_app.html' %} 
 {% block 'body' %}
 <div>
-    <div>
-        <p class="heading-1">Company: {{ company.name }}</p>
+    <div id="company-name-container" class="mb-3">
+        <span class="heading-1" id="page-title-company-name">
+            Company: {{ company.name }}
+        </span>
+        <button class="btn btn-primary" id="open-edit-company-form-btn">
+            <i class="fas fa-pen"></i> Edit
+        </button>
+    </div>
+    <div style="display:none;" id="edit-company-name-form-container" class="mb-3">
+        <div class="card p-2">
+            <p class="heading-2">Edit Company Name</p>
+            <div
+                id="edit-company-form-errors"
+                class="mt-2 mb-2 p-2 alert alert-danger"
+                style="display:none"
+            >
+            </div>
+            <input
+                id="edit-company-name-field"
+                type="text"
+                class="form-control text-input-max-400"
+                value="{{ company.name }}"
+            >
+            <div class="mt-3">
+                <button class="btn btn-success" id="save-company-name-btn">
+                    <i class="fas fa-save"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+$("#open-edit-company-form-btn").click(()=>{
+    $("#company-name-container").css("display", "none")
+    $("#edit-company-name-form-container").css("display", "block")
+    $("#edit-company-name-field").focus()
+})
+function drawEditCompanyFormError(error) {
+    $("#edit-company-form-errors").text(error)
+    $("#edit-company-form-errors").css("display", "block")
+}
+$("#save-company-name-btn").click(()=>{
+    $("#edit-company-form-errors").html("")
+    $("#edit-company-form-errors").css("display", "none")
+    const companyName = $("#edit-company-name-field").val()
+    if(companyName.length < 3 || companyName.length > 100) {
+        return drawEditCompanyFormError(
+            "Company name must be between 3 and 100 characters.")
+    }
+    const url = companyEditUrl("{{ company.slug }}")
+    const data = {name:companyName}
+    postJson(url, data, 
+        (data, status, xhr)=>{
+            if (xhr.status == 200) {
+                $("#page-title-company-name").text("Company: " + data.name)
+                $("#edit-company-name-field").attr("value", data.name)
+                $("#breadcrum-company-name").text(data.name)
+                $("#edit-company-name-form-container").css("display", "none")
+                $("#company-name-container").css("display", "block")
+            } else {
+                drawEditCompanyFormError("An error occured.")
+            }
+        },
+        (data, status, xhr)=>{
+            console.error(data)
+            drawEditCompanyFormError(errorToString(data.responseJSON))
+        }
+    )
+})
+</script>
+<div>
+    <div class="card">
+        <div class="card-header">
+            Company Information
+        </div>
+        <div class="card-body">
+
+        </div>
     </div>
 </div>
 {% endblock %}
