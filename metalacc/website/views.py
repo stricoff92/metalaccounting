@@ -16,9 +16,22 @@ def anon_landing(request):
 
 
 @login_required
+def app_main_menu(request):
+    data = {
+        'skip_moment_import':True,
+    }
+    return render(request, "app_main_menu.html", data)
+
+
+@login_required
 def app_landing(request):
     breadcrumbs = [
-        {'value':'companies'},
+        {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
+            'value':'companies',
+        },
     ]
     data = {
         'skip_moment_import':True,
@@ -35,6 +48,9 @@ def app_company(request, slug):
     journal_entry_count = JournalEntry.objects.filter(period__company=company).count()
     breadcrumbs = [
         {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
             'value':'companies',
             'href':reverse("app-landing"),
         }, {
@@ -49,13 +65,24 @@ def app_company(request, slug):
         'period_count':period_count,
         'journal_entry_count':journal_entry_count,
     }
-    print(data)
     return render(request, "app_company.html", data)
 
 
 @login_required
 def app_profile(request):
-    return render(request, "app_profile.html", {'skip_moment_import':True})
+    breadcrumbs = [
+        {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
+            'value':'settings',
+        },
+    ]
+    data = {
+        'breadcrumbs':breadcrumbs,
+        'skip_moment_import':True,
+    }
+    return render(request, "app_profile.html", data)
 
 
 def login_user(request):
