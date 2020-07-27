@@ -65,6 +65,7 @@ $("#save-company-name-btn").click(()=>{
             }
         },
         (data, status, xhr)=>{
+            console.error(data)
             drawEditCompanyFormError(errorToString(data.responseJSON))
         }
     )
