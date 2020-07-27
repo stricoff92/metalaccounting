@@ -97,6 +97,36 @@ def app_company_accounts(request, slug):
 
 
 @login_required
+def app_account_details(request, slug):
+    account = get_object_or_404(
+        Account, company__user=request.user, slug=slug)
+    company = account.company
+
+    breadcrumbs = [
+        {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
+            'value':'companies',
+            'href':reverse("app-landing"),
+        }, {
+            'value':company.name,
+            'href':reverse("app-company", kwargs={'slug':company.slug}),
+        }, {
+            'value':'accounts',
+            'href':reverse("app-accounts", kwargs={'slug':company.slug}),
+        }, {
+            'value':account.name,
+        }
+    ]
+    data = {
+        'account':account,
+        'breadcrumbs':breadcrumbs,
+    }
+    return render(request, "app_account_details.html", data)
+
+
+@login_required
 def app_company_add_default_accounts(request, slug):
     company = get_object_or_404(
         Company, user=request.user, slug=slug)
@@ -192,3 +222,6 @@ def register(request):
 def logout_user(request):
     logout(request)
     return redirect("anon-landing")
+
+def handler404(request, *args, **argv):
+    return render(request, "404.html", {})

@@ -1,4 +1,6 @@
 
+import datetime as dt
+
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from rest_framework import status
@@ -374,6 +376,33 @@ class AccountViewTests(BaseTestBase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Account.objects.count(), 0)
+
+
+    def test_that_a_user_cant_delete_their_own_account_if_its_used_by_a_journal_entry(self):
+        """ Test that a user cant delete their own account if the account
+            is being used by an existing journal entry.
+        """
+        period = self.factory.create_period(
+            self.company, dt.date(2020, 1 , 1), dt.date(2020, 3 , 31))
+        account1 = self.factory.create_account(
+            self.company, 'cash', Account.TYPE_ASSET, 1500,
+            is_current=True, is_contra=False)
+        account2 = self.factory.create_account(
+            self.company, 'A/P', Account.TYPE_LIABILITY, 2500,
+            is_current=True, is_contra=False)
+        je = self.factory.create_journal_entry(
+            period, dt.date(2020, 1, 30), memo="foobar")
+        self.factory.create_journal_entry_line(
+            je, account1, 'd', 50000)
+        self.factory.create_journal_entry_line(
+            je, account2, 'c', 50000)
+    
+        self.assertEqual(Account.objects.count(), 2)
+        url = reverse("account-delete", kwargs={'slug':account1.slug})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Account.objects.count(), 2)
+        self.assertEqual(response.data, "Cannot Delete. This account is referenced by a journal entry.")
 
 
     def test_that_a_user_cant_delete_other_users_account(self):

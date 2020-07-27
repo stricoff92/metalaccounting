@@ -51,6 +51,7 @@
 <script>
 function addAccountToList(accountData) {
     const accountRowDiv = document.createElement("div");
+    $(accountRowDiv).attr("id", `account-row-${accountData.slug}`)
     $(accountRowDiv).addClass(['card', 'p-2', 'mt-1'])
 
     const accountRowInnerDivTop = document.createElement("div");
@@ -64,11 +65,15 @@ function addAccountToList(accountData) {
             (${accountData.number})
         </div>
         <div style="display:flex; flex-wrap:nowrap;">
-            <button class="btn btn-success">
+            <button class="btn btn-success" onclick="window.location='/app/account/${accountData.slug}/'">
                 <i class="fas fa-hand-point-right"></i>
                 Open
             </button>
-            <button class="btn btn-danger">
+            <button
+                class="btn btn-danger"
+                id="delete-account-${accountData.slug}-btn"
+                ${accountData.has_entries ? 'disabled' : ''}
+            >
                 <i class="fas fa-trash-alt"></i>
                 Delete
             </button>
@@ -86,9 +91,26 @@ function addAccountToList(accountData) {
         `)
     }
     $(accountRowDiv).append(accountRowInnerDivBottom)
-
     $("#accounts-list").append(accountRowDiv)
     $(`#account-name-span-${accountData.slug}`).text(accountData.name)
+
+    if(!accountData.has_entries) {
+        $(`#delete-account-${accountData.slug}-btn`).click(()=>{
+            const url = accountDeleteUrl(accountData.slug)
+            const data = {}
+            postJson(url, data, 
+                (data, status, xhr)=>{
+                    if(xhr.status == 204) {
+                        return $(`#account-row-${accountData.slug}`).remove()
+                    }
+                    alert("An Error Occured: " + status)
+                },
+                (data, status, xhr)=>{
+                    alert("An Error Occured: " + status)
+                    console.error(data)
+                })
+        })
+    }
 }
 $(document).ready(()=>{
     const url = "{% url 'account-list' %}?company={{ company.slug }}"

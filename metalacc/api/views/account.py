@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from api.models import Company, Account
+from api.models import Company, Account, JournalEntryLine
 from api.forms.account import NewAccountForm, EditAccountForm
 from api.forms.company import CompanySelectionForm
 from api.utils import is_valid_slug
@@ -26,12 +26,26 @@ def account_list(request):
     company = get_object_or_404(Company, user=request.user, slug=company_slug)
 
     account_fields = (
-        "slug", "number", "name", "type", 
+        "id", "slug", "number", "name", "type", 
         "is_current", "is_contra")
-    accounts = (Account.objects
+    accounts = list((Account.objects
         .filter(company=company)
         .order_by("number")
-        .values(*account_fields))
+        .values(*account_fields)))
+
+    account_ids = [a['id'] for a in accounts]
+    account_ids_with_entries = set(JournalEntryLine.objects
+        .filter(account_id__in=account_ids)
+        .values_list("account_id", flat=True))
+    
+    for ix, account in enumerate(accounts):
+        # Add has_entries field
+        accounts[ix]['has_entries'] = account['id'] in account_ids_with_entries
+
+        # Remove id field
+        accounts[ix] = {
+            k:v for k,v in account.items() if k != "id"}
+    
     return Response(accounts, status.HTTP_200_OK)
 
 
@@ -134,5 +148,9 @@ def account_edit(request, slug):
 @permission_classes([IsAuthenticated])
 def account_delete(request, slug):
     account = get_object_or_404(Account, slug=slug, user=request.user)
+    if account.journalentryline_set.exists():
+        return Response(
+            "Cannot Delete. This account is referenced by a journal entry.",
+            status.HTTP_400_BAD_REQUEST)
     account.delete()
     return Response({}, status.HTTP_204_NO_CONTENT)
