@@ -69,11 +69,31 @@ def account_new(request):
         return Response(
             "user cannot add additional accounts", status.HTTP_400_BAD_REQUEST)
 
-    duplicate_accounts = Account.objects.filter(
-        name=form.cleaned_data['name'], number=form.cleaned_data['number'],
-        company=company, user=request.user)
-    if duplicate_accounts.exists():
-        return Response('duplicate account found', status.HTTP_400_BAD_REQUEST)
+    # Check for duplicate name/number combinations.
+    duplicate_account_names = Account.objects.filter(
+        name=form.cleaned_data['name'], company=company)
+    if duplicate_account_names.exists():
+        return Response('An account with that name already exists', status.HTTP_409_CONFLICT)
+
+    duplicate_account_number = Account.objects.filter(
+        number=form.cleaned_data['number'], company=company)
+    if duplicate_account_number.exists():
+        return Response('An account with that number already exists', status.HTTP_409_CONFLICT)
+    
+
+    # Verify non null is_current value is appropriate
+    is_current = form.cleaned_data.get('is_current')
+    account_type = form.cleaned_data.get('type')
+    if account_type in Account.CURRENT_TYPES:
+        if is_current is None:
+            return Response(
+                f"is_current cannot be null for type {account_type}",
+                status.HTTP_400_BAD_REQUEST)
+    else:
+        if is_current is not None:
+            return Response(
+                f"is_current must be null for type {account_type}",
+                status.HTTP_400_BAD_REQUEST)
 
 
     account = form.save(commit=False)
@@ -86,6 +106,7 @@ def account_new(request):
 
     data = {
         'name':account.name,
+        'slug':account.slug,
         'number':account.number,
         'type':account.type,
         'is_contra':account.is_contra,

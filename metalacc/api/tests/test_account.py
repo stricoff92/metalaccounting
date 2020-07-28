@@ -257,9 +257,9 @@ class AccountViewTests(BaseTestBase):
         self.assertEqual(Account.objects.count(), 1)
 
 
-    def test_user_cannot_create_duplicate_accounts(self):
+    def test_user_cannot_create_duplicate_named_accounts(self):
         """ Test that a user cannot create an account with the exact same
-            name, number company
+            name and company
         """
         self.assertEqual(Account.objects.count(), 0)
         url = reverse("account-new")
@@ -275,9 +275,37 @@ class AccountViewTests(BaseTestBase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Account.objects.count(), 1)
 
+        data['number'] += 1
         response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
         self.assertEqual(Account.objects.count(), 1)
+        self.assertEqual(response.data, "An account with that name already exists")
+
+
+    def test_user_cannot_create_duplicate_numbered_accounts(self):
+        """ Test that a user cannot create an account with the exact same
+            number and company
+        """
+        self.assertEqual(Account.objects.count(), 0)
+        url = reverse("account-new")
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_ASSET,
+            'is_contra':False,
+            'is_current':True,
+            'number':1500,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Account.objects.count(), 1)
+
+        data['name'] = "foobar2"
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(Account.objects.count(), 1)
+        self.assertEqual(response.data, "An account with that number already exists")
+
 
     def test_that_a_user_can_edit_their_own_account(self):
         """ Test that a user can edit their own account

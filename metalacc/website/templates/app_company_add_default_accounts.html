@@ -48,11 +48,10 @@
 <script>
 $(document).ready(()=>{
     $(".save-default-accounts").click(()=>{
-        const url = "{% url 'account-add-default-accounts' %}"
         const data = {
             company:"{{ company.slug }}",
         }
-        postJson(url, data, 
+        postJson(addDefaultAccountsUrl, data, 
             (data, status, xhr)=>{
                 if(xhr.status == 201) {
                     window.location = "/app/company/{{ company.slug }}/account/"

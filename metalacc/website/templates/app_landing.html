@@ -42,7 +42,7 @@ $("#open-new-company-form-btn").click(()=>{
 $("#save-new-company-btn").click(()=>{
     $("#new-company-form-errors").css("display", "none")
     $("#new-company-form-errors").html("")
-    const newCompanyName = $("#new-company-name-field").val()
+    const newCompanyName = $("#new-company-name-field").val().trim()
     if(newCompanyName.length < 3 || newCompanyName.length > 100) {
         drawFormError("Company name must be between 3 and 100 characters.")
         return

@@ -13,18 +13,209 @@
     <div id="new-company-form" style="display:none" class="card mt-4 mb-3 p-3">
         <p class="heading-2">Create a New Account</p>
         <div
-            id="new-company-form-errors"
+            id="new-account-form-errors"
             class="mt-2 mb-2 p-2 alert alert-danger"
             style="display:none"
         >
+            An Error Occured
         </div>
+        <div class="mt-2">
+            <p class="mb-1"><strong>Account Name</strong></p>
+            <div
+                id="new-account-form-name-errors"
+                class="mt-2 p-2 alert alert-danger"
+                style="display:none;"
+            >
+            </div>
+            <input type="text" class="form-control text-input-max-400" id="new-account-name-input">
+        </div>
+
+        <div class="mt-2">
+            <p class="mb-1"><strong>Account Number</strong></p>
+            <div
+                id="new-account-form-number-errors"
+                class="mt-2 p-2 alert alert-danger"
+                style="display:none;"
+            >
+            </div>
+            <input type="number" class="form-control text-input-max-400" id="new-account-number-input">
+        </div>
+
+        <div class="mt-2">
+            <p class="mb-1">
+                <strong>Account Type</strong>
+                <i class="fas fa-question-circle"></i>
+            </p>
+            <select class="form-control text-input-max-400" id="new-account-type-input">
+                <option value="asset" selected>
+                    Asset
+                </option>
+                <option value="liability">
+                    Liability
+                </option>
+                <option value="equity">
+                    Equity
+                </option>
+                <option value="revenue">
+                    Revenue
+                </option>
+                <option value="expense">
+                    Expense
+                </option>
+            </select>
+        </div>
+
         <div class="mt-3">
-            <button class="btn btn-success" id="save-new-account-btn">
-                <i class="fas fa-save"></i> Save
+            <p class="mb-1">
+                <strong>Current or Non-Current Account</strong>
+                <i class="fas fa-question-circle"></i>
+            </p>
+            <div class="form-check">
+                <input 
+                    class="form-check-input"
+                    type="radio"
+                    name="current-type-account-selection"
+                    id="current-account-input"
+                    value="is-current"
+                    checked
+                >
+                <label class="form-check-label" for="current-account-input">
+                    Current
+                </label>
+            </div>
+            <div class="form-check">
+                <input 
+                    class="form-check-input"
+                    type="radio"
+                    name="current-type-account-selection"
+                    id="non-current-account-input"
+                    value="is-non-current"
+                >
+                <label class="form-check-label" for="non-current-account-input">
+                    Non-Current
+                </label>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <p class="mb-1">
+                <strong>Contra Account</strong>
+                <i class="fas fa-question-circle"></i>
+            </p>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="new-account-is-contra-input">
+                <label class="form-check-label" for="new-account-is-contra-input">
+                    Is Contra Account
+                </label>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button class="btn btn-success save-new-account-btn">
+                <i class="fas fa-save"></i>
+                Save
+            </button>
+            <button class="btn btn-success save-new-account-btn ml-2" clearform="true">
+                <i class="fas fa-save"></i>
+                Save and add another
             </button>
         </div>
     </div>
 </div>
+<script>
+function resetNewAccountFormErrors() {
+    $("#new-account-form-name-errors").css("display", "none")
+    $("#new-account-form-number-errors").css("display", "none")
+}
+function addNewAccountFormNameError(error) {
+    $("#new-account-form-name-errors").css("display", "block")
+    $("#new-account-form-name-errors").text(error)
+}
+function addNewAccountFormNumberError(error) {
+    $("#new-account-form-number-errors").css("display", "block")
+    $("#new-account-form-number-errors").text(error)
+}
+function addNewAccountFormAPIError(error) {
+    $("#new-account-form-errors").css("display", "block")
+    $("#new-account-form-errors").text(error)
+}
+$(document).ready(()=>{
+    $('#open-new-account-form-btn').click(()=>{
+        $('#open-new-account-form-btn').prop('disabled', true)
+        $("#new-company-form").slideDown(350)
+    })
+    $('#new-account-type-input').change((e)=>{
+        const newAccountType = $('#new-account-type-input').val()
+        if(['asset', 'liability'].indexOf(newAccountType) != -1) {
+            $("#current-account-input").prop("disabled", false)
+            $("#non-current-account-input").prop("disabled", false)
+            if(!$("#current-account-input").prop("checked") && !$("#non-current-account-input").prop("checked")) {
+                $("#current-account-input").prop("checked", true)
+            }
+        } else {
+            $("#current-account-input").prop("checked", false)
+            $("#non-current-account-input").prop("checked", false)
+            $("#current-account-input").prop("disabled", true)
+            $("#non-current-account-input").prop("disabled", true)
+        }
+    })
+    $(".save-new-account-btn").click((event)=>{
+        const clearForm = !!$(event.target).attr("clearform")
+        resetNewAccountFormErrors()
+        $("#new-account-form-errors").html("")
+        $("#new-account-form-errors").css("display", "none")
+        
+        const newAccountName = $("#new-account-name-input").val().trim()
+        const newAccountNumber = parseInt($("#new-account-number-input").val())
+        const newAccountType = $("#new-account-type-input").val()
+        const isCurrent = ['asset', 'liability'].indexOf(newAccountType) != -1 ? $("#current-account-input").prop("checked") : null
+        const isContra = $("#new-account-is-contra-input").prop("checked")
+        
+        let foundError = false
+        if(newAccountName.length < 3 || newAccountName.length > 100) {
+            foundError = true
+            addNewAccountFormNameError(
+                "Account name must be between 3 and 100 characters.")
+        }
+        if(isNaN(newAccountNumber) || newAccountNumber < 1) {
+            foundError = true
+            addNewAccountFormNumberError(
+                "Account number is invalid. It must be a positive number.")
+        }
+        if(foundError) {
+            return
+        }
+
+        const url = accountNewUrl
+        const data = {
+            company:"{{ company.slug }}",
+            name:newAccountName,
+            type:newAccountType,
+            number:newAccountNumber,
+            is_current:isCurrent,
+            is_contra:isContra,
+        }
+        postJson(accountNewUrl, data, 
+            (data, status, xhr)=>{
+                if(xhr.status != 201) {
+                    return alert("An Error Occured: " + status)
+                }
+                if (clearForm) {
+                    $("#no-accounts-yet-msg").css("display", "none")
+                    $("#new-account-name-input").val("")
+                    $("#new-account-number-input").val("")
+                    $("#new-account-is-contra-input").prop("checked", false)
+                    addAccountToList(data)
+                } else {
+                    window.location = "/app/account/" + data.slug + "/"
+                }
+            },
+            (data, status, xhr)=>{
+                addNewAccountFormAPIError(errorToString(data.responseJSON))
+            })
+    })
+})
+</script>
 
 <div id="accounts-list" class="mt-3 mb-3">
     <div class="alert alert-info" id="no-accounts-yet-msg" style="display:none;">
@@ -104,6 +295,7 @@ function addAccountToList(accountData) {
                         return $(`#account-row-${accountData.slug}`).remove()
                     }
                     alert("An Error Occured: " + status)
+                    console.error(data)
                 },
                 (data, status, xhr)=>{
                     alert("An Error Occured: " + status)

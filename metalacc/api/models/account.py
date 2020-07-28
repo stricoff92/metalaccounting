@@ -99,7 +99,8 @@ class Account(models.Model):
     
     class Meta:
         unique_together = (
-            ('user', 'company', 'name', 'number'),
+            ('company', 'name',),
+            ('company', 'number',),
         )
 
 
