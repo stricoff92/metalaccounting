@@ -1,10 +1,13 @@
 
+import datetime as dt
+
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from rest_framework import status
 
 from .base import BaseTestBase
 from api.models import Company, Account
+from api.models.account import DEFAULT_ACCOUNTS
 
 
 class AccountViewTests(BaseTestBase):
@@ -254,9 +257,9 @@ class AccountViewTests(BaseTestBase):
         self.assertEqual(Account.objects.count(), 1)
 
 
-    def test_user_cannot_create_duplicate_accounts(self):
+    def test_user_cannot_create_duplicate_named_accounts(self):
         """ Test that a user cannot create an account with the exact same
-            name, number company
+            name and company
         """
         self.assertEqual(Account.objects.count(), 0)
         url = reverse("account-new")
@@ -272,9 +275,37 @@ class AccountViewTests(BaseTestBase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Account.objects.count(), 1)
 
+        data['number'] += 1
         response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
         self.assertEqual(Account.objects.count(), 1)
+        self.assertEqual(response.data, "An account with that name already exists")
+
+
+    def test_user_cannot_create_duplicate_numbered_accounts(self):
+        """ Test that a user cannot create an account with the exact same
+            number and company
+        """
+        self.assertEqual(Account.objects.count(), 0)
+        url = reverse("account-new")
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_ASSET,
+            'is_contra':False,
+            'is_current':True,
+            'number':1500,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Account.objects.count(), 1)
+
+        data['name'] = "foobar2"
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(Account.objects.count(), 1)
+        self.assertEqual(response.data, "An account with that number already exists")
+
 
     def test_that_a_user_can_edit_their_own_account(self):
         """ Test that a user can edit their own account
@@ -375,6 +406,33 @@ class AccountViewTests(BaseTestBase):
         self.assertEqual(Account.objects.count(), 0)
 
 
+    def test_that_a_user_cant_delete_their_own_account_if_its_used_by_a_journal_entry(self):
+        """ Test that a user cant delete their own account if the account
+            is being used by an existing journal entry.
+        """
+        period = self.factory.create_period(
+            self.company, dt.date(2020, 1 , 1), dt.date(2020, 3 , 31))
+        account1 = self.factory.create_account(
+            self.company, 'cash', Account.TYPE_ASSET, 1500,
+            is_current=True, is_contra=False)
+        account2 = self.factory.create_account(
+            self.company, 'A/P', Account.TYPE_LIABILITY, 2500,
+            is_current=True, is_contra=False)
+        je = self.factory.create_journal_entry(
+            period, dt.date(2020, 1, 30), memo="foobar")
+        self.factory.create_journal_entry_line(
+            je, account1, 'd', 50000)
+        self.factory.create_journal_entry_line(
+            je, account2, 'c', 50000)
+    
+        self.assertEqual(Account.objects.count(), 2)
+        url = reverse("account-delete", kwargs={'slug':account1.slug})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Account.objects.count(), 2)
+        self.assertEqual(response.data, "Cannot Delete. This account is referenced by a journal entry.")
+
+
     def test_that_a_user_cant_delete_other_users_account(self):
         """ Test that a user cant delete another users account
         """
@@ -387,4 +445,53 @@ class AccountViewTests(BaseTestBase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(Account.objects.count(), 1)
+
+
+    def test_user_can_add_default_accounts(self):
+        """ Test that a user can add default accounts to their own company if they dont
+            already have any accounts associated with the company
+        """
+        self.assertEqual(self.company.account_set.count(), 0)
+        url = reverse("account-add-default-accounts")
+        data = {
+            'company':self.company.slug
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.company.account_set.count(), len(DEFAULT_ACCOUNTS))
+
+
+    def test_user_cant_add_default_accounts_to_a_company_if_the_company_already_has_accounts(self):
+        """ Test that a user cant add default accounts to their own company if the company
+            already has accounts associated
+        """
+        self.factory.create_account(
+            self.company, 'cash', 'asset', 1000, is_current=True, is_contra=False)
+        self.assertEqual(self.company.account_set.count(), 1)
     
+        url = reverse("account-add-default-accounts")
+        data = {
+            'company':self.company.slug
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, "this company already has accounts associated")
+
+
+    def test_user_cant_add_default_accounts_to_another_users_company(self):
+        """ Test that a user cant add default accounts to another user's company
+        """
+        self.assertEqual(self.other_company.account_set.count(), 0)
+        url = reverse("account-add-default-accounts")
+        data = {
+            'company':self.other_company.slug
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+    def test_default_account_names_and_numbers_are_unique(self):
+        numbers = [r[3] for r in DEFAULT_ACCOUNTS]
+        names = [r[4] for r in DEFAULT_ACCOUNTS]
+        self.assertEqual(len(numbers), len(set(numbers)))
+        self.assertEqual(len(names), len(set(names)))

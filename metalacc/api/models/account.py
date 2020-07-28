@@ -38,17 +38,18 @@ DEFAULT_ACCOUNTS = (
     ('revenue', None, False, 4100, 'Sales Revenue',),
     ('revenue', None, False, 4200, 'Consulting Revenue',),
     ('revenue', None, False, 4300, 'Fee Revenue',),
-    ('revenue', None, True,  4400, 'Discounts',),
-    ('revenue', None, False,  4400, 'Gains',),
+    ('revenue', None, True, 4400, 'Discounts',),
+    ('revenue', None, False, 4450, 'Gains',),
 
     ('expense', None, False, 5100, 'CoGS',),
     ('expense', None, False, 5200, 'Wages Expenses',),
     ('expense', None, False, 5300, 'Tax Expenses',),
+    ('expense', None, False, 5350, 'Interest Expenses',),
     ('expense', None, False, 5400, 'Insurance Expenses',),
     ('expense', None, False, 5500, 'Fee Expenses',),
     ('expense', None, False, 5600, 'Rent Expenses',),
     ('expense', None, False, 5700, 'Office Supplies Expenses',),
-    ('expense', None, False,  4400, 'Loses',),
+    ('expense', None, False,  5800, 'Loses',),
 )
 
 
@@ -98,7 +99,8 @@ class Account(models.Model):
     
     class Meta:
         unique_together = (
-            ('user', 'company', 'name', 'number'),
+            ('company', 'name',),
+            ('company', 'number',),
         )
 
 

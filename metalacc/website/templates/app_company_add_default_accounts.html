@@ -1,0 +1,67 @@
+{% extends 'base_app.html' %} 
+{% block 'body' %}
+<div>
+    <p class="heading-1">Add Default Accounts</p>
+    <p class="heading-2">{{ company.name }}</p>
+</div>
+<style>
+    td, th {
+        padding:7px;
+    }
+</style>
+<div>
+    <button class="btn btn-success save-default-accounts">
+        <i class="fas fa-save"></i>
+        Save Accounts
+    </button>
+</div>
+<div class="mt-3">
+    <table>
+        <tr>
+            <th>Type</th>
+            <th>Name</th>
+            <th>Number</th>
+            <th>Contra Account</th>
+            <th>Current Account</th>
+        </tr>
+        {% for default_account in default_accounts %}
+            <tr>
+                <td>{{ default_account.type }}</td>
+                <td>{{ default_account.name }}</td>
+                <td>{{ default_account.number }}</td>
+                <td>{{ default_account.is_contra }}</td>
+                <td>
+                    {% if default_account.is_current != None %}
+                        {{ default_account.is_current }}
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+</div>
+<div class="mt-3 mb-3">
+    <button class="btn btn-success save-default-accounts">
+        <i class="fas fa-save"></i>
+        Save Accounts
+    </button>
+</div>
+<script>
+$(document).ready(()=>{
+    $(".save-default-accounts").click(()=>{
+        const data = {
+            company:"{{ company.slug }}",
+        }
+        postJson(addDefaultAccountsUrl, data, 
+            (data, status, xhr)=>{
+                if(xhr.status == 201) {
+                    window.location = "/app/company/{{ company.slug }}/account/"
+                    return
+                }
+                alert("An Error Occured")
+            },
+            ()=>{alert("An Error Occured")}
+        )
+    })
+})
+</script>
+{% endblock %}

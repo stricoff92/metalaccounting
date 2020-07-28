@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.http import HttpResponseNotAllowed
 
 from api.models import Company, Account, Period, JournalEntry
+from api.models.account import DEFAULT_ACCOUNTS
 from website.forms import LoginForm
 
 
@@ -70,6 +71,101 @@ def app_company(request, slug):
 
 
 @login_required
+def app_company_accounts(request, slug):
+    company = get_object_or_404(
+        Company, user=request.user, slug=slug)
+
+    breadcrumbs = [
+        {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
+            'value':'companies',
+            'href':reverse("app-landing"),
+        }, {
+            'value':company.name,
+            'href':reverse("app-company", kwargs={'slug':company.slug}),
+        }, {
+            'value':'accounts',
+        }
+    ]
+    data = {
+        'company':company,
+        'breadcrumbs':breadcrumbs,
+    }
+    return render(request, "app_company_accounts.html", data)
+
+
+@login_required
+def app_account_details(request, slug):
+    account = get_object_or_404(
+        Account, company__user=request.user, slug=slug)
+    company = account.company
+
+    breadcrumbs = [
+        {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
+            'value':'companies',
+            'href':reverse("app-landing"),
+        }, {
+            'value':company.name,
+            'href':reverse("app-company", kwargs={'slug':company.slug}),
+        }, {
+            'value':'accounts',
+            'href':reverse("app-accounts", kwargs={'slug':company.slug}),
+        }, {
+            'value':account.name,
+        }
+    ]
+    data = {
+        'account':account,
+        'breadcrumbs':breadcrumbs,
+    }
+    return render(request, "app_account_details.html", data)
+
+
+@login_required
+def app_company_add_default_accounts(request, slug):
+    company = get_object_or_404(
+        Company, user=request.user, slug=slug)
+    
+    if company.account_set.exists():
+        return redirect('app-accounts', slug=company.slug)
+
+    breadcrumbs = [
+        {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
+            'value':'companies',
+            'href':reverse("app-landing"),
+        }, {
+            'value':company.name,
+            'href':reverse("app-company", kwargs={'slug':company.slug}),
+        }, {
+            'value':'default accounts',
+        }
+    ]
+    default_accounts = [
+        {
+            'type':a[0],
+            'is_current':a[1],
+            'is_contra':a[2],
+            'number':a[3],
+            'name':a[4],
+        } for a in DEFAULT_ACCOUNTS
+    ]
+    data = {
+        'company':company,
+        'breadcrumbs':breadcrumbs,
+        'default_accounts':sorted(default_accounts, key=lambda r:r['number']),
+    }
+    return render(request, "app_company_add_default_accounts.html", data)
+
+
+@login_required
 def app_profile(request):
     breadcrumbs = [
         {
@@ -126,3 +222,6 @@ def register(request):
 def logout_user(request):
     logout(request)
     return redirect("anon-landing")
+
+def handler404(request, *args, **argv):
+    return render(request, "404.html", {})
