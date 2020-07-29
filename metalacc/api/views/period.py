@@ -50,7 +50,7 @@ def period_new(request):
         Q(company=company)
         & _get_date_conflict_Q(period.start, period.end))
     if conflicting_periods.exists():
-        return Response('start/end conflict', status.HTTP_400_BAD_REQUEST)
+        return Response('start/end conflict', status.HTTP_409_CONFLICT)
     
     # Save to the database.
     period.save()
@@ -89,7 +89,7 @@ def period_edit(request, slug):
         Q(company=company)
         & _get_date_conflict_Q(new_start, new_end))
     if conflicting_periods.exclude(id=period.id).exists():
-        return Response('start/end conflict', status.HTTP_400_BAD_REQUEST)
+        return Response('start/end conflict', status.HTTP_409_CONFLICT)
     
     period = form.save()
     data = {
