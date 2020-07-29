@@ -106,11 +106,11 @@ class Account(models.Model):
 
     def __str__(self):
         return f"<Account {self.pk} {self.type}-{self.name} ({self.user})>"
-    
+
 
     @property
-    def is_default(self):
-        return self.user is None
+    def supports_is_current(self):
+        return self.type in self.CURRENT_TYPES
 
 
     def save(self, *args, **kwargs):
