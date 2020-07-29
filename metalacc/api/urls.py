@@ -20,6 +20,7 @@ urlpatterns = [
     path('company/delete/<slug:slug>/', views.company_delete, name="company-delete"),
 
     # Period Routes
+    path('period/list/', views.period_list, name="period-list"),
     path('period/new/', views.period_new, name="period-new"),
     path('period/edit/<slug:slug>/', views.period_edit, name="period-edit"),
     path('period/delete/<slug:slug>/', views.period_delete, name="period-delete"),
