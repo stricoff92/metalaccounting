@@ -7,4 +7,5 @@
     const profileEditUrl = "/api/v1/userprofile/{{ user.userprofile.slug }}/"
     const accountDeleteUrl = (slug) => "/api/v1/account/delete/" + slug + "/"
     const accountNewUrl = "{% url 'account-new' %}"
+    const accountEditUrl = (slug) => "/api/v1/account/edit/" + slug + "/"
 </script>

@@ -329,6 +329,40 @@ class AccountViewTests(BaseTestBase):
         self.assertFalse(account.is_current)
 
 
+    def test_that_is_current_is_required_for_asset_accounts(self):
+        """ Test that is_current is required for asset accounts
+        """
+        account = self.factory.create_account(
+            self.company, 'foobar', Account.TYPE_ASSET, 1500,
+            is_current=True, is_contra=False)
+        
+        url = reverse("account-edit", kwargs={'slug':account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1900,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, "is_current cannot be null for type asset")
+
+
+    def test_that_is_current_is_required_for_liability_accounts(self):
+        """ Test that is_current is required for asset accounts
+        """
+        account = self.factory.create_account(
+            self.company, 'a/p', Account.TYPE_LIABILITY, 2500,
+            is_current=True, is_contra=False)
+        
+        url = reverse("account-edit", kwargs={'slug':account.slug})
+        data = {
+            "name":"a/p",
+            "number":2700,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, "is_current cannot be null for type liability")
+
+
     def test_that_a_user_can_edit_their_own_temporary_account(self):
         """ Test that a user can edit their own account
         """
@@ -350,8 +384,8 @@ class AccountViewTests(BaseTestBase):
         self.assertIsNone(account.is_current)
 
 
-    def test_that_a_user_cant_attach_is_current_value_to_temporary_accounts(self):
-        """ Test that a user cant attach an is_current value to a non current account
+    def test_that_a_user_cant_attach_is_current_value_to_revenue_accounts(self):
+        """ Test that a user cant attach an is_current value to revenue account
         """
         account = self.factory.create_account(
             self.company, 'foobar', Account.TYPE_REVENUE, 1500,
@@ -365,10 +399,83 @@ class AccountViewTests(BaseTestBase):
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, "is_current must be null for type revenue")
 
-        data['is_current'] = False
+
+    def test_that_a_user_cant_attach_is_current_value_to_expense_accounts(self):
+        """ Test that a user cant attach an is_current value to expense account
+        """
+        account = self.factory.create_account(
+            self.company, 'foobar', Account.TYPE_EXPENSE, 1500,
+            is_current=None, is_contra=False)
+        
+        url = reverse("account-edit", kwargs={'slug':account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1900,
+            "is_current":False,
+        }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, "is_current must be null for type expense")
+
+
+    def test_that_a_user_cant_attach_is_current_value_to_equity_accounts(self):
+        """ Test that a user cant attach an is_current value to equity account
+        """
+        account = self.factory.create_account(
+            self.company, 'foobar', Account.TYPE_EQUITY, 1500,
+            is_current=None, is_contra=False)
+        
+        url = reverse("account-edit", kwargs={'slug':account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1900,
+            "is_current":False,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, "is_current must be null for type equity")
+
+
+    def test_that_a_user_cant_edit_an_account_to_have_the_same_name_as_an_existing_account(self):
+        """ Test that a user cant edit an account name to have the same name as an existing account
+        """
+        account1 = self.factory.create_account(
+            self.company, 'foobar1', Account.TYPE_EQUITY, 1500,
+            is_current=None, is_contra=False)
+        account2 = self.factory.create_account(
+            self.company, 'foobar2', Account.TYPE_EQUITY, 1600,
+            is_current=None, is_contra=False)
+
+        url = reverse("account-edit", kwargs={'slug':account1.slug})
+        data = {
+            "name":"foobar2",
+            "number":1500,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.data, "An account with that name already exists")
+
+
+    def test_that_a_user_cant_edit_an_account_to_have_the_same_number_as_an_existing_account(self):
+        """ Test that a user cant edit an account number to have the same number as an existing account
+        """
+        account1 = self.factory.create_account(
+            self.company, 'foobar1', Account.TYPE_EQUITY, 1500,
+            is_current=None, is_contra=False)
+        account2 = self.factory.create_account(
+            self.company, 'foobar2', Account.TYPE_EQUITY, 1600,
+            is_current=None, is_contra=False)
+
+        url = reverse("account-edit", kwargs={'slug':account1.slug})
+        data = {
+            "name":"foobar1",
+            "number":1600,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.data, "An account with that number already exists")
 
 
     def test_that_a_user_cant_edit_others_account(self):

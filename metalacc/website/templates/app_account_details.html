@@ -1,3 +1,178 @@
 {% extends 'base_app.html' %} 
 {% block 'body' %}
+<div>
+    <p class="heading-1 mb-0">
+        <span id="heading-account-name">{{ account.name }}</span>
+        {% if account.is_contra %}
+            <span class="badge badge-pill badge-info">
+                contra
+            </span>
+        {% endif %}
+    </p>
+    <p class="heading-1 mb-0">
+        <span id="heading-account-name"># {{ account.number }}</span>
+    </p>
+    <p class="heading-2">
+        {% if account.supports_is_current %}
+            {% if account.is_current %}current{% else %}non-current{% endif %} 
+       {% endif %}
+       {% if account.is_contra %}
+           contra
+       {% endif %}
+       {{ account.type }} account
+    </p>
+</div>
+<div>
+    <button 
+        class="btn btn-primary"
+        id="open-edit-account-form-btn"
+    >
+        Edit Account
+    </button>
+    <div id="edit-account-form" style="display:none" class="card p-3 mt-3">
+        <p class="heading-2">
+            Edit Account
+        </p>
+        <div
+            id="edit-account-form-errors"
+            class="mt-2 mb-2 p-2 alert alert-danger"
+            style="display:none"
+        >
+        </div>
+        <p class="mt-2 mb-1">Account Name</p>
+        <div
+        id="edit-account-form-name-errors"
+        class="mt-2 p-2 alert alert-danger"
+        style="display:none"
+        >
+        </div>
+        <input
+            id="edit-account-name-input"
+            type="text"
+            value="{{ account.name }}"
+            class="form-control text-input-max-400"
+            maxlength="100"
+            minlength="3"
+        >
+        <p class="mt-3 mb-1">Account Number</p>
+        <div
+            id="edit-account-form-number-errors"
+            class="mt-2 p-2 alert alert-danger"
+            style="display:none;"
+        >
+        </div>
+        <input
+            id="edit-account-number-input"
+            type="number"
+            value="{{ account.number }}"
+            class="form-control text-input-max-400"
+        >
+        {% if account.supports_is_current %}
+            <div class="mt-3" id="is-current-input-wrapper">
+                <p class="mb-1">
+                    <strong>Current or Non-Current Account</strong>
+                    <i class="fas fa-question-circle"></i>
+                </p>
+                <div class="form-check">
+                    <input 
+                        class="form-check-input"
+                        type="radio"
+                        name="current-type-account-selection"
+                        id="current-account-input"
+                        value="is-current"
+                        {% if account.is_current %}checked{% endif %}
+                    >
+                    <label class="form-check-label" for="current-account-input">
+                        Current
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input
+                        class="form-check-input"
+                        type="radio"
+                        name="current-type-account-selection"
+                        id="non-current-account-input"
+                        value="is-non-current"
+                        {% if not account.is_current %}checked{% endif %}
+                    >
+                    <label class="form-check-label" for="non-current-account-input">
+                        Non-Current
+                    </label>
+                </div>
+            </div>
+       {% endif %}
+       <div class="mt-3">
+           <button class="btn btn-success" id="save-account-edits-btn">
+                <i class="fas fa-save"></i>
+                Save
+           </button>
+       </div>
+    </div>
+</div>
+<hr>
+<script>
+function resetEditAccountFormErrors() {
+    $("#edit-account-form-name-errors").text("")
+    $("#edit-account-form-number-errors").text("")
+    $("#edit-account-form-name-errors").css("display", "none")
+    $("#edit-account-form-number-errors").css("display", "none")
+    $("#edit-account-form-errors").text("")
+    $("#edit-account-form-errors").css("display", "none")
+}
+function addEditAccountFormNameError(error) {
+    $("#edit-account-form-name-errors").css("display", "block")
+    $("#edit-account-form-name-errors").text(error)
+}
+function addEditAccountFormNumberError(error) {
+    $("#edit-account-form-number-errors").css("display", "block")
+    $("#edit-account-form-number-errors").text(error)
+}
+function addEditAccountFormAPIError(error) {
+    $("#edit-account-form-errors").css("display", "block")
+    $("#edit-account-form-errors").text(error)
+}
+$(document).ready(()=>{
+    $("#open-edit-account-form-btn").click(()=>{
+        $("#open-edit-account-form-btn").attr('disabled', true)
+        $("#edit-account-form").slideDown()
+    })
+    $("#save-account-edits-btn").click(()=>{
+        resetEditAccountFormErrors()
+        const accountNewName = $("#edit-account-name-input").val().trim()
+        const accountNewNumber = parseInt($("#edit-account-number-input").val())
+        const accountIsCurrent = $("#is-current-input-wrapper").length ? $("#current-account-input").prop("checked") : null
+
+        let foundErrors = false
+        if(accountNewName.length < 3 || accountNewName.length > 100) {
+            addEditAccountFormNameError(
+                "Account name must be between 3 and 100 characters.")
+            foundErrors = true
+        }
+        if(isNaN(accountNewNumber) || accountNewNumber < 1) {
+            addEditAccountFormNumberError(
+                "Account number must be a positive number.")
+            foundErrors = true
+        }
+        if(foundErrors) {
+            return
+        }
+        const url = accountEditUrl("{{ account.slug }}")
+        const data = {
+            name:accountNewName,
+            number:accountNewNumber,
+            is_current:accountIsCurrent,
+        }
+        postJson(url, data,
+            (data, status, xhr)=>{
+                if(xhr.status == 200) {
+                    location.reload()
+                }
+            },
+            (data, status, xhr)=>{
+                console.error(data)
+                addEditAccountFormAPIError(errorToString(data.responseJSON))
+            })
+    })
+})
+</script>
 {% endblock %}

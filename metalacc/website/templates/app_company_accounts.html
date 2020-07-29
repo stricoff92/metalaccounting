@@ -26,7 +26,13 @@
                 style="display:none;"
             >
             </div>
-            <input type="text" class="form-control text-input-max-400" id="new-account-name-input">
+            <input
+                type="text"
+                class="form-control text-input-max-400"
+                id="new-account-name-input"
+                maxlength="100"
+                minlength="3"
+            >
         </div>
 
         <div class="mt-2">
@@ -123,8 +129,12 @@
 </div>
 <script>
 function resetNewAccountFormErrors() {
+    $("#new-account-form-name-errors").text("")
+    $("#new-account-form-number-errors").text("")
     $("#new-account-form-name-errors").css("display", "none")
     $("#new-account-form-number-errors").css("display", "none")
+    $("#new-account-form-errors").text("")
+    $("#new-account-form-errors").css("display", "none")
 }
 function addNewAccountFormNameError(error) {
     $("#new-account-form-name-errors").css("display", "block")

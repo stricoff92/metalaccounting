@@ -138,24 +138,46 @@ def account_add_default_accounts(request):
 @permission_classes([IsAuthenticated])
 def account_edit(request, slug):
     account = get_object_or_404(Account, slug=slug, user=request.user)
+    account_type = account.type
+    company = account.company
 
     form = EditAccountForm(request.data, instance=account)
     if not form.is_valid():
         return Response(form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
     
-    new_name = form.cleaned_data['name']
-    new_number = form.cleaned_data['number']
-    duplicate_accounts = Account.objects.filter(
-        company=account.company, user=request.user,
-        number=new_number, name=new_name)
-    if duplicate_accounts.exclude(id=account.id).exists():
-        return Response('duplicate account found', status.HTTP_400_BAD_REQUEST)
+    # Check for duplicate name/number combinations.
+    duplicate_account_names = Account.objects.exclude(id=account.id).filter(
+        name=form.cleaned_data['name'], company=company)
+    if duplicate_account_names.exists():
+        return Response('An account with that name already exists', status.HTTP_409_CONFLICT)
+
+    duplicate_account_number = Account.objects.exclude(id=account.id).filter(
+        number=form.cleaned_data['number'], company=company)
+    if duplicate_account_number.exists():
+        return Response('An account with that number already exists', status.HTTP_409_CONFLICT)
+
+
+    # Verify non null is_current value is appropriate
+    is_current = form.cleaned_data.get('is_current')
+    if account.supports_is_current:
+        if is_current is None:
+            return Response(
+                f"is_current cannot be null for type {account_type}",
+                status.HTTP_400_BAD_REQUEST)
+    else:
+        if is_current is not None:
+            return Response(
+                f"is_current must be null for type {account_type}",
+                status.HTTP_400_BAD_REQUEST)
+
 
     try:
         account = form.save()
     except ValidationError as e:
         return Response(e, status.HTTP_400_BAD_REQUEST)
+
     data = {
+        'slug':account.slug,
         'name':account.name,
         'number':account.number,
         'type':account.type,
