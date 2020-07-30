@@ -6,7 +6,7 @@
 ## Installation
 
 ### Python
-Install python3.6.X from <a href="https://www.python.org">python.org</a>
+Install python3.6.X from <a href="https://www.python.org" target="_blank">python.org</a>
 
 ### MySQL
 Install an instance of MySQL locally.
