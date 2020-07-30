@@ -21,7 +21,7 @@ class PeriodViewTests(BaseTestBase):
     def is_timeconflict_response(self, response):
         return (
             response.status_code == status.HTTP_409_CONFLICT
-            and 'start/end conflict' in response.data)
+            and 'start and end date overlaps with another period' in response.data)
 
 
     def test_user_can_add_a_period_for_their_own_company(self):

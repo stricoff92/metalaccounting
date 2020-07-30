@@ -3,6 +3,7 @@ import re
 import uuid
 
 from django.conf import settings
+from django.db.models import Q
 
 def generate_slug(model):
     while True:
@@ -32,3 +33,11 @@ def generate_slugs_batch(model, count:int):
 VALID_SLUG_PATT = re.compile(r'^[a-zA-Z0-9]{10,}$')
 def is_valid_slug(slug:str) -> bool:
     return bool(VALID_SLUG_PATT.match(slug))
+
+
+def get_date_conflict_Q(start, end):
+    return (
+        Q(start__lte=start, end__gte=start)
+        | Q(start__gte=start, start__lte=end)
+        | Q(start__gte=start, end__lte=end)
+        | Q(start__lte=start, end__gte=end))

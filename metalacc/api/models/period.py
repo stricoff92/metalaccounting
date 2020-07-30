@@ -2,10 +2,11 @@
 from itertools import chain
 
 from django.db import models
+from django.db.models import Q
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
-from api.utils import generate_slug
+from api.utils import generate_slug, get_date_conflict_Q
 
 
 class Period(models.Model):
@@ -34,5 +35,15 @@ class Period(models.Model):
         
         if self.start >= self.end:
             raise ValidationError("start cannot be after end")
+        
+        Q_date_conflict = get_date_conflict_Q(self.start, self.end)
+        conflicting_periods = Period.objects.filter(
+            Q(company=self.company)
+            & Q_date_conflict)
+        if self.pk:
+            conflicting_periods = conflicting_periods.exclude(pk=self.pk)
+        if conflicting_periods.exists():
+            raise ValidationError(
+                f"start and end date overlaps with another period: {conflicting_periods.values_list('pk', flat=True)}")
     
         return super().save(*args, **kwargs)

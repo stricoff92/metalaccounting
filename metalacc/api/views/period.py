@@ -9,15 +9,8 @@ from rest_framework import status
 from api.models import Company, Period, JournalEntry
 from api.forms.company import CompanySelectionForm
 from api.forms.period import PeriodForm
-from api.utils import is_valid_slug
+from api.utils import is_valid_slug, get_date_conflict_Q
 
-
-def _get_date_conflict_Q(start, end):
-    return (
-        Q(start__lte=start, end__gte=start)
-        | Q(start__gte=start, start__lte=end)
-        | Q(start__gte=start, end__lte=end)
-        | Q(start__lte=start, end__gte=end))
 
 
 @api_view(['GET'])
@@ -68,9 +61,9 @@ def period_new(request):
     # Verify the period's start/end does not conflict.
     conflicting_periods = Period.objects.filter(
         Q(company=company)
-        & _get_date_conflict_Q(period.start, period.end))
+        & get_date_conflict_Q(period.start, period.end))
     if conflicting_periods.exists():
-        return Response('start/end conflict', status.HTTP_409_CONFLICT)
+        return Response('start and end date overlaps with another period', status.HTTP_409_CONFLICT)
     
     # Save to the database.
     period.save()
@@ -107,9 +100,9 @@ def period_edit(request, slug):
     # Verify the period's start/end does not conflict.
     conflicting_periods = Period.objects.filter(
         Q(company=company)
-        & _get_date_conflict_Q(new_start, new_end))
+        & get_date_conflict_Q(new_start, new_end))
     if conflicting_periods.exclude(id=period.id).exists():
-        return Response('start/end conflict', status.HTTP_409_CONFLICT)
+        return Response('start and end date overlaps with another period', status.HTTP_409_CONFLICT)
     
     period = form.save()
     data = {
