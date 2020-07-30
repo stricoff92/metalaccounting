@@ -5,9 +5,12 @@ OPEN    <i class="fas fa-hand-point-right"></i>
 DELETE  <i class="fas fa-trash-alt"></i>
 EDIT    <i class="fas fa-pen"></i>
 SAVE    <i class="fas fa-save"></i>
+CANCEL  <i class="fas fa-window-close"></i>
 HELP    <i class="fas fa-question-circle"></i>
 WARN    <i class="fas fa-exclamation-triangle"></i>
 MACRO   <i class="fas fa-bolt"></i>
+
+DATE RANGE <i class="fas fa-arrow-right"></i>
 
 
 CONTRA ACCOUNT

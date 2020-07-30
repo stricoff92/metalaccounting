@@ -71,6 +71,30 @@ def app_company(request, slug):
 
 
 @login_required
+def app_periods(request, slug):
+    company = get_object_or_404(Company, user=request.user, slug=slug)
+    breadcrumbs = [
+        {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
+            'value':'companies',
+            'href':reverse("app-landing"),
+        }, {
+            'value':company.name,
+            'href':reverse("app-company", kwargs={'slug':company.slug}),
+        }, {
+            'value':'periods',
+        }
+    ]
+    data = {
+        'company':company,
+        'breadcrumbs':breadcrumbs,
+    }
+    return render(request, "app_periods.html", data)
+
+
+@login_required
 def app_company_accounts(request, slug):
     company = get_object_or_404(
         Company, user=request.user, slug=slug)

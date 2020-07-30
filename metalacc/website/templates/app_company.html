@@ -100,7 +100,7 @@ $("#save-company-name-btn").click(()=>{
                     <td class="company-info-key pt-3">Periods</td>
                     <td class="company-info-value pt-3">{{ period_count }}</td>
                     <td class="company-info-value pt-3">
-                        <button class="btn btn-success">
+                        <button class="btn btn-success" id="open-periods-btn">
                             <i class="fas fa-hand-point-right"></i>
                             Open
                         </button>
@@ -118,6 +118,9 @@ $("#save-company-name-btn").click(()=>{
 $(document).ready(()=>{
     $("#open-accounts-btn").click(()=>{
         window.location = "/app/company/{{company.slug}}/account/"
+    })
+    $("#open-periods-btn").click(()=>{
+        window.location = "/app/company/{{company.slug}}/period/"
     })
 })
 </script>

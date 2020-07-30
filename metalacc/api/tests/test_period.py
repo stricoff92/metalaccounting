@@ -19,7 +19,9 @@ class PeriodViewTests(BaseTestBase):
     
 
     def is_timeconflict_response(self, response):
-        return response.status_code == status.HTTP_400_BAD_REQUEST and 'start/end conflict' in response.data
+        return (
+            response.status_code == status.HTTP_409_CONFLICT
+            and 'start and end date overlaps with another period' in response.data)
 
 
     def test_user_can_add_a_period_for_their_own_company(self):
@@ -208,6 +210,63 @@ class PeriodViewTests(BaseTestBase):
         self.assertTrue(self.is_timeconflict_response(response))
 
         self.assertEqual(Period.objects.count(), 1)
+
+
+    def test_edit_period_start_end_conflict(self):
+        """ Test user cannot edit a period if it conflicts
+        """
+        company = self.factory.create_company(self.user)
+        period1 = self.factory.create_period(company, dt.date(2020, 3, 1), dt.date(2020, 3, 31))
+        period2 = self.factory.create_period(company, dt.date(2020, 1, 1), dt.date(2020, 1, 31))
+        url = reverse('period-edit', kwargs={'slug':period2.slug})
+
+        # Partial overlap start
+        data = {
+            'start':dt.date(2020, 1, 1),
+            'end':dt.date(2020, 3, 15),
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertTrue(self.is_timeconflict_response(response))
+
+        # Partial overlap end
+        data = {
+            'start':dt.date(2020, 3, 15),
+            'end':dt.date(2020, 4, 15),
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertTrue(self.is_timeconflict_response(response))
+
+        # 1 day overlap start
+        data = {
+            'start':dt.date(2020, 1, 15),
+            'end':dt.date(2020, 3, 1),
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertTrue(self.is_timeconflict_response(response))
+
+        # 1 day overlap end
+        data = {
+            'start':dt.date(2020, 3, 31),
+            'end':dt.date(2020, 5, 1),
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertTrue(self.is_timeconflict_response(response))
+
+        # total overlap
+        data = {
+            'start':dt.date(2020, 1, 1),
+            'end':dt.date(2020, 5, 1),
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertTrue(self.is_timeconflict_response(response))
+
+        # same start and end
+        data = {
+            'start':dt.date(2020, 3, 1),
+            'end':dt.date(2020, 3, 31),
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertTrue(self.is_timeconflict_response(response))
 
 
     def test_user_can_edit_own_period_start_end_date(self):

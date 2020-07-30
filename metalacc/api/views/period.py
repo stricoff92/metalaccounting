@@ -9,14 +9,27 @@ from rest_framework import status
 from api.models import Company, Period, JournalEntry
 from api.forms.company import CompanySelectionForm
 from api.forms.period import PeriodForm
+from api.utils import is_valid_slug, get_date_conflict_Q
 
 
-def _get_date_conflict_Q(start, end):
-    return (
-        Q(start__lte=start, end__gte=start)
-        | Q(start__gte=start, start__lte=end)
-        | Q(start__gte=start, end__lte=end)
-        | Q(start__lte=start, end__gte=end))
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def period_list(request):
+    company_slug = request.query_params.get('company')
+    if not company_slug:
+        return Response(
+            "company param required", status.HTTP_400_BAD_REQUEST)
+    if not is_valid_slug(company_slug):
+        return Response(
+            "invalid company slug", status.HTTP_400_BAD_REQUEST)
+
+    company = get_object_or_404(Company, user=request.user, slug=company_slug)
+    periods = (Period.objects
+        .filter(company=company)
+        .order_by("start")
+        .values("slug", "start", "end"))
+    return Response(periods, status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -48,9 +61,9 @@ def period_new(request):
     # Verify the period's start/end does not conflict.
     conflicting_periods = Period.objects.filter(
         Q(company=company)
-        & _get_date_conflict_Q(period.start, period.end))
+        & get_date_conflict_Q(period.start, period.end))
     if conflicting_periods.exists():
-        return Response('start/end conflict', status.HTTP_400_BAD_REQUEST)
+        return Response('start and end date overlaps with another period', status.HTTP_409_CONFLICT)
     
     # Save to the database.
     period.save()
@@ -87,9 +100,9 @@ def period_edit(request, slug):
     # Verify the period's start/end does not conflict.
     conflicting_periods = Period.objects.filter(
         Q(company=company)
-        & _get_date_conflict_Q(new_start, new_end))
+        & get_date_conflict_Q(new_start, new_end))
     if conflicting_periods.exclude(id=period.id).exists():
-        return Response('start/end conflict', status.HTTP_400_BAD_REQUEST)
+        return Response('start and end date overlaps with another period', status.HTTP_409_CONFLICT)
     
     period = form.save()
     data = {

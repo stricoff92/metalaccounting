@@ -1,0 +1,215 @@
+{% extends 'base_app.html' %} 
+{% block 'body' %}
+<div>
+    <p class="heading-1">Periods List</p>
+    <p class="heading-2">{{ company.name }}</p>
+</div>
+
+<div id="new-period-form-container" class="mt-3">
+    <button class="btn btn-primary" id="open-new-period-form-btn">
+        <i class="fas fa-plus-square"></i>
+        New Period
+    </button>
+    <div id="new-period-form" style="display:none" class="card mt-4 mb-3 p-3">
+        <p class="heading-2">Add a New Period</p>
+    </div>
+</div>
+<script>
+$(document).ready(()=>{
+    $("#open-new-period-form-btn").click(()=>{
+        $("#open-new-period-form-btn").prop('disabled', true)
+        $("#new-period-form").slideDown(350)
+    })
+})
+</script>
+
+<div id="accounts-list" class="mt-3 mb-3">
+    <div class="alert alert-info" id="no-periods-yet-msg" style="display:none;">
+        You don't have any periods for this company yet.
+    </div>
+</div>
+<script>
+function addPeriodEditError(slug, error) {
+    $(`#edit-period-form-errors-${slug}`).css("display", "block")
+    $(`#edit-period-form-errors-${slug}`).text(error)
+}
+function resetPeriodEditError(slug) {
+    $(`#edit-period-form-errors-${slug}`).css("display", "none")
+    $(`#edit-period-form-errors-${slug}`).text('')
+}
+function addPeriodToList(periodData) {
+    $("#accounts-list").append(`
+        <div class="card mt-1 p-3" id="period-card-${periodData.slug}">
+            <div style="display:flex; justify-content: space-between;">
+                <div id="date-range-${periodData.slug}">
+                    <span id="period-range-start-${periodData.slug}">
+                        ${moment(periodData.start).format("ll")}
+                    </span>
+                    <i class="fas fa-arrow-right"></i>
+                    <span id="period-range-end-${periodData.slug}">
+                        ${moment(periodData.end).format("ll")}
+                    </span>
+                </div>
+                <div 
+                    id="edit-period-form-container-${periodData.slug}"
+                    style="display:none"
+                >
+                    <p class="heading-2 mb-1">Edit Period</p>
+                    <div 
+                        class="alert alert-danger mt-2"
+                        id="edit-period-form-errors-${periodData.slug}"
+                        style="display:none"
+                    >
+                    </div>
+                    <table>
+                        <tr>
+                            <td class="pr-2">
+                                Start
+                            </td>
+                            <td>
+                                <div>
+                                    <input
+                                        id="period-edit-start-date-${periodData.slug}"
+                                        type="date"
+                                        value="${periodData.start}">
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="pr-2">
+                                End
+                            </td>
+                            <td>
+                                <div>
+                                    <input
+                                        id="period-edit-end-date-${periodData.slug}"
+                                        type="date" 
+                                        value="${periodData.end}">
+                                </div>
+                            <td>
+                        </tr>
+                    </table>
+                    <div class="mt-2">
+                        <button class="btn btn-success" id="save-edit-period-btn-${periodData.slug}">
+                            <i class="fas fa-save"></i>
+                            Save
+                        </button>
+                        <button class="btn btn-secondary" id="cancel-edit-period-btn-${periodData.slug}">
+                            <i class="fas fa-window-close"></i>
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+                <div style="display:flex; flex-wrap:nowrap;" id="btn-group-${periodData.slug}">
+                    <button class="btn btn-success" id="open-btn-${periodData.slug}">
+                        <i class="fas fa-hand-point-right"></i>
+                        Open
+                    </button>
+                    <button class="btn btn-primary" id="edit-btn-${periodData.slug}">
+                        <i class="fas fa-pen"></i>
+                        Edit
+                    </button>
+                    <button class="btn btn-danger" id="delete-btn-${periodData.slug}">
+                        <i class="fas fa-trash-alt"></i>
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    `)
+    $(`#period-card-${periodData.slug}`).data('start', periodData.start)
+    $(`#period-card-${periodData.slug}`).data('end', periodData.end)
+
+    $(`#open-btn-${periodData.slug}`).click(()=>{
+
+    })
+    $(`#edit-btn-${periodData.slug}`).click(()=>{
+        $(`#btn-group-${periodData.slug}`).css("display", "none")
+        $(`#date-range-${periodData.slug}`).css('display', 'none')
+        $(`#edit-period-form-container-${periodData.slug}`).css('display', 'block')
+    })
+    $(`#delete-btn-${periodData.slug}`).click(()=>{
+        const startDateStr =  moment($(`#period-card-${periodData.slug}`).data('start')).format("ll")
+        const endDateStr = moment($(`#period-card-${periodData.slug}`).data('end')).format("ll")
+        if(!confirm(`Delete period ${startDateStr} -> ${endDateStr}? All accociated journal entries will be deleted.`)) {
+            return
+        }
+        const url = deletePeriodUrl(periodData.slug)
+        postJson(url, {}, (data, status, xhr) =>{
+            if(xhr.status == 204) {
+                return $(`#period-card-${periodData.slug}`).remove()
+            }
+            alert('An error occured: ' + status)
+        }, (data, status, xhr) => {
+            console.error(data)
+            alert('An error occured: ' + status)
+        })
+    })
+    $(`#cancel-edit-period-btn-${periodData.slug}`).click(()=>{
+        $(`#period-edit-start-date-${periodData.slug}`).val($(`#period-card-${periodData.slug}`).data('start'))
+        $(`#period-edit-end-date-${periodData.slug}`).val($(`#period-card-${periodData.slug}`).data('end'))
+        $(`#btn-group-${periodData.slug}`).css("display", "block")
+        $(`#date-range-${periodData.slug}`).css('display', 'block')
+        $(`#edit-period-form-container-${periodData.slug}`).css('display', 'none')
+    })
+    $(`#save-edit-period-btn-${periodData.slug}`).click(()=>{
+        resetPeriodEditError(periodData.slug)
+        const periodNewStart = moment($(`#period-edit-start-date-${periodData.slug}`).val())
+        const periodNewEnd = moment($(`#period-edit-end-date-${periodData.slug}`).val())
+        let foundError = false
+        let errorList = []
+        if(!periodNewStart.isValid()) {
+            errorList.push("Invalid start date.")
+        }
+        if(!periodNewEnd.isValid()) {
+            errorList.push("Invalid end date.")
+        }
+        if (!foundError && periodNewStart > periodNewEnd) {
+            errorList.push("Start date must be before the end date.")
+        }
+        if(errorList.length) {
+            addPeriodEditError(periodData.slug, errorList.join(" "))
+            return
+        }
+        const url = editPeriodUrl(periodData.slug)
+        const data = {
+            start:periodNewStart.format("YYYY-MM-DD"),
+            end:periodNewEnd.format("YYYY-MM-DD"),
+        }
+        postJson(url, data,
+            (data, status, xhr)=>{
+                if(xhr.status == 200) {
+                    // update state
+                    $(`#period-card-${periodData.slug}`).data('start', data.start)
+                    $(`#period-card-${periodData.slug}`).data('end', data.end)
+                    // set new dates to form
+                    $(`#period-edit-start-date-${periodData.slug}`).val(data.start)
+                    $(`#period-edit-end-date-${periodData.slug}`).val(data.end)
+                    // show action btn group and date range display
+                    $(`#btn-group-${periodData.slug}`).css("display", "block")
+                    $(`#date-range-${periodData.slug}`).css('display', 'block')
+                    // update date range display with new dates
+                    $(`#period-range-start-${periodData.slug}`).text(moment(data.start).format("ll"))
+                    $(`#period-range-end-${periodData.slug}`).text(moment(data.end).format("ll"))
+                    // hide form
+                    $(`#edit-period-form-container-${periodData.slug}`).css('display', 'none')
+                    return
+                }
+                alert("An error occured: " + status)
+            },
+            (data, status, xhr)=>{
+                addPeriodEditError(periodData.slug, errorToString(data.responseJSON))
+            })
+        
+    })
+}
+$(document).ready(()=>{
+    $.get(periodListUrl + "?company={{ company.slug }}", (periods, status, xhr)=>{
+        if(periods.length == 0) {
+            return $("#no-periods-yet-msg").css("display", "block")
+        }
+        periods.forEach(addPeriodToList)
+    })
+})
+</script>
+{% endblock %}
