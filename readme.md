@@ -28,7 +28,7 @@ $ pip install -r requirements.txt
 $ sudo apt-get install python3.6-dev
 ```
 
-### Add Local Environment Variales
+### Add Local Environment Variables
 Add `applocals.py` file to the django project directory (`metalacc/metalacc/applocals.py`)
 
 example `applocals.py`
