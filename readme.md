@@ -17,7 +17,7 @@ docker run -p 3306:3306 -e MYSQL_ROOT_PASSWORD=YOUR_PASSWORD_GOES_HERE -v /tmp:/
 Create a new database on the MySQL server.
 
 
-### Python Virtual Environment and Dependancies
+### Python Virtual Environment and Install Packages
 ```bash
 # from the project root run
 $ pip install virtualenv env
