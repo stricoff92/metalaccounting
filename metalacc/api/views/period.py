@@ -39,10 +39,12 @@ def period_new(request):
     # Validate forms.
     company_form = CompanySelectionForm(request.data)
     if not company_form.is_valid():
-        return Response(company_form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
+        return Response(
+            company_form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
     company = company_form.cleaned_data['company']
     if company.user != request.user:
-        return Response("company not found", status.HTTP_404_NOT_FOUND)
+        return Response(
+            "company not found", status.HTTP_404_NOT_FOUND)
     
     period_count = company.period_set.count()
     max_periods_per_company = request.user.userprofile.object_limit_periods_per_company
@@ -53,19 +55,25 @@ def period_new(request):
 
     period_form = PeriodForm(request.data)
     if not period_form.is_valid():
-        return Response(period_form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
+        return Response(
+            period_form.errors.as_json(),
+            status.HTTP_400_BAD_REQUEST)
     
-    period = period_form.save(commit=False)
-    period.company = company
+    period_start = period_form.cleaned_data['start']
+    period_end = period_form.cleaned_data['end']
 
     # Verify the period's start/end does not conflict.
     conflicting_periods = Period.objects.filter(
         Q(company=company)
-        & get_date_conflict_Q(period.start, period.end))
+        & get_date_conflict_Q(period_start, period_end))
     if conflicting_periods.exists():
-        return Response('start and end date overlaps with another period', status.HTTP_409_CONFLICT)
+        return Response(
+            'start and end date overlaps with another period',
+            status.HTTP_409_CONFLICT)
     
     # Save to the database.
+    period = period_form.save(commit=False)
+    period.company = company
     period.save()
     data = {
         'start':period.start,

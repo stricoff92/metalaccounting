@@ -12,13 +12,106 @@
     </button>
     <div id="new-period-form" style="display:none" class="card mt-4 mb-3 p-3">
         <p class="heading-2">Add a New Period</p>
+        <div
+            class="alert alert-danger"
+            id="new-period-form-errors"
+            style="display:none"
+        >
+        </div>
+        <div>
+            <p class="mb-1">start</p>
+            <div class="alert alert-danger" style="display:none" id="new-period-form-start-errors">
+            </div>
+            <input type="date" class="form-control" id="new-period-start-input">
+        </div>
+        <div class="mt-3">
+            <p class="mb-1">end</p>
+            <div class="alert alert-danger" style="display:none" id="new-period-form-end-errors">
+            </div>
+            <input type="date" class="form-control" id="new-period-end-input">
+        </div>
+        <div class="mt-4">
+            <button class="btn btn-success" id="save-new-period-btn">
+                <i class="fas fa-save"></i>
+                Save
+            </button>
+        </div>
     </div>
 </div>
 <script>
+function resetNewPeriodFormErrors() {
+    $("#new-period-form-errors").text("")
+    $("#new-period-form-errors").css("display", "none")
+    $("#new-period-form-start-errors").text("")
+    $("#new-period-form-end-errors").text("")
+    $("#new-period-form-start-errors").css("display", "none")
+    $("#new-period-form-end-errors").css("display", "none")
+}
+function resetNewPeriodForm() {
+    resetNewPeriodFormErrors()
+    $("#new-period-start-input").val("")
+    $("#new-period-end-input").val("")
+    $("#open-new-period-form-btn").prop('disabled', false)
+    $("#new-period-form").css("display", "none")
+
+}
+function addNewPeriodFormStartError(error) {
+    $("#new-period-form-start-errors").css("display", "block")
+    $("#new-period-form-start-errors").text(error)
+}
+function addNewPeriodFormEndError(error) {
+    $("#new-period-form-end-errors").css("display", "block")
+    $("#new-period-form-end-errors").text(error)
+}
+function addNewPeriodAPIError(error) {
+    $("#new-period-form-errors").css("display", "block")
+    $("#new-period-form-errors").text(error)
+}
 $(document).ready(()=>{
     $("#open-new-period-form-btn").click(()=>{
         $("#open-new-period-form-btn").prop('disabled', true)
         $("#new-period-form").slideDown(350)
+    })
+    $("#save-new-period-btn").click(()=>{
+        resetNewPeriodFormErrors()
+        const periodNewStart = moment($("#new-period-start-input").val())
+        const periodNewEnd = moment($("#new-period-end-input").val())
+        let foundErrors = false
+        if(!periodNewStart.isValid()) {
+            addNewPeriodFormStartError("Invalid start date.")
+            foundErrors = true
+        }
+        if(!periodNewEnd.isValid()) {
+            addNewPeriodFormEndError("Invalid end date.")
+            foundErrors = true
+        }
+        if(!foundErrors && periodNewStart > periodNewEnd) {
+            addNewPeriodFormStartError("Start date must be before the end date.")
+            foundErrors = true
+        }
+        if(foundErrors) {
+            return
+        }
+
+        const data = {
+            company:"{{ company.slug }}",
+            start:periodNewStart.format("YYYY-MM-DD"),
+            end:periodNewEnd.format("YYYY-MM-DD"),
+        }
+        console.log(data)
+        postJson(newPeriodUrl, data,
+            (data, status, xhr)=>{
+                if(xhr.status == 201) {
+                    if($("#no-periods-yet-msg").length) {
+                        $("#no-periods-yet-msg").css("display", "none")
+                    }
+                    resetNewPeriodForm()
+                    return addPeriodToList(data)
+                }
+            },
+            (data, status, xhr)=>{
+                addNewPeriodAPIError(errorToString(data.responseJSON))
+            })
     })
 })
 </script>
@@ -70,6 +163,7 @@ function addPeriodToList(periodData) {
                                 <div>
                                     <input
                                         id="period-edit-start-date-${periodData.slug}"
+                                        class="form-control"
                                         type="date"
                                         value="${periodData.start}">
                                 </div>
@@ -83,6 +177,7 @@ function addPeriodToList(periodData) {
                                 <div>
                                     <input
                                         id="period-edit-end-date-${periodData.slug}"
+                                        class="form-control"
                                         type="date" 
                                         value="${periodData.end}">
                                 </div>
