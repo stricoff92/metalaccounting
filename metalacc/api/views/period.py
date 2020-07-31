@@ -1,4 +1,6 @@
 
+from collections import defaultdict
+
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from rest_framework.decorators import api_view, permission_classes
@@ -25,10 +27,37 @@ def period_list(request):
             "invalid company slug", status.HTTP_400_BAD_REQUEST)
 
     company = get_object_or_404(Company, user=request.user, slug=company_slug)
-    periods = (Period.objects
+    periods = list(Period.objects
         .filter(company=company)
         .order_by("start")
-        .values("slug", "start", "end"))
+        .values("id", "slug", "start", "end"))
+
+    # Aggregate journal entry info by period
+    period_ids = [p['id'] for p in periods]
+    journal_entries = (JournalEntry.objects
+        .filter(period_id__in=period_ids)
+        .values('period_id', 'is_adjusting_entry', 'is_closing_entry'))
+    je_data_by_period = defaultdict(lambda : {
+        'journal_entry_count':0,
+        'has_closing_entries':False,
+        'has_adjusting_entries':False,
+    })
+    for je in journal_entries:
+        period_id = je['period_id']
+        je_data_by_period[period_id]['journal_entry_count'] += 1
+        if je['is_closing_entry']:
+            je_data_by_period[period_id]['has_closing_entries'] = True
+        if je['is_adjusting_entry']:
+            je_data_by_period[period_id]['has_adjusting_entries'] = True
+    
+    # Enrich period data with journal entry into
+    for ix, period in enumerate(periods):
+        period_id = period['id']
+        periods[ix]['journal_entry_count'] = je_data_by_period[period_id]['journal_entry_count']
+        periods[ix]['has_closing_entries'] = je_data_by_period[period_id]['has_closing_entries']
+        periods[ix]['has_adjusting_entries'] = je_data_by_period[period_id]['has_adjusting_entries']
+        periods[ix] = {k:v for k,v in periods[ix].items() if k != 'id'} # remove id
+
     return Response(periods, status.HTTP_200_OK)
 
 

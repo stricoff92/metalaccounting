@@ -142,6 +142,20 @@ function addPeriodToList(periodData) {
                     <span id="period-range-end-${periodData.slug}">
                         ${moment(periodData.end).format("ll")}
                     </span>
+                    <table>
+                        <tr>
+                            <td class="pr-2">Jounral Entries</td>
+                            <td>${periodData.journal_entry_count}</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-2">Has Adjusting Entries</td>
+                            <td>${periodData.has_adjusting_entries ? 'Yes' : 'No'}</td>
+                        </tr>
+                        <tr>
+                            <td class="pr-2">Has Closing Entries</td>
+                            <td>${periodData.has_closing_entries ? 'Yes' : 'No'}</td>
+                        </tr>
+                    </table>
                 </div>
                 <div 
                     id="edit-period-form-container-${periodData.slug}"
@@ -195,7 +209,7 @@ function addPeriodToList(periodData) {
                         </button>
                     </div>
                 </div>
-                <div style="display:flex; flex-wrap:nowrap;" id="btn-group-${periodData.slug}">
+                <div id="btn-group-${periodData.slug}">
                     <button class="btn btn-success" id="open-btn-${periodData.slug}">
                         <i class="fas fa-hand-point-right"></i>
                         Open
