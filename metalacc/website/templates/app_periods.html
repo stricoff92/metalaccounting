@@ -135,13 +135,15 @@ function addPeriodToList(periodData) {
         <div class="card mt-1 p-3" id="period-card-${periodData.slug}">
             <div style="display:flex; justify-content: space-between;">
                 <div id="date-range-${periodData.slug}">
-                    <span id="period-range-start-${periodData.slug}">
-                        ${moment(periodData.start).format("ll")}
-                    </span>
-                    <i class="fas fa-arrow-right"></i>
-                    <span id="period-range-end-${periodData.slug}">
-                        ${moment(periodData.end).format("ll")}
-                    </span>
+                    <strong>
+                        <span id="period-range-start-${periodData.slug}">
+                            ${moment(periodData.start).format("ll")}
+                        </span>
+                        <i class="fas fa-arrow-right"></i>
+                        <span id="period-range-end-${periodData.slug}">
+                            ${moment(periodData.end).format("ll")}
+                        </span>
+                    </strong>
                     <table>
                         <tr>
                             <td class="pr-2">Jounral Entries</td>
