@@ -98,7 +98,6 @@ $(document).ready(()=>{
             start:periodNewStart.format("YYYY-MM-DD"),
             end:periodNewEnd.format("YYYY-MM-DD"),
         }
-        console.log(data)
         postJson(newPeriodUrl, data,
             (data, status, xhr)=>{
                 if(xhr.status == 201) {
@@ -116,7 +115,7 @@ $(document).ready(()=>{
 })
 </script>
 
-<div id="accounts-list" class="mt-3 mb-3">
+<div id="period-list" class="mt-3 mb-3">
     <div class="alert alert-info" id="no-periods-yet-msg" style="display:none;">
         You don't have any periods for this company yet.
     </div>
@@ -131,8 +130,8 @@ function resetPeriodEditError(slug) {
     $(`#edit-period-form-errors-${slug}`).text('')
 }
 function addPeriodToList(periodData) {
-    $("#accounts-list").append(`
-        <div class="card mt-1 p-3" id="period-card-${periodData.slug}">
+    $("#period-list").append(`
+        <div class="card mt-1 p-3" id="period-card-${periodData.slug}" class="period-record">
             <div style="display:flex; justify-content: space-between;">
                 <div id="date-range-${periodData.slug}">
                     <strong>
