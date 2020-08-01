@@ -231,7 +231,7 @@ function addPeriodToList(periodData) {
     $(`#period-card-${periodData.slug}`).data('end', periodData.end)
 
     $(`#open-btn-${periodData.slug}`).click(()=>{
-
+        window.location = "/app/period/" + periodData.slug + "/"
     })
     $(`#edit-btn-${periodData.slug}`).click(()=>{
         $(`#btn-group-${periodData.slug}`).css("display", "none")

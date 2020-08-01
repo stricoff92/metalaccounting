@@ -95,6 +95,35 @@ def app_periods(request, slug):
 
 
 @login_required
+def app_period_detail(request, slug):
+    period = get_object_or_404(Period, company__user=request.user, slug=slug)
+    company = period.company
+    date_format = "%b %-d, %Y"
+    breadcrumbs = [
+        {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
+            'value':'companies',
+            'href':reverse("app-landing"),
+        }, {
+            'value':company.name,
+            'href':reverse("app-company", kwargs={'slug':company.slug}),
+        }, {
+            'value':'periods',
+            'href':reverse("app-period", kwargs={'slug':company.slug})
+        }, {
+            'value':f'{period.start.strftime(date_format)} -> {period.end.strftime(date_format)}',
+        }
+    ]
+    data = {
+        'company':company,
+        'breadcrumbs':breadcrumbs,
+    }
+    return render(request, "app_period_detail.html", data)
+
+
+@login_required
 def app_company_accounts(request, slug):
     company = get_object_or_404(
         Company, user=request.user, slug=slug)

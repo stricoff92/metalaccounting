@@ -12,6 +12,7 @@ urlpatterns = [
     path('app/company/<slug:slug>/account/', views.app_company_accounts, name="app-accounts"),
     path('app/company/<slug:slug>/default-account/', views.app_company_add_default_accounts, name="app-default-accounts"),
     path('app/account/<slug:slug>/', views.app_account_details, name="app-account-details"),
+    path('app/period/<slug:slug>/', views.app_period_detail, name="app-period-details"),
     path('app/profile/', views.app_profile, name="app-profile"),
     path('login/', views.login_user, name="login"),
     path('logout/', views.logout_user, name="logout"),
