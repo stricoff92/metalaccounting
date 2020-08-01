@@ -20,7 +20,8 @@ Create a new database on the MySQL server.
 ### Setup a Python Virtual Environment and Install Packages
 ```bash
 # from the project root run
-$ pip install virtualenv env
+$ pip install virtualenv
+$ virtualenv env
 $ source env/bin/activate
 $ pip install -r requirements.txt
 
