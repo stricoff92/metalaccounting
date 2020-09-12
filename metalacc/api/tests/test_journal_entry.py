@@ -434,3 +434,17 @@ class JournalEntryViewTests(BaseTestBase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(JournalEntry.objects.count(), 1)
         self.assertEqual(JournalEntryLine.objects.count(), 2)
+
+
+    def test_user_cant_cant_list_journal_entries_for_another_users_period(self):
+        """ Test that a user cant view a list of journal entries associated with another user's period
+        """
+        url = reverse("je-list", kwargs={'slug':self.other_period.slug})
+        # can't see other user's entries
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # owner can see own entries
+        self.client.force_login(self.other_user)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
