@@ -1,4 +1,5 @@
 
+from collections import defaultdict
 import json
 
 from django.shortcuts import get_object_or_404
@@ -58,6 +59,46 @@ class JournalEntrySerializer(serializers.ModelSerializer):
         )
 
 # Function based views
+# "slug", "date", "memo", "is_adjusting_entry", "is_closing_entry"
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def journal_entry_list(request, slug):
+    period = get_object_or_404(Period, slug=slug, company__user=request.user)
+    try:
+        page = int(request.query_params.get("page", 1))
+    except ValueError:
+        return Response("invalid page", status.HTTP_400_BAD_REQUEST)
+
+    journal_entry_ids = list(JournalEntry.objects
+        .filter(period=period)
+        .order_by("-date")
+        .values_list("id", flat=True))
+
+    page_size = 50
+    start_ix = (page - 1) * page_size
+    end_ix = start_ix + page_size
+    journal_entry_ids = journal_entry_ids[start_ix:end_ix]
+    
+    journal_entries = list(JournalEntry.objects
+        .filter(id__in=journal_entry_ids)
+        .order_by("-date")
+        .values("id", "slug", "date", "memo", "is_adjusting_entry", "is_closing_entry"))
+
+    journal_entry_lines = list(JournalEntryLine.objects
+        .filter(journal_entry_id__in=journal_entry_ids)
+        .values("slug","journal_entry_id", "account__name", "account__number", "account__slug", "type", "amount"))
+    
+    je_lines_by_je = defaultdict(list)
+    for jel in journal_entry_lines:
+        je_lines_by_je[jel['journal_entry_id']].append(jel)
+
+    for ix, je in enumerate(journal_entries):
+        journal_entry_id = je['id']
+        journal_entries[ix]['lines'] = je_lines_by_je[journal_entry_id]
+
+    return Response(journal_entries, status.HTTP_200_OK)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

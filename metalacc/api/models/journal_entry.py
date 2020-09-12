@@ -25,7 +25,7 @@ class JournalEntry(models.Model):
 
 
     def __str__(self):
-        return f"<JournalEntry {self.pk} {self.name} ({self.user})>"
+        return f"<JournalEntry {self.pk} ({self.period.user})>"
 
     @property
     def dr_total(self):

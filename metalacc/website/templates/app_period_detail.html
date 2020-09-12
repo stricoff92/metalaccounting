@@ -82,13 +82,20 @@ $(document).ready(()=>{
 </script>
 <div class="card mt-4 mb-2" style="min-width:600px;">
     <div class="card-header">
-        <strong>General Journal</strong>
+        <div style="display:flex;">
+            <div>
+                <strong>General Journal</strong>
+            </div>
+            <div class="ml-3">
+                <button id="open-new-journal-entry-form-btn" class="btn btn-primary">New Entry</button>
+            </div>
+        </div>
     </div>
     <div class="card-body mr-2">
         <div id="recent-journal-entries">
 
         </div>
-        <div class="mt-2" id="add-new-journal-entry-form-container">
+        <div class="mt-2" id="add-new-journal-entry-form-container" style="display:none;">
             <p class="heading-2">Create a Journal Entry</p>
             <div id="new-journal-entry-form-error-container" style="display:none;">
                 <div class="alert alert-danger" id="new-journal-entry-form-error"></div>
@@ -161,10 +168,18 @@ $(document).ready(()=>{
                 <button class="btn btn-success" id="save-new-journal-entry-btn">Save</button>
             </div>
         </div>
+        <div id="journal-entries-container">
+
+        </div>
     </div>
 </div>
 <script>
 $(document).ready(()=>{
+    $("#new-journal-entry-date-input").val('{{ last_je.date|date:"Y-m-d" }}')
+    $("#open-new-journal-entry-form-btn").click(()=>{
+        $("#open-new-journal-entry-form-btn").prop("disabled", true)
+        $("#add-new-journal-entry-form-container").slideDown(350)
+    })
     $("#save-new-journal-entry-btn").click(()=>{
         resetNewJournalEntryFormErrors()
         const formErrors = getNewJournalEntryFormErrors()
@@ -192,9 +207,24 @@ $(document).ready(()=>{
         } else if (formData.type == 'adjusting') {
             data.is_adjusting_entry = true
         }
-        console.log(data)
+        postJson(newJournalEntryUrl, data, 
+            (data, status, xhr)=>{
+                if(xhr.status == 201) {
+                    resetNewJournalEntryForm()
+                    // return addPeriodToList(data)
+                }
+            }, (data, status, xhr)=>{
+        
+            })
     })
 })
+function resetNewJournalEntryForm (){
+    $('#dr-section').empty()
+    $('#cr-section').empty()
+    addAccountRowLine(true)
+    addAccountRowLine(false)
+    $("#new-journal-entry-memo-input").val("")
+}
 function resetNewJournalEntryFormErrors() {
     $("#new-journal-entry-form-error").text("")
     $("#new-journal-entry-form-error-container").css("display", "none")
@@ -381,5 +411,8 @@ $(document).ready(()=>{
         addAccountRowLine(isDr)
     })
 })
+function addJournalEntry(journalEntry) {
+    const jeContainerDiv = document.createElement("div")
+}
 </script>
 {% endblock %}

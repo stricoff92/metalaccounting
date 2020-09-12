@@ -97,6 +97,10 @@ def app_periods(request, slug):
 @login_required
 def app_period_detail(request, slug):
     period = get_object_or_404(Period, company__user=request.user, slug=slug)
+    try:
+        last_je = period.journalentry_set.latest("date")
+    except JournalEntry.DoesNotExist:
+        last_je = None
     company = period.company
     date_format = "%b %-d, %Y"
     breadcrumbs = [
@@ -119,6 +123,7 @@ def app_period_detail(request, slug):
     data = {
         'period':period,
         'company':company,
+        'last_je':last_je,
         'breadcrumbs':breadcrumbs,
     }
     return render(request, "app_period_detail.html", data)
