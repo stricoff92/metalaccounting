@@ -39,11 +39,11 @@ class JournalEntryViewTests(BaseTestBase):
             'period':self.period.slug,
             'journal_entry_lines':[
                 {
-                    "type":"d",
+                    "type":JournalEntryLine.TYPE_DEBIT,
                     "amount":50000,
                     "account":Account.objects.get(name='Cash').slug,
                 }, {
-                    "type":"c",
+                    "type":JournalEntryLine.TYPE_CREDIT,
                     "amount":50000,
                     "account":Account.objects.get(name='Common Stock').slug,
                 }
@@ -82,11 +82,11 @@ class JournalEntryViewTests(BaseTestBase):
             'is_adjusting_entry':True,
             'journal_entry_lines':[
                 {
-                    "type":"d",
+                    "type":JournalEntryLine.TYPE_DEBIT,
                     "amount":50000,
                     "account":Account.objects.get(name='Cash').slug,
                 }, {
-                    "type":"c",
+                    "type":JournalEntryLine.TYPE_CREDIT,
                     "amount":50000,
                     "account":Account.objects.get(name='Common Stock').slug,
                 }
@@ -111,11 +111,11 @@ class JournalEntryViewTests(BaseTestBase):
             'is_closing_entry':True,
             'journal_entry_lines':[
                 {
-                    "type":"d",
+                    "type":JournalEntryLine.TYPE_DEBIT,
                     "amount":50000,
                     "account":Account.objects.get(name='Cash').slug,
                 }, {
-                    "type":"c",
+                    "type":JournalEntryLine.TYPE_CREDIT,
                     "amount":50000,
                     "account":Account.objects.get(name='Common Stock').slug,
                 }
@@ -139,19 +139,19 @@ class JournalEntryViewTests(BaseTestBase):
             'period':self.period.slug,
             'journal_entry_lines':[
                 {
-                    "type":"d",
+                    "type":JournalEntryLine.TYPE_DEBIT,
                     "amount":40000,
                     "account":Account.objects.get(name='Cash').slug,
                 }, {
-                    "type":"d",
+                    "type":JournalEntryLine.TYPE_DEBIT,
                     "amount":20000,
                     "account":Account.objects.get(name='Prepaid Expenses').slug,
                 }, {
-                    "type":"c",
+                    "type":JournalEntryLine.TYPE_CREDIT,
                     "amount":50000,
                     "account":Account.objects.get(name='Common Stock').slug,
                 }, {
-                    "type":"c",
+                    "type":JournalEntryLine.TYPE_CREDIT,
                     "amount":10000,
                     "account":Account.objects.get(name='APIC').slug,
                 }
@@ -193,11 +193,11 @@ class JournalEntryViewTests(BaseTestBase):
             'is_closing_entry':True,
             'journal_entry_lines':[
                 {
-                    "type":"d",
+                    "type":JournalEntryLine.TYPE_DEBIT,
                     "amount":50000,
                     "account":Account.objects.get(name='Cash').slug,
                 }, {
-                    "type":"c",
+                    "type":JournalEntryLine.TYPE_CREDIT,
                     "amount":50000,
                     "account":Account.objects.get(name='Common Stock').slug,
                 }
@@ -220,11 +220,11 @@ class JournalEntryViewTests(BaseTestBase):
             'is_closing_entry':True,
             'journal_entry_lines':[
                 {
-                    "type":"d",
+                    "type":JournalEntryLine.TYPE_DEBIT,
                     "amount":50000,
                     "account":Account.objects.get(name='Cash').slug,
                 }, {
-                    "type":"c",
+                    "type":JournalEntryLine.TYPE_CREDIT,
                     "amount":50000,
                     "account":Account.objects.get(name='Common Stock').slug,
                 }
@@ -248,11 +248,11 @@ class JournalEntryViewTests(BaseTestBase):
             'is_closing_entry':True,
             'journal_entry_lines':[
                 {
-                    "type":"d",
+                    "type":JournalEntryLine.TYPE_DEBIT,
                     "amount":50000,
                     "account":Account.objects.get(name='Cash').slug,
                 }, {
-                    "type":"c",
+                    "type":JournalEntryLine.TYPE_CREDIT,
                     "amount":50000,
                     "account":Account.objects.get(name='Common Stock').slug,
                 }
@@ -274,11 +274,11 @@ class JournalEntryViewTests(BaseTestBase):
             'period':self.period.slug,
             'journal_entry_lines':[
                 {
-                    "type":"d",
+                    "type":JournalEntryLine.TYPE_DEBIT,
                     "amount":0,
                     "account":Account.objects.get(name='Cash').slug,
                 }, {
-                    "type":"c",
+                    "type":JournalEntryLine.TYPE_CREDIT,
                     "amount":0,
                     "account":Account.objects.get(name='Common Stock').slug,
                 }
@@ -300,11 +300,11 @@ class JournalEntryViewTests(BaseTestBase):
             'period':self.period.slug,
             'journal_entry_lines':[
                 {
-                    "type":"d",
+                    "type":JournalEntryLine.TYPE_DEBIT,
                     "amount":-5000,
                     "account":Account.objects.get(name='Cash').slug,
                 }, {
-                    "type":"c",
+                    "type":JournalEntryLine.TYPE_CREDIT,
                     "amount":-5000,
                     "account":Account.objects.get(name='Common Stock').slug,
                 }
@@ -325,11 +325,11 @@ class JournalEntryViewTests(BaseTestBase):
             'period':self.period.slug,
             'journal_entry_lines':[
                 {
-                    "type":"d",
+                    "type":JournalEntryLine.TYPE_DEBIT,
                     "amount":5000,
                     "account":Account.objects.get(name='Cash').slug,
                 }, {
-                    "type":"c",
+                    "type":JournalEntryLine.TYPE_CREDIT,
                     "amount":6000,
                     "account":Account.objects.get(name='Common Stock').slug,
                 }
@@ -351,11 +351,11 @@ class JournalEntryViewTests(BaseTestBase):
             'period':self.period.slug,
             'journal_entry_lines':[
                 {
-                    "type":"d",
+                    "type":JournalEntryLine.TYPE_DEBIT,
                     "amount":5000,
                     "account":Account.objects.get(name='Cash').slug,
                 }, {
-                    "type":"c",
+                    "type":JournalEntryLine.TYPE_CREDIT,
                     "amount":5000,
                     "account":Account.objects.get(name='Common Stock').slug,
                 }
@@ -381,11 +381,11 @@ class JournalEntryViewTests(BaseTestBase):
             'period':self.period.slug,
             'journal_entry_lines':[
                 {
-                    "type":"d",
+                    "type":JournalEntryLine.TYPE_DEBIT,
                     "amount":5000,
                     "account":Account.objects.get(name='Cash').slug,
                 }, {
-                    "type":"c",
+                    "type":JournalEntryLine.TYPE_CREDIT,
                     "amount":5000,
                     "account":Account.objects.get(name='Common Stock').slug,
                 }
@@ -404,7 +404,7 @@ class JournalEntryViewTests(BaseTestBase):
         self.factory.create_journal_entry_line(
             je, Account.objects.get(name='Cash'), 'd', 5000)
         self.factory.create_journal_entry_line(
-            je, Account.objects.get(name='Common Stock'), 'c', 5000)
+            je, Account.objects.get(name='Common Stock'), JournalEntryLine.TYPE_CREDIT, 5000)
         
         self.assertEqual(JournalEntry.objects.count(), 1)
         self.assertEqual(JournalEntryLine.objects.count(), 2)
@@ -424,7 +424,7 @@ class JournalEntryViewTests(BaseTestBase):
         self.factory.create_journal_entry_line(
             je, Account.objects.get(name='Cash'), 'd', 5000)
         self.factory.create_journal_entry_line(
-            je, Account.objects.get(name='Common Stock'), 'c', 5000)
+            je, Account.objects.get(name='Common Stock'), JournalEntryLine.TYPE_CREDIT, 5000)
         
         self.assertEqual(JournalEntry.objects.count(), 1)
         self.assertEqual(JournalEntryLine.objects.count(), 2)

@@ -117,6 +117,7 @@ def app_period_detail(request, slug):
         }
     ]
     data = {
+        'period':period,
         'company':company,
         'breadcrumbs':breadcrumbs,
     }

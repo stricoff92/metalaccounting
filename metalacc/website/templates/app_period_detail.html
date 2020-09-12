@@ -1,3 +1,230 @@
 {% extends 'base_app.html' %} 
 {% block 'body' %}
+<div>
+    <p class="heading-1">
+        {{ period.start|date:"M j, Y" }}
+        <i class="fas fa-arrow-right"></i>
+        {{ period.end|date:"M j, Y" }}
+    </p>
+    <p class="heading-2">
+        Fiscal Period for {{ company.name }}
+    </p>
+</div>
+<style>
+    .min-width-250 {
+        min-width: 250px;
+    }
+</style>
+<div class="card mt-4">
+    <div class="card-header" style="display:flex;">
+        <div>
+            <strong>Reports</strong>
+        </div>
+        <div class="ml-4">
+            <button class="btn btn-primary" id="open-reports-card">Open</button>
+        </div>
+    </div>
+    <div class="card-body" style="display:none" id="report-btn-container">
+        <div>
+            <button class="btn btn-primary min-width-250">
+                Trial Balance
+            </button>
+            <p class="mt-2">
+                See a list of all account balances through this period before
+                and after adjusting entries have been made.
+            </p>
+        </div>
+        <hr>
+        <div>
+            <button class="btn btn-primary min-width-250">
+                Balance Sheet
+            </button>
+            <p class="mt-2">
+                Lorum Ipsum
+            </p>
+        </div>
+        <hr>
+        <div>
+            <button class="btn btn-primary min-width-250">
+                Income Statement
+            </button>
+            <p class="mt-2">
+                Lorum Ipsum
+            </p>
+        </div>
+        <hr>
+        <div>
+            <button class="btn btn-primary min-width-250">
+                Cash Flow Statement
+            </button>
+            <p class="mt-2">
+                Lorum Ipsum
+            </p>
+        </div>
+        <hr>
+        <div>
+            <button class="btn btn-primary min-width-250">
+                Statement of Retained Earnings
+            </button>
+            <p class="mt-2">
+                Lorum Ipsum
+            </p>
+        </div>
+    </div>
+</div>
+<script>
+$(document).ready(()=>{
+    $("#open-reports-card").click(()=>{
+        $("#open-reports-card").prop("disabled", true)
+        $("#report-btn-container").slideDown(350)
+    })
+})
+</script>
+<div class="card mt-4 mb-2" style="min-width:600px;">
+    <div class="card-header">
+        <strong>General Journal</strong>
+    </div>
+    <div class="card-body mr-2">
+        <div id="recent-journal-entries">
+
+        </div>
+        <div class="mt-2" id="add-new-journal-entry-form-container">
+            <p class="heading-2">Create a Journal Entry</p>
+            <div id="dr-cr-section">
+                <p class="mb-1">Accounts to Debit</p>
+                <div id="dr-section">
+
+                </div>
+                <button class="btn btn-primary mt-3" id="add-dr-row-btn">
+                    Add Debit Line
+                </button>
+                <p class="mb-1 mt-4">Accounts to Credit</p>
+                <div id="cr-section">
+
+                </div>
+                <button class="btn btn-primary mt-3" id="add-cr-row-btn">
+                    Add Credit Line
+                </button>
+            </div>
+            <div id="save-totals-section" class="row mt-4">
+                <div class="col-8" style="display:flex;justify-content:space-between;">
+                    <div>
+                        <button class="btn btn-success">Save</button>
+                    </div>
+                    <div>
+                        <strong>Totals</strong>
+                    </div>
+                </div>
+                <div class="col-2 border-top border-right text-right">
+                    <span id="dr-total-span">0</span>
+                </div>
+                <div class="col-2 border-top text-right">
+                    <span id="dr-total-span">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function getNewJournalEntryFormValues() {
+    const rows = $(".account-input-row")
+    const accountsLength = rows.length
+    formData = []
+    for(let i=0; i<accountsLength; i++) {
+        let row = rows[i]
+        let rowuid = $(row).attr("rowuid")
+        let isDebit = $(row).hasClass("dr-row")
+        let accountSlug = $("#account-select-" + rowuid).val()
+        let amount = $("#amount-input-" + rowuid).val() - 0
+        formData.push({
+            type:isDebit ? "d" : "c",
+            amount,
+            accountSlug,
+        })
+    }
+    return formData
+}
+function addAccountRowLine(isDebit) {
+    const rowUID  = getNewUID()
+    $(`#${isDebit ? 'dr-section' : 'cr-section'}`).append(`
+        <div class="mt-1 row account-input-row ${isDebit ? 'dr' : 'cr'}-row" rowuid="${rowUID}">
+            <div class="col-8" style="display:flex;">
+                <select
+                    class="form-control ${!isDebit ? 'ml-5' : ''}"
+                    id="account-select-${rowUID}"
+                >
+                    <option value="">--</option>
+                </select>
+            </div>
+            <div class="col-2">
+                ${isDebit ? '<input type="number" id="amount-input-' + rowUID + '" class="dr-amount-input form-control p-0 pl-1">' : ''}
+            </div>
+            <div class="col-2">
+                ${!isDebit ? '<input type="number" id="amount-input-' + rowUID + '" class="cr-amount-input form-control p-0 pl-1">' : ''}
+            </div>
+        </div>
+    `)
+    $("body").data('accounts').forEach(account => {
+        $(`#account-select-${rowUID}`).append(`
+            <option value="${account.slug}">
+                ${account.name} (${account.number})
+            </option>
+        `)
+    })
+}
+function searchByName(searchName) {
+    const allAccounts = $("body").data('accounts')
+    let foundAccounts = []
+    for(let i=0; i<allAccounts.length; i++) {
+        let account = allAccounts[i]
+        let accName = account.name.replace(/\s+/g, '').toLowerCase()
+        if(accName.indexOf(searchName) != -1) {
+            foundAccounts.push(account)
+        }
+    }
+    return foundAccounts
+}
+function searchByNumber(searchNumber) {
+    const allAccounts = $("body").data('accounts')
+    let foundAccounts = []
+    for(let i=0; i<allAccounts.length; i++) {
+        let account = allAccounts[i]
+        let accNumber = account.number + ""
+        if(accNumber.startsWith(searchNumber)) {
+            foundAccounts.push(account)
+        }
+    }
+    return foundAccounts
+}
+function searchForAccount(nameOrNumber, excludeSlugs) {
+    excludeSlugs = excludeSlugs || []
+    let accounts = []
+    const searchVal = (nameOrNumber + "").replace(/\s+/g, '')
+    if (/^[0-9]+$/.test(searchVal)) {
+        accounts = searchByNumber(searchVal)
+    } else {
+        accounts = searchByName(searchVal.toLowerCase())
+    }
+    return accounts.filter(a=>excludeSlugs.indexOf(a.slug) == -1)
+}
+$(document).ready(()=>{
+    $.get(`${accountListUrl}?company={{ company.slug }}`,
+        (accounts, status, xhr)=>{
+            if(xhr.status == 200) {
+                $("body").data('accounts', accounts)
+                addAccountRowLine(true)
+                addAccountRowLine(false)
+                return
+            }
+            alert("An error occured: " + status)
+        }
+    )
+    $("#add-dr-row-btn").click(()=>{
+        addAccountRowLine(true)
+    })
+    $("#add-cr-row-btn").click(()=>{
+        addAccountRowLine(false)
+    })
+})
+</script>
 {% endblock %}
