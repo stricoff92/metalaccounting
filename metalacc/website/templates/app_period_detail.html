@@ -98,18 +98,17 @@ $(document).ready(()=>{
                 <button class="btn btn-primary mt-3" id="add-dr-row-btn">
                     Add Debit Line
                 </button>
-                <p class="mb-1 mt-4">Accounts to Credit</p>
+                <p class="mb-1 mt-4 ml-5">Accounts to Credit</p>
                 <div id="cr-section">
 
                 </div>
-                <button class="btn btn-primary mt-3" id="add-cr-row-btn">
+                <button class="btn btn-primary mt-3 ml-5" id="add-cr-row-btn">
                     Add Credit Line
                 </button>
             </div>
-            <div id="save-totals-section" class="row mt-4">
+            <div id="totals-section" class="row mt-4">
                 <div class="col-8" style="display:flex;justify-content:space-between;">
                     <div>
-                        <button class="btn btn-success">Save</button>
                     </div>
                     <div>
                         <strong>Totals</strong>
@@ -119,8 +118,21 @@ $(document).ready(()=>{
                     <span id="dr-total-span">0</span>
                 </div>
                 <div class="col-2 border-top text-right">
-                    <span id="dr-total-span">0</span>
+                    <span id="cr-total-span">0</span>
                 </div>
+            </div>
+            <div id="date-input-container" class="mt-3">
+                <div class="ml-2">
+                    <input class="form-control text-input-max-200" type="date" id="new-journal-entry-date-input">
+                </div>
+            </div>
+            <div id="memo-input-container" class="mt-3">
+                <div class="ml-2">
+                    <input class="form-control text-input-max-400" type="text" id="new-journal-entry-memo-input" placeholder="Entry Memo">
+                </div>
+            </div>
+            <div class="mt-4">
+                <button class="btn btn-success">Save</button>
             </div>
         </div>
     </div>
@@ -138,11 +150,18 @@ function getNewJournalEntryFormValues() {
         let amount = $("#amount-input-" + rowuid).val() - 0
         formData.push({
             type:isDebit ? "d" : "c",
-            amount,
+            amount: isNaN(amount) ? 0 : amount,
             accountSlug,
         })
     }
     return formData
+}
+function updateDrCrTotals() {
+    const rows = getNewJournalEntryFormValues()
+    const drTotal = rows.filter(r=>r.type == 'd').map(r=>r.amount).reduce((a, b) => a + b, 0)
+    const crTotal = rows.filter(r=>r.type == 'c').map(r=>r.amount).reduce((a, b) => a + b, 0)
+    $("#dr-total-span").text(drTotal)
+    $("#cr-total-span").text(crTotal)  
 }
 function addAccountRowLine(isDebit) {
     const rowUID  = getNewUID()
@@ -164,6 +183,9 @@ function addAccountRowLine(isDebit) {
             </div>
         </div>
     `)
+    $('#amount-input-' + rowUID).keydown(()=>{
+        setTimeout(updateDrCrTotals)
+    })
     $("body").data('accounts').forEach(account => {
         $(`#account-select-${rowUID}`).append(`
             <option value="${account.slug}">
@@ -220,10 +242,12 @@ $(document).ready(()=>{
         }
     )
     $("#add-dr-row-btn").click(()=>{
-        addAccountRowLine(true)
+        const isDr = true
+        addAccountRowLine(isDr)
     })
     $("#add-cr-row-btn").click(()=>{
-        addAccountRowLine(false)
+        const isDr = false
+        addAccountRowLine(isDr)
     })
 })
 </script>
