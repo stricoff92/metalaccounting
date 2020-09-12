@@ -90,6 +90,9 @@ $(document).ready(()=>{
         </div>
         <div class="mt-2" id="add-new-journal-entry-form-container">
             <p class="heading-2">Create a Journal Entry</p>
+            <div id="new-journal-entry-form-error-container" style="display:none;">
+                <div class="alert alert-danger" id="new-journal-entry-form-error"></div>
+            </div>
             <div id="dr-cr-section">
                 <p class="mb-1">Accounts to Debit</p>
                 <div id="dr-section">
@@ -122,23 +125,130 @@ $(document).ready(()=>{
                 </div>
             </div>
             <div id="date-input-container" class="mt-3">
-                <div class="ml-2">
+                <div>
                     <input class="form-control text-input-max-200" type="date" id="new-journal-entry-date-input">
                 </div>
             </div>
             <div id="memo-input-container" class="mt-3">
-                <div class="ml-2">
+                <div>
                     <input class="form-control text-input-max-400" type="text" id="new-journal-entry-memo-input" placeholder="Entry Memo">
                 </div>
             </div>
+            <div id="type-input-container" class="mt-3">
+                <p class="mb-1">
+                    Entry Type
+                </p>
+                <div class="form-check">
+                    <input class="form-check-input" id="entry-type-regular" type="radio" name="entry-type-radio" value="regular" checked>
+                    <label class="form-check-label" for="entry-type-regular">
+                        Regular
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" id="entry-type-adjusting" type="radio" name="entry-type-radio" value="regular">
+                    <label class="form-check-label" for="entry-type-adjusting">
+                        Adjusting
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" id="entry-type-closing" type="radio" name="entry-type-radio" value="regular">
+                    <label class="form-check-label" for="entry-type-closing">
+                        Closing
+                    </label>
+                </div>
+            </div>
             <div class="mt-4">
-                <button class="btn btn-success">Save</button>
+                <button class="btn btn-success" id="save-new-journal-entry-btn">Save</button>
             </div>
         </div>
     </div>
 </div>
 <script>
-function getNewJournalEntryFormValues() {
+$(document).ready(()=>{
+    $("#save-new-journal-entry-btn").click(()=>{
+        resetNewJournalEntryFormErrors()
+        const formErrors = getNewJournalEntryFormErrors()
+        if(formErrors.length) {
+            return showNewJournalEntryFormErrors(formErrors)
+        }
+        const formData = getNewJournalEntryFormValues()
+        const data = {
+            date:formData.date,
+            memo:formData.memo,
+            period:"{{ period.slug }}",
+            journal_entry_lines:[],
+        }
+        const rowsLength = formData.rows.length
+        for(let i=0; i<rowsLength; i++) {
+            let row = formData.rows[i]
+            data.journal_entry_lines.push({
+                type: row.type,
+                amount: row.amount,
+                account: row.accountSlug,
+            })
+        }
+        if (formData.type == 'closing') {
+            data.is_closing_entry = true
+        } else if (formData.type == 'adjusting') {
+            data.is_adjusting_entry = true
+        }
+        console.log(data)
+    })
+})
+function resetNewJournalEntryFormErrors() {
+    $("#new-journal-entry-form-error").text("")
+    $("#new-journal-entry-form-error-container").css("display", "none")
+}
+function showNewJournalEntryFormErrors(errors) {
+    $("#new-journal-entry-form-error").text(errors.join(" "))
+    $("#new-journal-entry-form-error-container").css("display", "block")
+}
+function getNewJournalEntryFormErrors() {
+    const errors = []
+    const formData = getNewJournalEntryFormValues()
+    const entryDate = moment(formData.date)
+    if(!entryDate.isValid()) {
+        errors.push("Date is required.")
+    }
+    if(entryDate.isValid() && !entryDate.isBetween('{{ period.start|date:"Y-m-d" }}', '{{ period.end|date:"Y-m-d" }}', 'day', '[]')) {
+        errors.push("Entry date must fall between period boundaries.")
+    }
+    const rowsCount = formData.rows.length
+    let cleanedDrTotal = 0
+    let cleanedCrTotal = 0
+    const foundAccountSlugs = []
+    let foundDuplicate = false
+    let foundInvalidNumber = false
+    let foundInvalidAccountSlug = false
+    for(let i=0; i<rowsCount; i++) {
+        let row = formData.rows[i]
+        if(!foundInvalidAccountSlug && !/^[a-zA-Z0-9]{10,}$/.test(row.accountSlug)) {
+            errors.push("Account Field Cannot Be Empty.")
+            foundInvalidAccountSlug = true
+        } else {
+            if (!foundDuplicate && foundAccountSlugs.indexOf(row.accountSlug) != -1) {
+                errors.push("Account Cannot Be Used Multiple Times.")
+                foundDuplicate = true
+            } else {
+                foundAccountSlugs.push(row.accountSlug)
+            }
+        }
+        if(!foundInvalidNumber && row.amount <= 0) {
+            errors.push("Amount Must Be Greater Than 0.")
+            foundInvalidNumber = true
+        }
+        if (row.type == 'd') {
+            cleanedDrTotal = cleanedDrTotal + row.amount
+        } else {
+            cleanedCrTotal = cleanedCrTotal + row.amount
+        }
+    }
+    if (!foundInvalidNumber && cleanedDrTotal != cleanedCrTotal) {
+        errors.push("Credit Total Must Equal Debit Total.")
+    }
+    return errors
+}
+function getNewJournalEntryFormRowValues() {
     const rows = $(".account-input-row")
     const accountsLength = rows.length
     formData = []
@@ -156,8 +266,29 @@ function getNewJournalEntryFormValues() {
     }
     return formData
 }
+function getNewJournalEntryFormValues() {
+    let entryType;
+    switch(true) {
+        case $("#entry-type-regular").prop("checked"):
+            entryType = 'regular'
+            break
+        case $("#entry-type-adjusting").prop("checked"):
+            entryType = 'adjusting'
+            break
+        case $("#entry-type-closing").prop("checked"):
+            entryType = 'closing'
+            break
+    }
+    return {
+        rows:getNewJournalEntryFormRowValues(),
+        date:$("#new-journal-entry-date-input").val(),
+        memo:$("#new-journal-entry-memo-input").val(),
+        type:entryType,
+
+    }
+}
 function updateDrCrTotals() {
-    const rows = getNewJournalEntryFormValues()
+    const rows = getNewJournalEntryFormRowValues()
     const drTotal = rows.filter(r=>r.type == 'd').map(r=>r.amount).reduce((a, b) => a + b, 0)
     const crTotal = rows.filter(r=>r.type == 'c').map(r=>r.amount).reduce((a, b) => a + b, 0)
     $("#dr-total-span").text(drTotal)
