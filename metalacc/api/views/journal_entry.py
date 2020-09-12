@@ -59,7 +59,6 @@ class JournalEntrySerializer(serializers.ModelSerializer):
         )
 
 # Function based views
-# "slug", "date", "memo", "is_adjusting_entry", "is_closing_entry"
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -95,7 +94,13 @@ def journal_entry_list(request, slug):
 
     for ix, je in enumerate(journal_entries):
         journal_entry_id = je['id']
-        journal_entries[ix]['lines'] = je_lines_by_je[journal_entry_id]
+        journal_entries[ix]['lines'] = sorted(
+            je_lines_by_je[journal_entry_id],
+            key=lambda jel: (
+                jel['type'] == 'c',
+                jel['account__number'],
+            )
+        )
 
     return Response(journal_entries, status.HTTP_200_OK)
 

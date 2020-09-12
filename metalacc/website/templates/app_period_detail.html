@@ -410,9 +410,14 @@ $(document).ready(()=>{
         const isDr = false
         addAccountRowLine(isDr)
     })
+    $.get(listJournalEntriesUrl('{{ period.slug }}'), (entries, status, xhr)=>{
+        if(xhr.status == 200) {
+            entries.forEach(addJournalEntry)
+        }
+    })
 })
 function addJournalEntry(journalEntry) {
-    const jeContainerDiv = document.createElement("div")
+    console.log(journalEntry)
 }
 </script>
 {% endblock %}
