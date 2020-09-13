@@ -99,6 +99,38 @@ class JournalEntryViewTests(BaseTestBase):
         self.assertFalse(journal_entry.is_closing_entry)
 
 
+
+    def test_user_cant_create_entry_with_diplicate_account(self):
+        """ Test that a user cannot create an entry that uses the same account more than once.
+        """
+        Account.objects.create_default_accounts(self.company)
+        url = reverse('je-new')
+        data = {
+            'date':"2020-01-15",
+            'memo':'investing in biz with common stock',
+            'period':self.period.slug,
+            'is_adjusting_entry':True,
+            'journal_entry_lines':[
+                {
+                    "type":JournalEntryLine.TYPE_DEBIT,
+                    "amount":45000,
+                    "account":Account.objects.get(name='Cash').slug,
+                }, {
+                    "type":JournalEntryLine.TYPE_DEBIT,
+                    "amount":500,
+                    "account":Account.objects.get(name='Common Stock').slug,
+                }, {
+                    "type":JournalEntryLine.TYPE_CREDIT,
+                    "amount":50000,
+                    "account":Account.objects.get(name='Common Stock').slug,
+                }
+            ],
+        }
+        response = self.client.post(url, json.dumps(data), content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {'account': 'cannot use more than once'})
+
+
     def test_user_can_create_closing_entry(self):
         """ Test that a user can create a closing journal entry with 1 DR account and 1 CR account
         """

@@ -135,19 +135,27 @@ def journal_entry_new(request):
     dr_total = 0
     cr_total = 0
     jel_forms = []
+    found_accounts = set()
     for entry_post in request.data.get('journal_entry_lines', []):
         jel_form = NewJournalEntryLineForm(entry_post)
         if not jel_form.is_valid():
             return Response(
                 jel_form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
         
+        account = jel_form.cleaned_data['account']
+        if account in found_accounts:
+            return Response(
+                {"account":"cannot use more than once"}, status.HTTP_400_BAD_REQUEST)
+        else:
+            found_accounts.add(account)
+        
         # Verify account is owned by this user
-        if jel_form.cleaned_data['account'].user != request.user:
+        if account.user != request.user:
             return Response(
                 {"account":"account not found"}, status.HTTP_404_NOT_FOUND)
 
         # Verify the account belongs to the company
-        if jel_form.cleaned_data['account'].company != company:
+        if account.company != company:
             return Response(
                 {"account":"account belongs to another company"}, status.HTTP_400_BAD_REQUEST)
 
