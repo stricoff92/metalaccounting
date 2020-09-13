@@ -5,13 +5,13 @@ import uuid
 from django.conf import settings
 from django.db.models import Q, Max
 
-def generate_slug(model):
+def generate_slug(model) -> str:
     while True:
         slug = uuid.uuid4().hex[:settings.SLUG_LENGTH]
         if not model.objects.filter(slug=slug).exists():
             return slug
 
-def generate_slugs_batch(model, count:int):
+def generate_slugs_batch(model, count:int) -> set:
     if count <= 0:
         return set()
 
@@ -43,7 +43,7 @@ def get_date_conflict_Q(start, end):
         | Q(start__lte=start, end__gte=end))
 
 
-def get_next_journal_entry_display_id_for_company(company):
+def get_next_journal_entry_display_id_for_company(company) -> int:
     from api.models import JournalEntry
     last_id = JournalEntry.objects.filter(period__company=company).aggregate(m=Max("display_id"))['m'] or 0
     return last_id + 1

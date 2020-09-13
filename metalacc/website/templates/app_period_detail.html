@@ -521,6 +521,16 @@ function addJournalEntry(journalEntry) {
         if(!confirm("Are you sure you want to delete Journal Entry " + journalEntry.display_id)) {
             return
         }
+        postJson(deleteJournalEntryUrl(journalEntry.slug), {},
+            (data, status, xhr)=>{
+                if(xhr.status == 204) {
+                    $(entryContainerDiv).remove()
+                }
+            },
+            (data, status, xhr)=>{
+                alert("An Error Occured")
+            }
+        )
     })
 
 }

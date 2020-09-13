@@ -202,6 +202,6 @@ def journal_entry_new(request):
 def journal_entry_delete(request, slug):
     je = get_object_or_404(
         JournalEntry,
-        period__company__user=request.user)
+        period__company__user=request.user, slug=slug)
     je.delete()
     return Response({}, status.HTTP_204_NO_CONTENT)

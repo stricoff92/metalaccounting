@@ -106,7 +106,7 @@ class JournalEntryViewTests(BaseTestBase):
     def test_journal_entry_display_ids_can_collide_between_companies(self):
         """ Test that a new journal entry display IDs can collide between companies
         """
-
+        # Create a second company/period and set of accounts for the same user.
         another_company = self.factory.create_company(self.user)
         another_period = self.factory.create_period(
             another_company, dt.date(2020, 1, 1), dt.date(2020, 3, 31))
