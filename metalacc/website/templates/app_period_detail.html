@@ -87,14 +87,14 @@ $(document).ready(()=>{
                 <strong>General Journal</strong>
             </div>
             <div class="ml-3">
-                <button id="open-new-journal-entry-form-btn" class="btn btn-primary">New Entry</button>
+                <button id="open-new-journal-entry-form-btn" class="btn btn-primary">
+                    <i class="fas fa-plus-square"></i>
+                    New Entry
+                </button>
             </div>
         </div>
     </div>
     <div class="card-body mr-2">
-        <div id="recent-journal-entries">
-
-        </div>
         <div class="mt-2" id="add-new-journal-entry-form-container" style="display:none;">
             <p class="heading-2">Create a Journal Entry</p>
             <div id="new-journal-entry-form-error-container" style="display:none;">
@@ -165,10 +165,15 @@ $(document).ready(()=>{
                 </div>
             </div>
             <div class="mt-4">
-                <button class="btn btn-success" id="save-new-journal-entry-btn">Save</button>
+                <button class="btn btn-success" id="save-new-journal-entry-btn">
+                    <i class="fas fa-save"></i>
+                    Save
+                </button>
             </div>
+            <hr>
         </div>
-        <div id="journal-entries-container">
+        <div id="journal-entries-container" class="mt-3">
+            <p class="heading-2">Journal Entries</p>
 
         </div>
     </div>
@@ -211,7 +216,7 @@ $(document).ready(()=>{
             (data, status, xhr)=>{
                 if(xhr.status == 201) {
                     resetNewJournalEntryForm()
-                    // return addPeriodToList(data)
+                    addJournalEntry(data)
                 }
             }, (data, status, xhr)=>{
         
@@ -221,6 +226,8 @@ $(document).ready(()=>{
 function resetNewJournalEntryForm (){
     $('#dr-section').empty()
     $('#cr-section').empty()
+    $("#dr-total-span").text("0")
+    $("#cr-total-span").text("0")
     addAccountRowLine(true)
     addAccountRowLine(false)
     $("#new-journal-entry-memo-input").val("")
@@ -321,8 +328,8 @@ function updateDrCrTotals() {
     const rows = getNewJournalEntryFormRowValues()
     const drTotal = rows.filter(r=>r.type == 'd').map(r=>r.amount).reduce((a, b) => a + b, 0)
     const crTotal = rows.filter(r=>r.type == 'c').map(r=>r.amount).reduce((a, b) => a + b, 0)
-    $("#dr-total-span").text(drTotal)
-    $("#cr-total-span").text(crTotal)  
+    $("#dr-total-span").text(numberWithCommas(drTotal))
+    $("#cr-total-span").text(numberWithCommas(crTotal))  
 }
 function addAccountRowLine(isDebit) {
     const rowUID  = getNewUID()
@@ -410,14 +417,97 @@ $(document).ready(()=>{
         const isDr = false
         addAccountRowLine(isDr)
     })
-    $.get(listJournalEntriesUrl('{{ period.slug }}'), (entries, status, xhr)=>{
-        if(xhr.status == 200) {
-            entries.forEach(addJournalEntry)
-        }
-    })
+    const fetchPage = (page) => {
+        const url = listJournalEntriesUrl('{{ period.slug }}') + "?page=" + page
+        $.get(url, (entries, status, xhr)=>{
+            if(xhr.status == 200) {
+                if(entries.length) {
+                    entries.forEach(addJournalEntry)
+                    let nextPage = page + 1
+                    return fetchPage(nextPage)
+                }
+            }
+        })
+    }
+    fetchPage(1)
 })
 function addJournalEntry(journalEntry) {
+    console.log("drawing journal entries")
     console.log(journalEntry)
+    const entryContainerDiv = document.createElement("div")
+    $(entryContainerDiv).attr("id", "journal-entry-container-" + journalEntry.slug)
+    $(entryContainerDiv).attr("entrydate", journalEntry.date)
+    $(entryContainerDiv).addClass("p-2 mt-2 journal-entry-container")
+
+    const drEntriesDiv = document.createElement("div")
+    const crEntriesDiv = document.createElement("div")
+
+    const linesLength = journalEntry.lines.length
+    for(let i=0; i<linesLength; i++) {
+        let jeLine = journalEntry.lines[i]
+        let isDebit = jeLine.type == 'd'
+    
+        let jeLineDiv = document.createElement("div")
+        $(jeLineDiv).addClass("row border-bottom")
+
+        let col1Div = document.createElement("div") // account
+        let col2Div = document.createElement("div") // dr amount
+        let col3Div = document.createElement("div") // cr amount
+        $(col1Div).text(`(${jeLine.account__number}) ${jeLine.account__name}`)
+        $(col1Div).addClass("col-8 pb-1 pt-1")
+        $(col2Div).addClass("col-2 pb-1 pt-1 border-right")
+        $(col3Div).addClass("col-2 pb-1 pt-1")
+    
+        if (isDebit) {
+            $(col2Div).text(numberWithCommas(jeLine.amount))
+        } else {
+            $(col3Div).text(numberWithCommas(jeLine.amount))
+            $(col1Div).addClass("pl-5")
+        }
+        $(jeLineDiv).append(col1Div)
+        $(jeLineDiv).append(col2Div)
+        $(jeLineDiv).append(col3Div)
+        if (isDebit) {
+            $(drEntriesDiv).append(jeLineDiv)
+        } else {
+            $(crEntriesDiv).append(jeLineDiv)
+        }
+    }
+    entryContainerDiv.append(drEntriesDiv)
+    entryContainerDiv.append(crEntriesDiv)
+
+    const jeDateDiv = document.createElement("div") // date
+    $(jeDateDiv).text(journalEntry.date)
+
+
+    const jeMemoDiv = document.createElement("div") // memo
+    $(jeMemoDiv).text(moment(journalEntry.date).format("ll") + (journalEntry.memo ?" | " + journalEntry.memo : ""))
+    $(jeMemoDiv).addClass("mt-3 card p-2 text-white bg-secondary")
+    entryContainerDiv.append(jeMemoDiv)
+    entryContainerDiv.append(document.createElement("hr"))
+
+    const thisEntryDate = moment(journalEntry.date)
+    const existingEntries = $('.journal-entry-container')
+    const existingEntriesCount = existingEntries.length
+    if(existingEntriesCount == 0)
+        $('#journal-entries-container').append(entryContainerDiv)
+    else {
+        let insertBeforeDivId;
+        for(let i=0; i<existingEntriesCount; i++) {
+            let dateOnPage = moment($(existingEntries[i]).attr("entrydate"))
+            if(dateOnPage < thisEntryDate) {
+                insertBeforeDivId = $(existingEntries[i]).attr("id")
+                break
+            }
+        }
+
+        if(insertBeforeDivId) {
+            $(entryContainerDiv).insertBefore($("#" + insertBeforeDivId))
+        } else {
+            $('#journal-entries-container').append(entryContainerDiv)
+        }        
+    }
+
 }
 </script>
 {% endblock %}

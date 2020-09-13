@@ -17,24 +17,30 @@ from api.forms.journal_entry import NewJournalEntryForm, NewJournalEntryLineForm
 
 class JournalEntryLineSerializer(serializers.ModelSerializer):
 
-    account_name = serializers.SerializerMethodField()
-    account_number = serializers.SerializerMethodField()
+    account__name = serializers.SerializerMethodField()
+    account__number = serializers.SerializerMethodField()
+    account__slug = serializers.SerializerMethodField()
 
     class Meta:
         model = JournalEntryLine
         fields = (
             "slug",
-            "account_name",
-            "account_number",
+            "account__name",
+            "account__number",
+            "account__slug",
             "type",
             "amount",
         )
     
-    def get_account_name(self, obj):
+    def get_account__name(self, obj):
         return obj.account.name
 
-    def get_account_number(self, obj):
+    def get_account__number(self, obj):
         return obj.account.number
+
+    def get_account__slug(self, obj):
+        return obj.account.slug
+
 
 class PeriodSerializer(serializers.ModelSerializer):
     class Meta:
