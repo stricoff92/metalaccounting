@@ -6,7 +6,10 @@ from django.db.models import Sum
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
-from api.utils import generate_slug
+from api.utils import (
+    generate_slug,
+    get_next_journal_entry_display_id_for_company,
+)
 
 
 JOURNAL_ENTRY_TYPE_DR = 'd'
@@ -22,6 +25,8 @@ class JournalEntry(models.Model):
     memo = models.CharField(max_length=1000, blank=True, null=True, default=None)
     is_adjusting_entry = models.BooleanField(blank=True, default=False)
     is_closing_entry = models.BooleanField(blank=True, default=False)
+
+    display_id = models.PositiveIntegerField()
 
 
     def __str__(self):
@@ -43,6 +48,11 @@ class JournalEntry(models.Model):
             if 'update_fields' in kwargs and 'slug' not in kwargs['update_fields']:
                 kwargs['update_fields'] = list(chain(kwargs['update_fields'], ['slug']))
         
+        if not self.display_id:
+            self.display_id = get_next_journal_entry_display_id_for_company(self.period.company)
+            if 'update_fields' in kwargs and 'display_id' not in kwargs['update_fields']:
+                kwargs['update_fields'] = list(chain(kwargs['update_fields'], ['display_id']))
+
         if not (self.period.start <= self.date <= self.period.end):
             raise ValidationError("entry date must fall within period")
         

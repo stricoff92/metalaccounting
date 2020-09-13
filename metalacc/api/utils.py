@@ -3,7 +3,7 @@ import re
 import uuid
 
 from django.conf import settings
-from django.db.models import Q
+from django.db.models import Q, Max
 
 def generate_slug(model):
     while True:
@@ -41,3 +41,9 @@ def get_date_conflict_Q(start, end):
         | Q(start__gte=start, start__lte=end)
         | Q(start__gte=start, end__lte=end)
         | Q(start__lte=start, end__gte=end))
+
+
+def get_next_journal_entry_display_id_for_company(company):
+    from api.models import JournalEntry
+    last_id = JournalEntry.objects.filter(period__company=company).aggregate(m=Max("display_id"))['m'] or 0
+    return last_id + 1
