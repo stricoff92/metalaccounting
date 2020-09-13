@@ -20,66 +20,25 @@
         <div>
             <strong>Reports</strong>
         </div>
-        <div class="ml-4">
-            <button class="btn btn-primary" id="open-reports-card">Open</button>
-        </div>
     </div>
-    <div class="card-body" style="display:none" id="report-btn-container">
-        <div>
-            <a href="/app/period/{{ period.slug }}/trial-balance/">
-                Trial Balance
-            </a>
-            <p class="mt-2">
-                See a list of all account balances through this period before
-                and after adjusting entries have been made.
-            </p>
-        </div>
-        <hr>
-        <div>
-            <button class="btn btn-primary min-width-250">
-                Balance Sheet
-            </button>
-            <p class="mt-2">
-                Lorum Ipsum
-            </p>
-        </div>
-        <hr>
-        <div>
-            <button class="btn btn-primary min-width-250">
-                Income Statement
-            </button>
-            <p class="mt-2">
-                Lorum Ipsum
-            </p>
-        </div>
-        <hr>
-        <div>
-            <button class="btn btn-primary min-width-250">
-                Cash Flow Statement
-            </button>
-            <p class="mt-2">
-                Lorum Ipsum
-            </p>
-        </div>
-        <hr>
-        <div>
-            <button class="btn btn-primary min-width-250">
-                Statement of Retained Earnings
-            </button>
-            <p class="mt-2">
-                Lorum Ipsum
-            </p>
+    <div class="card-body" id="report-container">
+        <div class="row">
+            <div class="col-2">
+                <p>
+                    <a href="/app/period/{{ period.slug }}/trial-balance/">
+                        Trial Balance
+                    </a>
+                </p>
+            </div>
+            <div class="col-10">
+                <p>
+                    See a list of all account balances through this period before
+                    and after adjusting entries have been made. Closing entries are excluded.
+                </p>
+            </div>
         </div>
     </div>
 </div>
-<script>
-$(document).ready(()=>{
-    $("#open-reports-card").click(()=>{
-        $("#open-reports-card").prop("disabled", true)
-        $("#report-btn-container").slideDown(350)
-    })
-})
-</script>
 <div class="card mt-4 mb-2" style="min-width:600px;">
     <div class="card-header">
         <div style="display:flex;">

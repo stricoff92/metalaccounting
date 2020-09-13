@@ -42,6 +42,7 @@ DEFAULT_ACCOUNTS = (
     ('revenue', None, False, 4450, 'Gains',),
 
     ('expense', None, False, 5100, 'CoGS',),
+    ('expense', None, False, 5150, 'Depreciation Expenses',),
     ('expense', None, False, 5200, 'Wages Expenses',),
     ('expense', None, False, 5300, 'Tax Expenses',),
     ('expense', None, False, 5350, 'Interest Expenses',),

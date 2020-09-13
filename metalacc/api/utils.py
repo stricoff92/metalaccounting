@@ -7,6 +7,9 @@ from django.db.models import Q, Max
 from django.urls import reverse
 
 def generate_slug(model) -> str:
+    if not model:
+        return uuid.uuid4().hex[:settings.SLUG_LENGTH]
+
     while True:
         slug = uuid.uuid4().hex[:settings.SLUG_LENGTH]
         if not model.objects.filter(slug=slug).exists():
@@ -73,3 +76,15 @@ def get_report_page_breadcrumbs(period, report_name:str) -> list:
             'value':report_name,
         }
     ]
+
+
+def get_company_periods_up_to_and_excluding(period):
+    """ Get all periods for a company leading up to the given period, including the given period
+    """
+    company = period.company
+    return (company.period_set
+        .exclude(id=period.id)
+        .filter(company_id=company.id, end__lte=period.start))
+
+
+

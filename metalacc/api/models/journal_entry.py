@@ -2,7 +2,7 @@
 from itertools import chain
 
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
@@ -16,7 +16,37 @@ JOURNAL_ENTRY_TYPE_DR = 'd'
 JOURNAL_ENTRY_TYPE_CR = 'c'
 
 
+class JounralEntryManager(models.Manager):
+    def filter_for_unadjusted_trial(self, period):
+        """ Get all current regular entries, and all entries from pervious periods.
+        """
+        return self.filter(
+            Q(period=period, is_adjusting_entry=False, is_closing_entry=False)
+            | (
+                ~Q(period=period)
+                & Q(period__company=period.company)
+                & Q(period__end__lte=period.start)
+            )
+        )
+
+    def filter_for_adjusted_trial(self, period):
+        """ Get all current regular & adjusting entries, and all entries from pervious periods.
+        """
+        return self.filter(
+            Q(period=period, is_closing_entry=False)
+            | (
+                ~Q(period=period)
+                & Q(period__company=period.company)
+                & Q(period__end__lte=period.start)
+            )
+        )
+
+
+
 class JournalEntry(models.Model):
+
+    objects = JounralEntryManager()
+
 
     slug = models.SlugField(unique=True, editable=False)
     period = models.ForeignKey("api.Period", on_delete=models.CASCADE)

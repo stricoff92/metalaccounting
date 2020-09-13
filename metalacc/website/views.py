@@ -1,14 +1,20 @@
 
+import csv
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.urls import reverse
-from django.http import HttpResponseNotAllowed
+from django.http import HttpResponseNotAllowed, HttpResponse
 
 from api.models import Company, Account, Period, JournalEntry
 from api.models.account import DEFAULT_ACCOUNTS
-from api.utils import get_report_page_breadcrumbs
+from api.utils import (
+    generate_slug,
+    get_report_page_breadcrumbs,
+)
+from api.lib import reports as reports_lib
 from website.forms import LoginForm
 
 
@@ -247,12 +253,56 @@ def app_profile(request):
 
 @login_required
 def trial_balance(request, slug):
-    period = get_object_or_404(
+    current_period = get_object_or_404(
         Period, company__user=request.user, slug=slug)
 
-    breadcrumbs = get_report_page_breadcrumbs(period, "Trial Balance")
-    data = {'period':period, 'breadcrumbs':breadcrumbs}
-    return render(request, "trial_balance.html", data)
+    (rows,
+    total_company_unadj_dr,
+    total_company_unadj_cr,
+    total_company_adj_dr,
+    total_company_adj_cr,) = reports_lib.get_trial_balance_data(current_period)
+
+    breadcrumbs = get_report_page_breadcrumbs(current_period, "Trial Balance")
+    data = {
+        'period':current_period,
+        'breadcrumbs':breadcrumbs,
+        'trial_balance_rows':rows,
+        'total_company_unadj_dr':total_company_unadj_dr,
+        'total_company_unadj_cr':total_company_unadj_cr,
+        'total_company_adj_dr':total_company_adj_dr,
+        'total_company_adj_cr':total_company_adj_cr,
+    }
+    return render(request, "app_report_trial_balance.html", data)
+
+
+@login_required
+def trial_balance_csv(request, slug):
+    current_period = get_object_or_404(
+        Period, company__user=request.user, slug=slug)
+
+    (rows,
+    total_company_unadj_dr,
+    total_company_unadj_cr,
+    total_company_adj_dr,
+    total_company_adj_cr,) = reports_lib.get_trial_balance_data(current_period)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="trial-balance-{generate_slug(None)}.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        'account number', 'account name',
+        'unadjusted debit balance', 'unadjusted credit balance',
+        'adjusted debit balance', 'adjusted credit balance',
+    ])
+    for row in rows:
+        writer.writerow([
+            row['account']['number'], row['account']['name'],
+            row['unadj_dr_bal'], row['unadj_cr_bal'],
+            row['adj_dr_bal'], row['adj_cr_bal'],
+        ])
+
+    return response
 
 # END OF REPORT PAGES
 

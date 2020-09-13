@@ -15,6 +15,7 @@ urlpatterns = [
     path('app/period/<slug:slug>/', views.app_period_detail, name="app-period-details"),
 
     path('app/period/<slug:slug>/trial-balance/', views.trial_balance, name="app-trial-balance"),
+    path('app/period/<slug:slug>/trial-balance/csv/', views.trial_balance_csv, name="app-trial-balance-csv"),
 
     path('app/profile/', views.app_profile, name="app-profile"),
     path('login/', views.login_user, name="login"),
