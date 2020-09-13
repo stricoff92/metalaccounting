@@ -173,6 +173,12 @@ $(document).ready(()=>{
                 addEditAccountFormAPIError(errorToString(data.responseJSON))
             })
     })
+
+    if(window.location.search.indexOf("edit=1") != -1) {
+        setTimeout(()=>{
+            $("#open-edit-account-form-btn").trigger("click")
+        }, 200)
+    }
 })
 </script>
 {% endblock %}

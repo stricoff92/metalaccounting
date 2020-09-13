@@ -112,6 +112,19 @@ class Account(models.Model):
     @property
     def supports_is_current(self):
         return self.type in self.CURRENT_TYPES
+    
+    @property
+    def balance_type(self):
+        if self.type in (self.TYPE_ASSET, self.TYPE_EXPENSE,):
+            if self.is_contra:
+                return "credit"
+            else:
+                return "debit"
+        else:
+            if self.is_contra:
+                return "debit"
+            else:
+                return "credit"
 
 
     def save(self, *args, **kwargs):

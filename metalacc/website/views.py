@@ -252,6 +252,22 @@ def app_profile(request):
 # REPORT PAGES
 
 @login_required
+def t_account(request, period_slug, account_slug):
+    current_period = get_object_or_404(
+        Period, company__user=request.user, slug=period_slug)
+    account = get_object_or_404(Account, company=current_period.company, slug=account_slug)
+
+    breadcrumbs = get_report_page_breadcrumbs(current_period, f"{account.name} T-Account")
+
+    data = {
+        'breadcrumbs':breadcrumbs,
+        'account':account,
+        'period':current_period,
+    }
+    return render(request, "app_report_t_account.html", data)
+
+
+@login_required
 def trial_balance(request, slug):
     current_period = get_object_or_404(
         Period, company__user=request.user, slug=slug)
