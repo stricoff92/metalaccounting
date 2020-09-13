@@ -4,6 +4,7 @@ import uuid
 
 from django.conf import settings
 from django.db.models import Q, Max
+from django.urls import reverse
 
 def generate_slug(model) -> str:
     while True:
@@ -47,3 +48,28 @@ def get_next_journal_entry_display_id_for_company(company) -> int:
     from api.models import JournalEntry
     last_id = JournalEntry.objects.filter(period__company=company).aggregate(m=Max("display_id"))['m'] or 0
     return last_id + 1
+
+
+def get_report_page_breadcrumbs(period, report_name:str) -> list:
+    company = period.company
+    date_format = "%b %-d, %Y"
+    return [
+        {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
+            'value':'companies',
+            'href':reverse("app-landing"),
+        }, {
+            'value':company.name,
+            'href':reverse("app-company", kwargs={'slug':company.slug}),
+        }, {
+            'value':'periods',
+            'href':reverse("app-period", kwargs={'slug':company.slug})
+        }, {
+            'value':f'{period.start.strftime(date_format)} -> {period.end.strftime(date_format)}',
+            'href':reverse("app-period-details", kwargs={'slug':period.slug})
+        }, {
+            'value':report_name,
+        }
+    ]

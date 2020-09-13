@@ -8,6 +8,7 @@ from django.http import HttpResponseNotAllowed
 
 from api.models import Company, Account, Period, JournalEntry
 from api.models.account import DEFAULT_ACCOUNTS
+from api.utils import get_report_page_breadcrumbs
 from website.forms import LoginForm
 
 
@@ -239,6 +240,21 @@ def app_profile(request):
         'skip_moment_import':True,
     }
     return render(request, "app_profile.html", data)
+
+
+
+# REPORT PAGES
+
+@login_required
+def trial_balance(request, slug):
+    period = get_object_or_404(
+        Period, company__user=request.user, slug=slug)
+
+    breadcrumbs = get_report_page_breadcrumbs(period, "Trial Balance")
+    data = {'period':period, 'breadcrumbs':breadcrumbs}
+    return render(request, "trial_balance.html", data)
+
+# END OF REPORT PAGES
 
 
 def login_user(request):
