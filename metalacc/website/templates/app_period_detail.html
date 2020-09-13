@@ -432,8 +432,6 @@ $(document).ready(()=>{
     fetchPage(1)
 })
 function addJournalEntry(journalEntry) {
-    console.log("drawing journal entries")
-    console.log(journalEntry)
     const entryContainerDiv = document.createElement("div")
     $(entryContainerDiv).attr("id", "journal-entry-container-" + journalEntry.slug)
     $(entryContainerDiv).attr("entrydate", journalEntry.date)
@@ -476,11 +474,7 @@ function addJournalEntry(journalEntry) {
     entryContainerDiv.append(drEntriesDiv)
     entryContainerDiv.append(crEntriesDiv)
 
-    const jeDateDiv = document.createElement("div") // date
-    $(jeDateDiv).text(journalEntry.date)
-
-
-    const jeMemoDiv = document.createElement("div") // memo
+    const jeMemoDiv = document.createElement("div") // memo & date
     $(jeMemoDiv).text(moment(journalEntry.date).format("ll") + (journalEntry.memo ?" | " + journalEntry.memo : ""))
     $(jeMemoDiv).addClass("mt-3 card p-2 text-white bg-secondary")
     entryContainerDiv.append(jeMemoDiv)
