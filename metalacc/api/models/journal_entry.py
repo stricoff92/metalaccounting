@@ -2,18 +2,51 @@
 from itertools import chain
 
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
-from api.utils import generate_slug
+from api.utils import (
+    generate_slug,
+    get_next_journal_entry_display_id_for_company,
+)
 
 
 JOURNAL_ENTRY_TYPE_DR = 'd'
 JOURNAL_ENTRY_TYPE_CR = 'c'
 
 
+class JounralEntryManager(models.Manager):
+    def filter_for_unadjusted_trial(self, period):
+        """ Get all current regular entries, and all entries from pervious periods.
+        """
+        return self.filter(
+            Q(period=period, is_adjusting_entry=False, is_closing_entry=False)
+            | (
+                ~Q(period=period)
+                & Q(period__company=period.company)
+                & Q(period__end__lte=period.start)
+            )
+        )
+
+    def filter_for_adjusted_trial(self, period):
+        """ Get all current regular & adjusting entries, and all entries from pervious periods.
+        """
+        return self.filter(
+            Q(period=period, is_closing_entry=False)
+            | (
+                ~Q(period=period)
+                & Q(period__company=period.company)
+                & Q(period__end__lte=period.start)
+            )
+        )
+
+
+
 class JournalEntry(models.Model):
+
+    objects = JounralEntryManager()
+
 
     slug = models.SlugField(unique=True, editable=False)
     period = models.ForeignKey("api.Period", on_delete=models.CASCADE)
@@ -22,6 +55,8 @@ class JournalEntry(models.Model):
     memo = models.CharField(max_length=1000, blank=True, null=True, default=None)
     is_adjusting_entry = models.BooleanField(blank=True, default=False)
     is_closing_entry = models.BooleanField(blank=True, default=False)
+
+    display_id = models.PositiveIntegerField()
 
 
     def __str__(self):
@@ -43,6 +78,11 @@ class JournalEntry(models.Model):
             if 'update_fields' in kwargs and 'slug' not in kwargs['update_fields']:
                 kwargs['update_fields'] = list(chain(kwargs['update_fields'], ['slug']))
         
+        if not self.display_id:
+            self.display_id = get_next_journal_entry_display_id_for_company(self.period.company)
+            if 'update_fields' in kwargs and 'display_id' not in kwargs['update_fields']:
+                kwargs['update_fields'] = list(chain(kwargs['update_fields'], ['display_id']))
+
         if not (self.period.start <= self.date <= self.period.end):
             raise ValidationError("entry date must fall within period")
         

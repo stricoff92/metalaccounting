@@ -3,15 +3,19 @@ import re
 import uuid
 
 from django.conf import settings
-from django.db.models import Q
+from django.db.models import Q, Max
+from django.urls import reverse
 
-def generate_slug(model):
+def generate_slug(model) -> str:
+    if not model:
+        return uuid.uuid4().hex[:settings.SLUG_LENGTH]
+
     while True:
         slug = uuid.uuid4().hex[:settings.SLUG_LENGTH]
         if not model.objects.filter(slug=slug).exists():
             return slug
 
-def generate_slugs_batch(model, count:int):
+def generate_slugs_batch(model, count:int) -> set:
     if count <= 0:
         return set()
 
@@ -41,3 +45,46 @@ def get_date_conflict_Q(start, end):
         | Q(start__gte=start, start__lte=end)
         | Q(start__gte=start, end__lte=end)
         | Q(start__lte=start, end__gte=end))
+
+
+def get_next_journal_entry_display_id_for_company(company) -> int:
+    from api.models import JournalEntry
+    last_id = JournalEntry.objects.filter(period__company=company).aggregate(m=Max("display_id"))['m'] or 0
+    return last_id + 1
+
+
+def get_report_page_breadcrumbs(period, report_name:str) -> list:
+    company = period.company
+    date_format = "%b %-d, %Y"
+    return [
+        {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
+            'value':'companies',
+            'href':reverse("app-landing"),
+        }, {
+            'value':company.name,
+            'href':reverse("app-company", kwargs={'slug':company.slug}),
+        }, {
+            'value':'periods',
+            'href':reverse("app-period", kwargs={'slug':company.slug})
+        }, {
+            'value':f'{period.start.strftime(date_format)} -> {period.end.strftime(date_format)}',
+            'href':reverse("app-period-details", kwargs={'slug':period.slug})
+        }, {
+            'value':report_name,
+        }
+    ]
+
+
+def get_company_periods_up_to_and_excluding(period):
+    """ Get all periods for a company leading up to the given period, including the given period
+    """
+    company = period.company
+    return (company.period_set
+        .exclude(id=period.id)
+        .filter(company_id=company.id, end__lte=period.start))
+
+
+

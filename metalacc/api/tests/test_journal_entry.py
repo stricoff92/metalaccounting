@@ -60,6 +60,7 @@ class JournalEntryViewTests(BaseTestBase):
         self.assertFalse(journal_entry.is_closing_entry)
         self.assertEqual(journal_entry.dr_total, 50000)
         self.assertEqual(journal_entry.cr_total, 50000)  
+        self.assertEqual(journal_entry.display_id, 1)  
 
         self.assertEqual(journal_entry.lines.count(), 2)
         cr_line = journal_entry.lines.get(type=JournalEntryLine.TYPE_CREDIT)
@@ -68,6 +69,93 @@ class JournalEntryViewTests(BaseTestBase):
         self.assertEqual(dr_line.amount, 50000)
         self.assertEqual(cr_line.account, Account.objects.get(name='Common Stock'))
         self.assertEqual(dr_line.account, Account.objects.get(name='Cash'))
+
+
+    def test_journal_entry_display_ids_increment_by_1(self):
+        """ Test that a new journal entry increments it's display ID by 1 VS the previous entry
+        """
+        Account.objects.create_default_accounts(self.company)
+        url = reverse('je-new')
+        data = {
+            'date':"2020-01-15",
+            'memo':'investing in biz with common stock',
+            'period':self.period.slug,
+            'journal_entry_lines':[
+                {
+                    "type":JournalEntryLine.TYPE_DEBIT,
+                    "amount":50000,
+                    "account":Account.objects.get(name='Cash').slug,
+                }, {
+                    "type":JournalEntryLine.TYPE_CREDIT,
+                    "amount":50000,
+                    "account":Account.objects.get(name='Common Stock').slug,
+                }
+            ],
+        }
+        response = self.client.post(url, json.dumps(data), content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        journal_entry = JournalEntry.objects.get(slug=response.data['slug'])
+        self.assertEqual(journal_entry.display_id, 1)  
+
+        response = self.client.post(url, json.dumps(data), content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        journal_entry = JournalEntry.objects.get(slug=response.data['slug'])
+        self.assertEqual(journal_entry.display_id, 2)  
+
+
+    def test_journal_entry_display_ids_can_collide_between_companies(self):
+        """ Test that a new journal entry display IDs can collide between companies
+        """
+        # Create a second company/period and set of accounts for the same user.
+        another_company = self.factory.create_company(self.user)
+        another_period = self.factory.create_period(
+            another_company, dt.date(2020, 1, 1), dt.date(2020, 3, 31))
+
+        Account.objects.create_default_accounts(self.company)
+        Account.objects.create_default_accounts(another_company)
+
+        url = reverse('je-new')
+        data = {
+            'date':"2020-01-15",
+            'memo':'investing in biz with common stock',
+            'period':self.period.slug,
+            'journal_entry_lines':[
+                {
+                    "type":JournalEntryLine.TYPE_DEBIT,
+                    "amount":50000,
+                    "account":Account.objects.get(name='Cash', company=self.company).slug,
+                }, {
+                    "type":JournalEntryLine.TYPE_CREDIT,
+                    "amount":50000,
+                    "account":Account.objects.get(name='Common Stock', company=self.company).slug,
+                }
+            ],
+        }
+        response = self.client.post(url, json.dumps(data), content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        journal_entry = JournalEntry.objects.get(slug=response.data['slug'])
+        self.assertEqual(journal_entry.display_id, 1)  
+
+        data = {
+            'date':"2020-01-15",
+            'memo':'investing in biz with common stock',
+            'period':another_period.slug,
+            'journal_entry_lines':[
+                {
+                    "type":JournalEntryLine.TYPE_DEBIT,
+                    "amount":50000,
+                    "account":Account.objects.get(name='Cash', company=another_company).slug,
+                }, {
+                    "type":JournalEntryLine.TYPE_CREDIT,
+                    "amount":50000,
+                    "account":Account.objects.get(name='Common Stock', company=another_company).slug,
+                }
+            ],
+        }
+        response = self.client.post(url, json.dumps(data), content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        journal_entry = JournalEntry.objects.get(slug=response.data['slug'])
+        self.assertEqual(journal_entry.display_id, 1) # same display ID as entry associated with another company
 
 
     def test_user_can_create_adjustment_entry(self):

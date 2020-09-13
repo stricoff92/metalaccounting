@@ -56,6 +56,7 @@ class JournalEntrySerializer(serializers.ModelSerializer):
         model = JournalEntry
         fields = (
             "slug",
+            "display_id",
             "date",
             "period",
             "memo",
@@ -88,7 +89,7 @@ def journal_entry_list(request, slug):
     journal_entries = list(JournalEntry.objects
         .filter(id__in=journal_entry_ids)
         .order_by("-date")
-        .values("id", "slug", "date", "memo", "is_adjusting_entry", "is_closing_entry"))
+        .values("id", "slug", "display_id", "date", "memo", "is_adjusting_entry", "is_closing_entry"))
 
     journal_entry_lines = list(JournalEntryLine.objects
         .filter(journal_entry_id__in=journal_entry_ids)
@@ -201,6 +202,6 @@ def journal_entry_new(request):
 def journal_entry_delete(request, slug):
     je = get_object_or_404(
         JournalEntry,
-        period__company__user=request.user)
+        period__company__user=request.user, slug=slug)
     je.delete()
     return Response({}, status.HTTP_204_NO_CONTENT)
