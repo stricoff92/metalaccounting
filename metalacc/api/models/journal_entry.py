@@ -9,6 +9,10 @@ from django.core.exceptions import ValidationError
 from api.utils import generate_slug
 
 
+JOURNAL_ENTRY_TYPE_DR = 'd'
+JOURNAL_ENTRY_TYPE_CR = 'c'
+
+
 class JournalEntry(models.Model):
 
     slug = models.SlugField(unique=True, editable=False)
@@ -21,16 +25,16 @@ class JournalEntry(models.Model):
 
 
     def __str__(self):
-        return f"<JournalEntry {self.pk} {self.name} ({self.user})>"
+        return f"<JournalEntry {self.pk} ({self.period.user})>"
 
     @property
     def dr_total(self):
-        value = self.lines.filter(type='d').aggregate(s=Sum('amount'))['s']
+        value = self.lines.filter(type=JOURNAL_ENTRY_TYPE_DR).aggregate(s=Sum('amount'))['s']
         return value or 0
 
     @property
     def cr_total(self):
-        value = self.lines.filter(type='c').aggregate(s=Sum('amount'))['s']
+        value = self.lines.filter(type=JOURNAL_ENTRY_TYPE_CR).aggregate(s=Sum('amount'))['s']
         return value or 0
 
     def save(self, *args, **kwargs):
@@ -54,8 +58,8 @@ class JournalEntryLine(models.Model):
     journal_entry = models.ForeignKey(JournalEntry, on_delete=models.CASCADE, related_name='lines')
     account = models.ForeignKey('api.Account', on_delete=models.CASCADE)
 
-    TYPE_DEBIT = 'd'
-    TYPE_CREDIT = 'c'
+    TYPE_DEBIT = JOURNAL_ENTRY_TYPE_DR
+    TYPE_CREDIT = JOURNAL_ENTRY_TYPE_CR
     TYPE_CHOICES = (
         (TYPE_DEBIT, 'Debit',),
         (TYPE_CREDIT, 'Credit',),

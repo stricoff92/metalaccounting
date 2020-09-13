@@ -108,6 +108,8 @@
         {% csrf_token %}
         <script>
             $(document).ready(()=>{
+                $("body").data('uidsInUse', [])
+
                 window.csrftoken = document.querySelector("input[name=csrfmiddlewaretoken]").value;
                 function csrfSafeMethod(method) {
                     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
@@ -120,6 +122,9 @@
                     }
                 });
             })
+            function numberWithCommas(x) {
+                return (x-0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
             function postJson(url, data, successCb, errorCb) {
                 $.ajax({
                     url,
@@ -200,6 +205,26 @@
                     })
                     return errorParts.join(" ")
                 }
+            }
+
+            function getNewUID() {
+                const charChoices = "0123456789abcdef"
+                const charChoicesCount = charChoices.length
+                let uidsInUse = $("body").data('uidsInUse')
+                let newUID;
+                while(true) {
+                    let chars = []
+                    for (let i=0; i<6; i++) {
+                        chars.push(charChoices.charAt(Math.floor(Math.random() * charChoicesCount)))
+                    }
+                    newUID = chars.join("")
+                    if(uidsInUse.indexOf(newUID) == -1) {
+                        break
+                    }
+                }
+                uidsInUse.push(newUID)
+                $("body").data('uidsInUse', uidsInUse)
+                return newUID
             }
         </script>
     </body>

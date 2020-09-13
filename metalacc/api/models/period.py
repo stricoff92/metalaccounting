@@ -25,7 +25,11 @@ class Period(models.Model):
     @property
     def user(self):
         return self.company.user
-
+    
+    @property
+    def days_count(self):
+        delta = self.end - self.start
+        return delta.days + 1
 
     def save(self, *args, **kwargs):
         if not self.slug:

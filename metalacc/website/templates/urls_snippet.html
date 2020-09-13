@@ -5,6 +5,7 @@
     const companyDeleteUrl = (slug) => "/api/v1/company/delete/" + slug + "/"
     const companyEditUrl = (slug) => "/api/v1/company/edit/" + slug + "/"
     const profileEditUrl = "/api/v1/userprofile/{{ user.userprofile.slug }}/"
+    const accountListUrl = "{% url 'account-list' %}"
     const accountDeleteUrl = (slug) => "/api/v1/account/delete/" + slug + "/"
     const accountNewUrl = "{% url 'account-new' %}"
     const accountEditUrl = (slug) => "/api/v1/account/edit/" + slug + "/"
@@ -12,4 +13,6 @@
     const deletePeriodUrl = (slug) => '/api/v1/period/delete/' + slug + "/"
     const editPeriodUrl = (slug) => '/api/v1/period/edit/' + slug + "/"
     const newPeriodUrl = "{% url 'period-new' %}"
+    const newJournalEntryUrl = "{% url 'je-new' %}"
+    const listJournalEntriesUrl = (slug) => '/api/v1/period/' + slug + "/je/list/"
 </script>

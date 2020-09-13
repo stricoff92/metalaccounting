@@ -1,4 +1,5 @@
 
+from collections import defaultdict
 import json
 
 from django.shortcuts import get_object_or_404
@@ -16,24 +17,30 @@ from api.forms.journal_entry import NewJournalEntryForm, NewJournalEntryLineForm
 
 class JournalEntryLineSerializer(serializers.ModelSerializer):
 
-    account_name = serializers.SerializerMethodField()
-    account_number = serializers.SerializerMethodField()
+    account__name = serializers.SerializerMethodField()
+    account__number = serializers.SerializerMethodField()
+    account__slug = serializers.SerializerMethodField()
 
     class Meta:
         model = JournalEntryLine
         fields = (
             "slug",
-            "account_name",
-            "account_number",
+            "account__name",
+            "account__number",
+            "account__slug",
             "type",
             "amount",
         )
     
-    def get_account_name(self, obj):
+    def get_account__name(self, obj):
         return obj.account.name
 
-    def get_account_number(self, obj):
+    def get_account__number(self, obj):
         return obj.account.number
+
+    def get_account__slug(self, obj):
+        return obj.account.slug
+
 
 class PeriodSerializer(serializers.ModelSerializer):
     class Meta:
@@ -59,6 +66,51 @@ class JournalEntrySerializer(serializers.ModelSerializer):
 
 # Function based views
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def journal_entry_list(request, slug):
+    period = get_object_or_404(Period, slug=slug, company__user=request.user)
+    try:
+        page = int(request.query_params.get("page", 1))
+    except ValueError:
+        return Response("invalid page", status.HTTP_400_BAD_REQUEST)
+
+    journal_entry_ids = list(JournalEntry.objects
+        .filter(period=period)
+        .order_by("-date")
+        .values_list("id", flat=True))
+
+    page_size = 50
+    start_ix = (page - 1) * page_size
+    end_ix = start_ix + page_size
+    journal_entry_ids = journal_entry_ids[start_ix:end_ix]
+    
+    journal_entries = list(JournalEntry.objects
+        .filter(id__in=journal_entry_ids)
+        .order_by("-date")
+        .values("id", "slug", "date", "memo", "is_adjusting_entry", "is_closing_entry"))
+
+    journal_entry_lines = list(JournalEntryLine.objects
+        .filter(journal_entry_id__in=journal_entry_ids)
+        .values("slug","journal_entry_id", "account__name", "account__number", "account__slug", "type", "amount"))
+    
+    je_lines_by_je = defaultdict(list)
+    for jel in journal_entry_lines:
+        je_lines_by_je[jel['journal_entry_id']].append(jel)
+
+    for ix, je in enumerate(journal_entries):
+        journal_entry_id = je['id']
+        journal_entries[ix]['lines'] = sorted(
+            je_lines_by_je[journal_entry_id],
+            key=lambda jel: (
+                jel['type'] == 'c',
+                jel['account__number'],
+            )
+        )
+
+    return Response(journal_entries, status.HTTP_200_OK)
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def journal_entry_new(request):
@@ -83,19 +135,27 @@ def journal_entry_new(request):
     dr_total = 0
     cr_total = 0
     jel_forms = []
+    found_accounts = set()
     for entry_post in request.data.get('journal_entry_lines', []):
         jel_form = NewJournalEntryLineForm(entry_post)
         if not jel_form.is_valid():
             return Response(
                 jel_form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
         
+        account = jel_form.cleaned_data['account']
+        if account in found_accounts:
+            return Response(
+                {"account":"cannot use more than once"}, status.HTTP_400_BAD_REQUEST)
+        else:
+            found_accounts.add(account)
+        
         # Verify account is owned by this user
-        if jel_form.cleaned_data['account'].user != request.user:
+        if account.user != request.user:
             return Response(
                 {"account":"account not found"}, status.HTTP_404_NOT_FOUND)
 
         # Verify the account belongs to the company
-        if jel_form.cleaned_data['account'].company != company:
+        if account.company != company:
             return Response(
                 {"account":"account belongs to another company"}, status.HTTP_400_BAD_REQUEST)
 

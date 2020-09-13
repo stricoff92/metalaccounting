@@ -1,0 +1,507 @@
+{% extends 'base_app.html' %} 
+{% block 'body' %}
+<div>
+    <p class="heading-1">
+        {{ period.start|date:"M j, Y" }}
+        <i class="fas fa-arrow-right"></i>
+        {{ period.end|date:"M j, Y" }}
+    </p>
+    <p class="heading-2">
+        Fiscal Period for {{ company.name }}
+    </p>
+</div>
+<style>
+    .min-width-250 {
+        min-width: 250px;
+    }
+</style>
+<div class="card mt-4">
+    <div class="card-header" style="display:flex;">
+        <div>
+            <strong>Reports</strong>
+        </div>
+        <div class="ml-4">
+            <button class="btn btn-primary" id="open-reports-card">Open</button>
+        </div>
+    </div>
+    <div class="card-body" style="display:none" id="report-btn-container">
+        <div>
+            <button class="btn btn-primary min-width-250">
+                Trial Balance
+            </button>
+            <p class="mt-2">
+                See a list of all account balances through this period before
+                and after adjusting entries have been made.
+            </p>
+        </div>
+        <hr>
+        <div>
+            <button class="btn btn-primary min-width-250">
+                Balance Sheet
+            </button>
+            <p class="mt-2">
+                Lorum Ipsum
+            </p>
+        </div>
+        <hr>
+        <div>
+            <button class="btn btn-primary min-width-250">
+                Income Statement
+            </button>
+            <p class="mt-2">
+                Lorum Ipsum
+            </p>
+        </div>
+        <hr>
+        <div>
+            <button class="btn btn-primary min-width-250">
+                Cash Flow Statement
+            </button>
+            <p class="mt-2">
+                Lorum Ipsum
+            </p>
+        </div>
+        <hr>
+        <div>
+            <button class="btn btn-primary min-width-250">
+                Statement of Retained Earnings
+            </button>
+            <p class="mt-2">
+                Lorum Ipsum
+            </p>
+        </div>
+    </div>
+</div>
+<script>
+$(document).ready(()=>{
+    $("#open-reports-card").click(()=>{
+        $("#open-reports-card").prop("disabled", true)
+        $("#report-btn-container").slideDown(350)
+    })
+})
+</script>
+<div class="card mt-4 mb-2" style="min-width:600px;">
+    <div class="card-header">
+        <div style="display:flex;">
+            <div>
+                <strong>General Journal</strong>
+            </div>
+            <div class="ml-3">
+                <button id="open-new-journal-entry-form-btn" class="btn btn-primary">
+                    <i class="fas fa-plus-square"></i>
+                    New Entry
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body mr-2">
+        <div class="mt-2" id="add-new-journal-entry-form-container" style="display:none;">
+            <p class="heading-2">Create a Journal Entry</p>
+            <div id="new-journal-entry-form-error-container" style="display:none;">
+                <div class="alert alert-danger" id="new-journal-entry-form-error"></div>
+            </div>
+            <div id="dr-cr-section">
+                <p class="mb-1">Accounts to Debit</p>
+                <div id="dr-section">
+
+                </div>
+                <button class="btn btn-primary mt-3" id="add-dr-row-btn">
+                    Add Debit Line
+                </button>
+                <p class="mb-1 mt-4 ml-5">Accounts to Credit</p>
+                <div id="cr-section">
+
+                </div>
+                <button class="btn btn-primary mt-3 ml-5" id="add-cr-row-btn">
+                    Add Credit Line
+                </button>
+            </div>
+            <div id="totals-section" class="row mt-4">
+                <div class="col-8" style="display:flex;justify-content:space-between;">
+                    <div>
+                    </div>
+                    <div>
+                        <strong>Totals</strong>
+                    </div>
+                </div>
+                <div class="col-2 border-top border-right text-right">
+                    <span id="dr-total-span">0</span>
+                </div>
+                <div class="col-2 border-top text-right">
+                    <span id="cr-total-span">0</span>
+                </div>
+            </div>
+            <div id="date-input-container" class="mt-3">
+                <div>
+                    <input class="form-control text-input-max-200" type="date" id="new-journal-entry-date-input">
+                </div>
+            </div>
+            <div id="memo-input-container" class="mt-3">
+                <div>
+                    <input class="form-control text-input-max-400" type="text" id="new-journal-entry-memo-input" placeholder="Entry Memo">
+                </div>
+            </div>
+            <div id="type-input-container" class="mt-3">
+                <p class="mb-1">
+                    Entry Type <i class="fas fa-question-circle"></i>
+                </p>
+                <div class="form-check">
+                    <input class="form-check-input" id="entry-type-regular" type="radio" name="entry-type-radio" value="regular" checked>
+                    <label class="form-check-label" for="entry-type-regular">
+                        Regular
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" id="entry-type-adjusting" type="radio" name="entry-type-radio" value="regular">
+                    <label class="form-check-label" for="entry-type-adjusting">
+                        Adjusting
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" id="entry-type-closing" type="radio" name="entry-type-radio" value="regular">
+                    <label class="form-check-label" for="entry-type-closing">
+                        Closing
+                    </label>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button class="btn btn-success" id="save-new-journal-entry-btn">
+                    <i class="fas fa-save"></i>
+                    Save
+                </button>
+            </div>
+            <hr>
+        </div>
+        <div id="journal-entries-container" class="mt-3">
+            <p class="heading-2">Journal Entries</p>
+
+        </div>
+    </div>
+</div>
+<script>
+$(document).ready(()=>{
+    $("#new-journal-entry-date-input").val('{{ last_je.date|date:"Y-m-d" }}')
+    $("#open-new-journal-entry-form-btn").click(()=>{
+        $("#open-new-journal-entry-form-btn").prop("disabled", true)
+        $("#add-new-journal-entry-form-container").slideDown(350)
+    })
+    $("#save-new-journal-entry-btn").click(()=>{
+        resetNewJournalEntryFormErrors()
+        const formErrors = getNewJournalEntryFormErrors()
+        if(formErrors.length) {
+            return showNewJournalEntryFormErrors(formErrors)
+        }
+        const formData = getNewJournalEntryFormValues()
+        const data = {
+            date:formData.date,
+            memo:formData.memo,
+            period:"{{ period.slug }}",
+            journal_entry_lines:[],
+        }
+        const rowsLength = formData.rows.length
+        for(let i=0; i<rowsLength; i++) {
+            let row = formData.rows[i]
+            data.journal_entry_lines.push({
+                type: row.type,
+                amount: row.amount,
+                account: row.accountSlug,
+            })
+        }
+        if (formData.type == 'closing') {
+            data.is_closing_entry = true
+        } else if (formData.type == 'adjusting') {
+            data.is_adjusting_entry = true
+        }
+        postJson(newJournalEntryUrl, data, 
+            (data, status, xhr)=>{
+                if(xhr.status == 201) {
+                    resetNewJournalEntryForm()
+                    addJournalEntry(data)
+                }
+            }, (data, status, xhr)=>{
+        
+            })
+    })
+})
+function resetNewJournalEntryForm (){
+    $('#dr-section').empty()
+    $('#cr-section').empty()
+    $("#dr-total-span").text("0")
+    $("#cr-total-span").text("0")
+    addAccountRowLine(true)
+    addAccountRowLine(false)
+    $("#new-journal-entry-memo-input").val("")
+}
+function resetNewJournalEntryFormErrors() {
+    $("#new-journal-entry-form-error").text("")
+    $("#new-journal-entry-form-error-container").css("display", "none")
+}
+function showNewJournalEntryFormErrors(errors) {
+    $("#new-journal-entry-form-error").text(errors.join(" "))
+    $("#new-journal-entry-form-error-container").css("display", "block")
+}
+function getNewJournalEntryFormErrors() {
+    const errors = []
+    const formData = getNewJournalEntryFormValues()
+    const entryDate = moment(formData.date)
+    if(!entryDate.isValid()) {
+        errors.push("Date is required.")
+    }
+    if(entryDate.isValid() && !entryDate.isBetween('{{ period.start|date:"Y-m-d" }}', '{{ period.end|date:"Y-m-d" }}', 'day', '[]')) {
+        errors.push("Entry date must fall between period boundaries.")
+    }
+    const rowsCount = formData.rows.length
+    let cleanedDrTotal = 0
+    let cleanedCrTotal = 0
+    const foundAccountSlugs = []
+    let foundDuplicate = false
+    let foundInvalidNumber = false
+    let foundInvalidAccountSlug = false
+    for(let i=0; i<rowsCount; i++) {
+        let row = formData.rows[i]
+        if(!foundInvalidAccountSlug && !/^[a-zA-Z0-9]{10,}$/.test(row.accountSlug)) {
+            errors.push("Account Field Cannot Be Empty.")
+            foundInvalidAccountSlug = true
+        } else {
+            if (!foundDuplicate && foundAccountSlugs.indexOf(row.accountSlug) != -1) {
+                errors.push("Account Cannot Be Used Multiple Times.")
+                foundDuplicate = true
+            } else {
+                foundAccountSlugs.push(row.accountSlug)
+            }
+        }
+        if(!foundInvalidNumber && row.amount <= 0) {
+            errors.push("Amount Must Be Greater Than 0.")
+            foundInvalidNumber = true
+        }
+        if (row.type == 'd') {
+            cleanedDrTotal = cleanedDrTotal + row.amount
+        } else {
+            cleanedCrTotal = cleanedCrTotal + row.amount
+        }
+    }
+    if (!foundInvalidNumber && cleanedDrTotal != cleanedCrTotal) {
+        errors.push("Credit Total Must Equal Debit Total.")
+    }
+    return errors
+}
+function getNewJournalEntryFormRowValues() {
+    const rows = $(".account-input-row")
+    const accountsLength = rows.length
+    formData = []
+    for(let i=0; i<accountsLength; i++) {
+        let row = rows[i]
+        let rowuid = $(row).attr("rowuid")
+        let isDebit = $(row).hasClass("dr-row")
+        let accountSlug = $("#account-select-" + rowuid).val()
+        let amount = $("#amount-input-" + rowuid).val() - 0
+        formData.push({
+            type:isDebit ? "d" : "c",
+            amount: isNaN(amount) ? 0 : amount,
+            accountSlug,
+        })
+    }
+    return formData
+}
+function getNewJournalEntryFormValues() {
+    let entryType;
+    switch(true) {
+        case $("#entry-type-regular").prop("checked"):
+            entryType = 'regular'
+            break
+        case $("#entry-type-adjusting").prop("checked"):
+            entryType = 'adjusting'
+            break
+        case $("#entry-type-closing").prop("checked"):
+            entryType = 'closing'
+            break
+    }
+    return {
+        rows:getNewJournalEntryFormRowValues(),
+        date:$("#new-journal-entry-date-input").val(),
+        memo:$("#new-journal-entry-memo-input").val(),
+        type:entryType,
+
+    }
+}
+function updateDrCrTotals() {
+    const rows = getNewJournalEntryFormRowValues()
+    const drTotal = rows.filter(r=>r.type == 'd').map(r=>r.amount).reduce((a, b) => a + b, 0)
+    const crTotal = rows.filter(r=>r.type == 'c').map(r=>r.amount).reduce((a, b) => a + b, 0)
+    $("#dr-total-span").text(numberWithCommas(drTotal))
+    $("#cr-total-span").text(numberWithCommas(crTotal))  
+}
+function addAccountRowLine(isDebit) {
+    const rowUID  = getNewUID()
+    $(`#${isDebit ? 'dr-section' : 'cr-section'}`).append(`
+        <div class="mt-1 row account-input-row ${isDebit ? 'dr' : 'cr'}-row" rowuid="${rowUID}">
+            <div class="col-8" style="display:flex;">
+                <select
+                    class="form-control ${!isDebit ? 'ml-5' : ''}"
+                    id="account-select-${rowUID}"
+                >
+                    <option value="">--</option>
+                </select>
+            </div>
+            <div class="col-2">
+                ${isDebit ? '<input type="number" id="amount-input-' + rowUID + '" class="dr-amount-input form-control p-0 pl-1">' : ''}
+            </div>
+            <div class="col-2">
+                ${!isDebit ? '<input type="number" id="amount-input-' + rowUID + '" class="cr-amount-input form-control p-0 pl-1">' : ''}
+            </div>
+        </div>
+    `)
+    $('#amount-input-' + rowUID).keydown(()=>{
+        setTimeout(updateDrCrTotals)
+    })
+    $("body").data('accounts').forEach(account => {
+        $(`#account-select-${rowUID}`).append(`
+            <option value="${account.slug}">
+                ${account.name} (${account.number})
+            </option>
+        `)
+    })
+}
+function searchByName(searchName) {
+    const allAccounts = $("body").data('accounts')
+    let foundAccounts = []
+    for(let i=0; i<allAccounts.length; i++) {
+        let account = allAccounts[i]
+        let accName = account.name.replace(/\s+/g, '').toLowerCase()
+        if(accName.indexOf(searchName) != -1) {
+            foundAccounts.push(account)
+        }
+    }
+    return foundAccounts
+}
+function searchByNumber(searchNumber) {
+    const allAccounts = $("body").data('accounts')
+    let foundAccounts = []
+    for(let i=0; i<allAccounts.length; i++) {
+        let account = allAccounts[i]
+        let accNumber = account.number + ""
+        if(accNumber.startsWith(searchNumber)) {
+            foundAccounts.push(account)
+        }
+    }
+    return foundAccounts
+}
+function searchForAccount(nameOrNumber, excludeSlugs) {
+    excludeSlugs = excludeSlugs || []
+    let accounts = []
+    const searchVal = (nameOrNumber + "").replace(/\s+/g, '')
+    if (/^[0-9]+$/.test(searchVal)) {
+        accounts = searchByNumber(searchVal)
+    } else {
+        accounts = searchByName(searchVal.toLowerCase())
+    }
+    return accounts.filter(a=>excludeSlugs.indexOf(a.slug) == -1)
+}
+$(document).ready(()=>{
+    $.get(`${accountListUrl}?company={{ company.slug }}`,
+        (accounts, status, xhr)=>{
+            if(xhr.status == 200) {
+                $("body").data('accounts', accounts)
+                addAccountRowLine(true)
+                addAccountRowLine(false)
+                return
+            }
+            alert("An error occured: " + status)
+        }
+    )
+    $("#add-dr-row-btn").click(()=>{
+        const isDr = true
+        addAccountRowLine(isDr)
+    })
+    $("#add-cr-row-btn").click(()=>{
+        const isDr = false
+        addAccountRowLine(isDr)
+    })
+    const fetchPage = (page) => {
+        const url = listJournalEntriesUrl('{{ period.slug }}') + "?page=" + page
+        $.get(url, (entries, status, xhr)=>{
+            if(xhr.status == 200) {
+                if(entries.length) {
+                    entries.forEach(addJournalEntry)
+                    let nextPage = page + 1
+                    return fetchPage(nextPage)
+                }
+            }
+        })
+    }
+    fetchPage(1)
+})
+function addJournalEntry(journalEntry) {
+    const entryContainerDiv = document.createElement("div")
+    $(entryContainerDiv).attr("id", "journal-entry-container-" + journalEntry.slug)
+    $(entryContainerDiv).attr("entrydate", journalEntry.date)
+    $(entryContainerDiv).addClass("p-2 mt-2 journal-entry-container")
+
+    const drEntriesDiv = document.createElement("div")
+    const crEntriesDiv = document.createElement("div")
+
+    const linesLength = journalEntry.lines.length
+    for(let i=0; i<linesLength; i++) {
+        let jeLine = journalEntry.lines[i]
+        let isDebit = jeLine.type == 'd'
+    
+        let jeLineDiv = document.createElement("div")
+        $(jeLineDiv).addClass("row border-bottom")
+
+        let col1Div = document.createElement("div") // account
+        let col2Div = document.createElement("div") // dr amount
+        let col3Div = document.createElement("div") // cr amount
+        $(col1Div).text(`(${jeLine.account__number}) ${jeLine.account__name}`)
+        $(col1Div).addClass("col-8 pb-1 pt-1")
+        $(col2Div).addClass("col-2 pb-1 pt-1 border-right")
+        $(col3Div).addClass("col-2 pb-1 pt-1")
+    
+        if (isDebit) {
+            $(col2Div).text(numberWithCommas(jeLine.amount))
+        } else {
+            $(col3Div).text(numberWithCommas(jeLine.amount))
+            $(col1Div).addClass("pl-5")
+        }
+        $(jeLineDiv).append(col1Div)
+        $(jeLineDiv).append(col2Div)
+        $(jeLineDiv).append(col3Div)
+        if (isDebit) {
+            $(drEntriesDiv).append(jeLineDiv)
+        } else {
+            $(crEntriesDiv).append(jeLineDiv)
+        }
+    }
+    entryContainerDiv.append(drEntriesDiv)
+    entryContainerDiv.append(crEntriesDiv)
+
+    const jeMemoDiv = document.createElement("div") // memo & date
+    $(jeMemoDiv).text(moment(journalEntry.date).format("ll") + (journalEntry.memo ?" | " + journalEntry.memo : ""))
+    $(jeMemoDiv).addClass("mt-3 card p-2 text-white bg-secondary")
+    entryContainerDiv.append(jeMemoDiv)
+    entryContainerDiv.append(document.createElement("hr"))
+
+    const thisEntryDate = moment(journalEntry.date)
+    const existingEntries = $('.journal-entry-container')
+    const existingEntriesCount = existingEntries.length
+    if(existingEntriesCount == 0)
+        $('#journal-entries-container').append(entryContainerDiv)
+    else {
+        let insertBeforeDivId;
+        for(let i=0; i<existingEntriesCount; i++) {
+            let dateOnPage = moment($(existingEntries[i]).attr("entrydate"))
+            if(dateOnPage < thisEntryDate) {
+                insertBeforeDivId = $(existingEntries[i]).attr("id")
+                break
+            }
+        }
+
+        if(insertBeforeDivId) {
+            $(entryContainerDiv).insertBefore($("#" + insertBeforeDivId))
+        } else {
+            $('#journal-entries-container').append(entryContainerDiv)
+        }        
+    }
+
+}
+</script>
+{% endblock %}
