@@ -26,6 +26,7 @@
             <div class="col-4">
                 (<a 
                     href="/app/period/{{ period.slug }}/taccount/{{ row.account.slug }}/"
+                    {{ user.userprofile.target_attr }}
                 >{{ row.account.number }}</a>)
                 {{ row.account.name }}
                 {% if row.account.is_contra %}

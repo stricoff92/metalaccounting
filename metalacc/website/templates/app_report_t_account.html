@@ -76,6 +76,7 @@
         <div class="col-5 col-lg-2">
             <a
                 href="/app/account/{{ account.slug }}/?edit=1"
+                {{ user.userprofile.target_attr }}
             >
                 Edit Account
             </a>
@@ -88,13 +89,13 @@
 
         </div>
         <div class="col-3 p-2 text-center" style="font-size:1.2rem;">
-            Debit
+            <strong>Debit</strong>
         </div>
         <div class="col-3 border-left p-2 text-center" style="font-size:1.2rem;">
-            Credit
+            <strong>Credit</strong>
         </div>
         <div class="col-3 border-left p-2 text-center" style="font-size:1.2rem;">
-            Balance
+            <strong>Balance</strong>
         </div>
     </div>
     <div class="row border-bottom report-row">
@@ -189,6 +190,11 @@
             $(col1Div).addClass("col-8 pb-1 pt-1 border-right")
             $(col2Div).addClass("col-2 pb-1 pt-1 border-right")
             $(col3Div).addClass("col-2 pb-1 pt-1")
+            if(i==0) {
+                $(col1Div).addClass("border-top")
+                $(col2Div).addClass("border-top")
+                $(col3Div).addClass("border-top")
+            }
         
             if (isDebit) {
                 $(col2Div).text(numberWithCommas(jeLine.amount))
@@ -213,15 +219,22 @@
             journalEntry.display_id + ". | " + moment(journalEntry.date).format("ll") + (journalEntry.memo ?" | " + journalEntry.memo : ""))
         $(jeMemoDiv).addClass("card p-2 bg-secondary ml-2")
         $(jeMemoDiv).css({'flex-grow':'1'})
+        
+        const gotoAnchor = document.createElement("a")
+        $(gotoAnchor).attr("href", "/app/period/{{ period.slug }}/?jegoto=" + journalEntry.slug)
+        $(gotoAnchor).text("Jump to Entry")
+        $(gotoAnchor).css({})
+        if("{{ user.userprofile.open_links_in_new_tabs }}" == "True") {
+            $(gotoAnchor).attr("target", "_blank")
+        }
 
         const bottomRowDiv = document.createElement("div") // bottom row
         $(bottomRowDiv).addClass("mt-3")
         $(bottomRowDiv).css({display:'flex'})
+        $(bottomRowDiv).append(gotoAnchor)
         $(bottomRowDiv).append(jeMemoDiv)
 
         entryContainerDiv.append(bottomRowDiv)
-        console.log(entryContainerDiv)
-        console.log($('#journal-entry-container-' + journalEntry.slug))
 
         $('#journal-entry-container-' + journalEntry.slug).append(entryContainerDiv)
 

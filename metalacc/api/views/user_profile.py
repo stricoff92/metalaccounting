@@ -18,6 +18,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = (
             "slug",
             "use_nightmode",
+            "open_links_in_new_tabs",
             "object_limit_companies",
             "object_limit_periods_per_company",
             "object_limit_entries_per_period",
