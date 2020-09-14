@@ -3,6 +3,7 @@ import os
 
 from .applocals import (
     SECRET_KEY as _SECRET_KEY,
+    OBJECT_SERIALIZATION_KEY as _OBJECT_SERIALIZATION_KEY,
     ADDITIONAL_ALLOWED_HOSTS,
     ENV,
     DB_NAME,
@@ -16,6 +17,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 SECRET_KEY = _SECRET_KEY
+OBJECT_SERIALIZATION_KEY = _OBJECT_SERIALIZATION_KEY
 
 DEBUG = ENV != 'PROD'
 
