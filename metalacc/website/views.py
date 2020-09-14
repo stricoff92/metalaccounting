@@ -172,7 +172,7 @@ def app_account_details(request, slug):
         .filter(account=account)
         .values_list("journal_entry__period_id", flat=True)
         .distinct())
-    periods = Period.objects.filter(id__in=periods_ids)
+    periods = Period.objects.filter(id__in=periods_ids).order_by("-start")
 
     breadcrumbs = [
         {
