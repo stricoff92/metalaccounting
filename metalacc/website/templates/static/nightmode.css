@@ -2,6 +2,9 @@
 .report-row:hover {
   background-color:#410059;
 }
+.report-row-highlight {
+  background-color:#410059;
+}
 
 /*!
  * Bootswatch v4.5.0

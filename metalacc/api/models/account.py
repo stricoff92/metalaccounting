@@ -125,6 +125,14 @@ class Account(models.Model):
                 return "debit"
             else:
                 return "credit"
+    
+    @property
+    def is_dr(self):
+        return self.balance_type == 'debit'
+
+    @property
+    def is_cr(self):
+        return self.balance_type == 'credit'
 
 
     def save(self, *args, **kwargs):

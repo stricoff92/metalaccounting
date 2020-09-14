@@ -84,7 +84,26 @@ def get_company_periods_up_to_and_excluding(period):
     company = period.company
     return (company.period_set
         .exclude(id=period.id)
-        .filter(company_id=company.id, end__lte=period.start))
+        .filter(company=company, end__lte=period.start))
+
+def get_company_periods_up_to(period):
+    """ Get all periods for a company leading up to the given period, including the given period
+    """
+    company = period.company
+    return (company.period_set
+        .filter(company=company, end__lte=period.end))
 
 
-
+def get_dr_cr_balance(dr_total:int, cr_total:int):
+    balance = 0
+    if dr_total > 0 and dr_total > cr_total:
+        balance = dr_total - cr_total
+    elif dr_total > 0 and dr_total < cr_total:
+        balance =  cr_total - dr_total
+    
+    elif cr_total > 0 and cr_total > dr_total:
+        balance =  cr_total - dr_total
+    elif cr_total > 0 and cr_total < dr_total:
+        balance = dr_total - cr_total
+    
+    return balance

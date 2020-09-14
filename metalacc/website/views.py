@@ -257,12 +257,29 @@ def t_account(request, period_slug, account_slug):
         Period, company__user=request.user, slug=period_slug)
     account = get_object_or_404(Account, company=current_period.company, slug=account_slug)
 
-    breadcrumbs = get_report_page_breadcrumbs(current_period, f"{account.name} T-Account")
+    (rows,
+    start_balance,
+    end_balance,
+    prev_dr_total,
+    prev_cr_total,
+    curr_dr_total,
+    curr_cr_total,) = reports_lib.get_t_account_data_for_account(account, current_period)
 
+    balance_change = f'({format(abs(end_balance - start_balance), ",")})' if end_balance < start_balance else format(end_balance - start_balance, ",")
+
+    breadcrumbs = get_report_page_breadcrumbs(current_period, f"{account.name} T-Account")
     data = {
         'breadcrumbs':breadcrumbs,
         'account':account,
         'period':current_period,
+        'start_balance':start_balance,
+        'end_balance':end_balance,
+        'balance_change':balance_change,
+        'prev_dr_total':prev_dr_total,
+        'prev_cr_total':prev_cr_total,
+        'curr_dr_total':curr_dr_total,
+        'curr_cr_total':curr_cr_total,
+        't_account_rows':rows,
     }
     return render(request, "app_report_t_account.html", data)
 
