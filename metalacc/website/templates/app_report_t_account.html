@@ -1,0 +1,259 @@
+{% extends 'base_app.html' %}
+{% load humanize %}
+{% block 'body' %}
+<div>
+    <p class="heading-1"> T Account Chart: <em>{{ account.name }} ({{ account.number }})</em></p>
+    <p class="heading-2">{{ period.company.name }}</p>
+    <p>
+        {{ period.start|date:"M j, Y" }}
+        <i class="fas fa-arrow-right"></i>
+        {{ period.end|date:"M j, Y" }}
+    </p>
+</div>
+<div class="card p-4 mt-4">
+    <div>
+        <p class="heading-2">Acount Info</p>
+    </div>
+    <div class="row mt-2">
+        <div class="col-5 col-lg-2">
+            Account Type
+        </div>
+        <div class="col-5 col-lg-2">
+            {{ account.type }}
+        </div>
+    </div>
+    {% if account.supports_is_current %}
+        <div class="row mt-2">
+            <div class="col-5 col-lg-2">
+                Current
+            </div>
+            <div class="col-5 col-lg-2">
+                {% if account.is_current %} Yes {% else %} No {% endif %}
+            </div>
+        </div>
+    {% endif %}
+    <div class="row mt-2">
+        <div class="col-5 col-lg-2">
+            Contra
+        </div>
+        <div class="col-5 col-lg-2">
+            {% if account.is_contra %} Yes {% else %} No {% endif %}
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-5 col-lg-2">
+            Balance Type
+        </div>
+        <div class="col-5 col-lg-2">
+            {{ account.balance_type }}
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-5 col-lg-2">
+            Starting Balance
+        </div>
+        <div class="col-5 col-lg-2">
+            {{ start_balance|intcomma }}
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-5 col-lg-2">
+            Ending Balance
+        </div>
+        <div class="col-5 col-lg-2">
+            {{ end_balance|intcomma }}
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-5 col-lg-2">
+            Change In Balance
+        </div>
+        <div class="col-5 col-lg-2">
+            {{ balance_change }}
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-5 col-lg-2">
+            <a
+                href="/app/account/{{ account.slug }}/?edit=1"
+                {{ user.userprofile.target_attr }}
+            >
+                Edit Account
+            </a>
+        </div>
+    </div>
+</div>
+<div class="mt-4 mb-4">
+    <div class="row border-bottom">
+        <div class="col-3">
+
+        </div>
+        <div class="col-3 p-2 text-center" style="font-size:1.2rem;">
+            <strong>Debit</strong>
+        </div>
+        <div class="col-3 border-left p-2 text-center" style="font-size:1.2rem;">
+            <strong>Credit</strong>
+        </div>
+        <div class="col-3 border-left p-2 text-center" style="font-size:1.2rem;">
+            <strong>Balance</strong>
+        </div>
+    </div>
+    <div class="row border-bottom report-row">
+        <div class="col-3 p-2">
+            <strong>Start</strong>
+        </div>
+        <div class="col-3 p-2 text-center">
+            {{ prev_dr_total|intcomma }}
+        </div>
+        <div class="col-3 border-left p-2 text-center">
+            {{ prev_cr_total|intcomma }}
+        </div>
+        <div class="col-3 border-left p-2 text-center">
+            {{ start_balance|intcomma }}
+        </div>
+    </div>
+    <div class="row border-bottom report-row pb-3">
+        <div class="col-3 p-2">
+            <strong>End</strong>
+        </div>
+        <div class="col-3 p-2 text-center">
+            {{ curr_dr_total|intcomma }}
+        </div>
+        <div class="col-3 border-left p-2 text-center">
+            {{ curr_cr_total|intcomma }}
+        </div>
+        <div class="col-3 border-left p-2 text-center">
+            {{ end_balance|intcomma }}
+        </div>
+    </div>
+    {% for row in t_account_rows %}
+        <div class="row report-row" id="row-{{ row.slug }}">
+            <div class="col-3 p-2  border-bottom">
+                <button
+                    id="open-details-btn-{{ row.slug }}"
+                    class="open-details-btn btn btn-primary pl-1 pr-1 pt-0 pb-0"
+                    jeslug="{{ row.journal_entry__slug }}"
+                >
+                    Open
+                </button>
+                <span style="white-space: nowrap">
+                    {{ row.journal_entry__date|date:"M j, Y"  }}
+                </span>
+            </div>
+            <div class="col-3 p-2 text-center border-bottom">
+                {% if row.type == 'd' %}
+                    <span class="align-middle">{{ row.amount|intcomma }}</span>
+                {% endif %}
+            </div>
+            <div class="col-3 p-2 border-left text-center border-bottom">
+                {% if row.type == 'c' %}
+                    <span class="align-middle">{{ row.amount|intcomma }}</span>
+                {% endif %}
+            </div>
+            <div class="col-3 p-2 text-center">
+                
+            </div>
+        </div>
+        <div id="row-details-div-{{ row.journal_entry__slug }}" style="display:none;">
+            <div class="card pt-1 pb-1 pl-2 pr-2 mt-1 mb-3">
+                <div id="journal-entry-container-{{ row.journal_entry__slug }}">
+
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+<script>
+    function drawJournalEntry(journalEntry) {
+        const entryContainerDiv = document.createElement("div")
+        $(entryContainerDiv).addClass("p-2 mt-2 journal-entry-container")
+
+        const drEntriesDiv = document.createElement("div")
+        const crEntriesDiv = document.createElement("div")
+
+        const linesLength = journalEntry.lines.length
+        for(let i=0; i<linesLength; i++) {
+            let jeLine = journalEntry.lines[i]
+            let isDebit = jeLine.type == 'd'
+        
+            let jeLineDiv = document.createElement("div")
+            $(jeLineDiv).addClass("row border-bottom")
+
+            if (jeLine.account__slug == "{{ account.slug }}") {
+                $(jeLineDiv).addClass("report-row-highlight")
+            }
+
+            let col1Div = document.createElement("div") // account
+            let col2Div = document.createElement("div") // dr amount
+            let col3Div = document.createElement("div") // cr amount
+            $(col1Div).text(`(${jeLine.account__number}) ${jeLine.account__name}`)
+            $(col1Div).addClass("col-8 pb-1 pt-1 border-right")
+            $(col2Div).addClass("col-2 pb-1 pt-1 border-right")
+            $(col3Div).addClass("col-2 pb-1 pt-1")
+            if(i==0) {
+                $(col1Div).addClass("border-top")
+                $(col2Div).addClass("border-top")
+                $(col3Div).addClass("border-top")
+            }
+        
+            if (isDebit) {
+                $(col2Div).text(numberWithCommas(jeLine.amount))
+            } else {
+                $(col3Div).text(numberWithCommas(jeLine.amount))
+                $(col1Div).addClass("pl-5")
+            }
+            $(jeLineDiv).append(col1Div)
+            $(jeLineDiv).append(col2Div)
+            $(jeLineDiv).append(col3Div)
+            if (isDebit) {
+                $(drEntriesDiv).append(jeLineDiv)
+            } else {
+                $(crEntriesDiv).append(jeLineDiv)
+            }
+        }
+        entryContainerDiv.append(drEntriesDiv)
+        entryContainerDiv.append(crEntriesDiv)
+
+        const jeMemoDiv = document.createElement("div") // memo & date
+        $(jeMemoDiv).text(
+            journalEntry.display_id + ". | " + moment(journalEntry.date).format("ll") + (journalEntry.memo ?" | " + journalEntry.memo : ""))
+        $(jeMemoDiv).addClass("card p-2 bg-secondary ml-2")
+        $(jeMemoDiv).css({'flex-grow':'1'})
+        
+        const gotoAnchor = document.createElement("a")
+        $(gotoAnchor).attr("href", "/app/period/{{ period.slug }}/?jegoto=" + journalEntry.slug)
+        $(gotoAnchor).text("Jump to Entry")
+        $(gotoAnchor).css({})
+        if("{{ user.userprofile.open_links_in_new_tabs }}" == "True") {
+            $(gotoAnchor).attr("target", "_blank")
+        }
+
+        const bottomRowDiv = document.createElement("div") // bottom row
+        $(bottomRowDiv).addClass("mt-3")
+        $(bottomRowDiv).css({display:'flex'})
+        $(bottomRowDiv).append(gotoAnchor)
+        $(bottomRowDiv).append(jeMemoDiv)
+
+        entryContainerDiv.append(bottomRowDiv)
+
+        $('#journal-entry-container-' + journalEntry.slug).append(entryContainerDiv)
+
+    }
+    $(document).ready(()=>{
+        $(".open-details-btn").click(e=>{
+            $(e.target).prop("disabled", true)
+            const jeslug = $(e.target).attr("jeslug")
+            
+            $.get(journalEntryDetailsUrl(jeslug), (journalEntry, status, xhr)=>{
+                if(xhr.status == 200) {
+                    drawJournalEntry(journalEntry)
+                    $("#row-details-div-" + jeslug).slideDown(150, ()=>{
+                        
+                    })
+                }
+            })
+        })
+    })
+    
+</script>
+{% endblock %}

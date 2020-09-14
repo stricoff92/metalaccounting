@@ -24,7 +24,11 @@
     {% for row in trial_balance_rows %}
         <div class="row mt-2 p-1 report-row">
             <div class="col-4">
-                ({{ row.account.number }}) {{ row.account.name }}
+                (<a 
+                    href="/app/period/{{ period.slug }}/taccount/{{ row.account.slug }}/"
+                    {{ user.userprofile.target_attr }}
+                >{{ row.account.number }}</a>)
+                {{ row.account.name }}
                 {% if row.account.is_contra %}
                     <span class="badge badge-pill badge-info">
                         contra

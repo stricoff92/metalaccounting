@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST
 from django.urls import reverse
 from django.http import HttpResponseNotAllowed, HttpResponse
 
-from api.models import Company, Account, Period, JournalEntry
+from api.models import Company, Account, Period, JournalEntry, JournalEntryLine
 from api.models.account import DEFAULT_ACCOUNTS
 from api.utils import (
     generate_slug,
@@ -168,6 +168,12 @@ def app_account_details(request, slug):
         Account, company__user=request.user, slug=slug)
     company = account.company
 
+    periods_ids = (JournalEntryLine.objects
+        .filter(account=account)
+        .values_list("journal_entry__period_id", flat=True)
+        .distinct())
+    periods = Period.objects.filter(id__in=periods_ids).order_by("-start")
+
     breadcrumbs = [
         {
             'value':'menu',
@@ -186,6 +192,7 @@ def app_account_details(request, slug):
         }
     ]
     data = {
+        'periods':periods,
         'account':account,
         'breadcrumbs':breadcrumbs,
     }
@@ -250,6 +257,39 @@ def app_profile(request):
 
 
 # REPORT PAGES
+
+@login_required
+def t_account(request, period_slug, account_slug):
+    current_period = get_object_or_404(
+        Period, company__user=request.user, slug=period_slug)
+    account = get_object_or_404(Account, company=current_period.company, slug=account_slug)
+
+    (rows,
+    start_balance,
+    end_balance,
+    prev_dr_total,
+    prev_cr_total,
+    curr_dr_total,
+    curr_cr_total,) = reports_lib.get_t_account_data_for_account(account, current_period)
+
+    balance_change = f'({format(abs(end_balance - start_balance), ",")})' if end_balance < start_balance else format(end_balance - start_balance, ",")
+
+    breadcrumbs = get_report_page_breadcrumbs(current_period, f"{account.name} T-Account")
+    data = {
+        'breadcrumbs':breadcrumbs,
+        'account':account,
+        'period':current_period,
+        'start_balance':start_balance,
+        'end_balance':end_balance,
+        'balance_change':balance_change,
+        'prev_dr_total':prev_dr_total,
+        'prev_cr_total':prev_cr_total,
+        'curr_dr_total':curr_dr_total,
+        'curr_cr_total':curr_cr_total,
+        't_account_rows':rows,
+    }
+    return render(request, "app_report_t_account.html", data)
+
 
 @login_required
 def trial_balance(request, slug):

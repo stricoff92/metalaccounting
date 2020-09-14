@@ -112,6 +112,15 @@ def journal_entry_list(request, slug):
     return Response(journal_entries, status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def journal_entry_details(request, slug):
+    journal_entry = get_object_or_404(
+        JournalEntry, slug=slug, period__company__user=request.user)
+    data = JournalEntrySerializer(journal_entry).data
+    return Response(data, status.HTTP_200_OK)
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def journal_entry_new(request):

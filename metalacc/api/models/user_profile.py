@@ -2,6 +2,7 @@
 
 from django.db import models
 from django.conf import settings
+from django.utils.html import mark_safe
 
 from api.utils import generate_slug
 
@@ -12,6 +13,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     use_nightmode = models.BooleanField(default=False)
+    open_links_in_new_tabs = models.BooleanField(default=False)
 
     object_limit_accounts = models.PositiveIntegerField(default=300)
     object_limit_companies = models.PositiveIntegerField(default=15)
@@ -21,6 +23,10 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"<UserProfile {self.pk} ({self.user})>"
+    
+    @property
+    def target_attr(self):
+        return mark_safe('target="_blank"' if self.open_links_in_new_tabs else "")
 
 
     def save(self, *args, **kwargs):

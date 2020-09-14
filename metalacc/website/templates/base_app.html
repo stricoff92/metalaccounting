@@ -1,3 +1,4 @@
+{% load website_extras %}
 <!DOCTYPE html>
 <html>
 
@@ -43,14 +44,18 @@
                 <div style="display:flex;justify-content:flex-start;">
                     <span>
                         Logged in as
-                        <a href="{% url 'app-profile' %}"><strong>{{ user.email }}</strong></a>,
+                        <a
+                            href="{% url 'app-profile' %}"
+                            {{ user.userprofile.target_attr }}
+                        >
+                        <strong>{{ user.email }}</strong></a>,
                     </span>
                     <span class="ml-1">
                         <a href="{% url 'logout' %}">logout</a>
                     </span>
                     {% if user.is_superuser %}
                         <span class="ml-1">
-                            <a href="/admin/">admin</a>
+                            <a href="/admin/" {{ user.userprofile.target_attr }}>admin</a>
                         </span>
                     {% endif %}
                 </div>

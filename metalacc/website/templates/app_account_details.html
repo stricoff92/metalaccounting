@@ -173,6 +173,27 @@ $(document).ready(()=>{
                 addEditAccountFormAPIError(errorToString(data.responseJSON))
             })
     })
+
+    if(window.location.search.indexOf("edit=1") != -1) {
+        setTimeout(()=>{
+            $("#open-edit-account-form-btn").trigger("click")
+        }, 200)
+    }
 })
 </script>
+<div class="mt-3">
+    {% if periods %}
+        <p class="heading-2">T Account Charts</p>
+        {% for period in periods %}
+            <div class="mt-2">
+                <a
+                    href="/app/period/{{ period.slug }}/taccount/{{ account.slug }}/"
+                    {{ user.userprofile.target_attr }}
+                >
+                    {{ period.start }} <i class="fas fa-arrow-right"></i> {{ period.end }}
+                </a>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
 {% endblock %}

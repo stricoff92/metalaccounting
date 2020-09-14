@@ -6,13 +6,12 @@ from django.db.models import Sum
 from api.models import JournalEntry, JournalEntryLine, Account
 from api.utils import (
     get_company_periods_up_to_and_excluding,
+    get_company_periods_up_to,
+    get_dr_cr_balance,
 )
 
 def get_trial_balance_data(current_period):
     company = current_period.company
-    
-    # Fetch all periods prior to this period
-    past_periods = get_company_periods_up_to_and_excluding(current_period)
 
     # Fetch non-closing journal entries from this period
     current_unadjustedjournal_entries = JournalEntry.objects.filter_for_unadjusted_trial(
@@ -122,3 +121,60 @@ def get_trial_balance_data(current_period):
         total_company_adj_dr,
         total_company_adj_cr,
     )
+
+
+def get_t_account_data_for_account(account, current_period) -> tuple:
+    if account.company != current_period.company:
+        raise ValueError("account and period must belong to the same company")
+
+    all_periods = get_company_periods_up_to(current_period)
+    previous_periods = get_company_periods_up_to_and_excluding(current_period)
+    previous_period_ids = set(previous_periods.values_list("id", flat=True))
+
+    all_jels = JournalEntryLine.objects.filter(
+        journal_entry__period__in=all_periods,
+        account=account)
+    
+    prev_dr_total = 0
+    curr_dr_total = 0
+    prev_cr_total = 0
+    curr_cr_total = 0
+    rows = []
+
+    for jel in all_jels.order_by("journal_entry__date").values(
+        "type", "amount", "slug",
+        "journal_entry__period_id",
+        "journal_entry__slug",
+        "journal_entry__is_adjusting_entry",
+        "journal_entry__is_closing_entry",
+        "journal_entry__display_id",
+        "journal_entry__date"):
+
+        if jel['journal_entry__period_id'] in previous_period_ids:
+            if jel['type'] == JournalEntryLine.TYPE_DEBIT:
+                prev_dr_total += jel['amount']
+            else:
+                prev_cr_total += jel['amount']
+        else:
+            if jel['type'] == JournalEntryLine.TYPE_DEBIT:
+                curr_dr_total += jel['amount']
+            else:
+                curr_cr_total += jel['amount']
+        
+        if jel['journal_entry__period_id'] == current_period.id:
+            rows.append(jel)
+
+
+    start_balance = get_dr_cr_balance(prev_dr_total, prev_cr_total)
+    end_balance = get_dr_cr_balance(curr_dr_total, curr_cr_total)
+
+    return (
+        rows,
+        start_balance,
+        end_balance,
+        prev_dr_total,
+        prev_cr_total,
+        curr_dr_total,
+        curr_cr_total,
+    )
+

@@ -20,12 +20,25 @@
             <tr">
                 <td class="setting-key pt-2">Display Theme</td>
                 <td class="setting-value pt-2">
-                    <select id="theme-select" class="form-control">
+                    <select id="theme-select" class="form-control dropdown-auto-save">
                         <option value="0">
                             Light Mode
                         </option>
                         <option value="1" {% if user.userprofile.use_nightmode %}selected{% endif %}>
                             Dark Mode
+                        </option>
+                    </select>
+                </td>
+            </tr>
+            <tr">
+                <td class="setting-key pt-2">Open Links in</td>
+                <td class="setting-value pt-2">
+                    <select id="tab-open-select" class="form-control dropdown-auto-save">
+                        <option value="0">
+                            Same Tab
+                        </option>
+                        <option value="1" {% if user.userprofile.open_links_in_new_tabs %}selected{% endif %}>
+                            New Tab
                         </option>
                     </select>
                 </td>
@@ -57,9 +70,10 @@
 
 <script>
     $(document).ready(()=>{
-        $("#theme-select").change(()=>{
+        $(".dropdown-auto-save").change(()=>{
             const use_nightmode = Boolean($("#theme-select").val() - 0)
-            const data = {use_nightmode}
+            const open_links_in_new_tabs = Boolean($("#tab-open-select").val() - 0)
+            const data = {use_nightmode, open_links_in_new_tabs}
             $.ajax({
                 url:profileEditUrl,
                 type:'PUT',

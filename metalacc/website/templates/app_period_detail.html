@@ -23,14 +23,17 @@
     </div>
     <div class="card-body" id="report-container">
         <div class="row">
-            <div class="col-2">
+            <div class="col-4 col-lg-2">
                 <p>
-                    <a href="/app/period/{{ period.slug }}/trial-balance/">
+                    <a
+                        href="/app/period/{{ period.slug }}/trial-balance/"
+                        {{ user.userprofile.target_attr }}
+                    >
                         Trial Balance
                     </a>
                 </p>
             </div>
-            <div class="col-10">
+            <div class="col-8 col-lg-10">
                 <p>
                     See a list of all account balances through this period before
                     and after adjusting entries have been made. Closing entries are excluded.
@@ -356,6 +359,19 @@ function searchForAccount(nameOrNumber, excludeSlugs) {
     }
     return accounts.filter(a=>excludeSlugs.indexOf(a.slug) == -1)
 }
+function navigateToEntry() {
+    const urlParams = new URLSearchParams(window.location.search);
+    let jeslug
+    if (urlParams.has('jegoto')){
+        jeslug = urlParams.get('jegoto')
+        let jeDiv = $("#journal-entry-container-" + jeslug)
+        $([document.documentElement, document.body]).animate({
+            scrollTop: jeDiv.offset().top
+        }, 250, ()=>{
+            $(jeDiv).addClass("border border-info")
+        });
+    }
+}
 $(document).ready(()=>{
     $.get(`${accountListUrl}?company={{ company.slug }}`,
         (accounts, status, xhr)=>{
@@ -384,6 +400,8 @@ $(document).ready(()=>{
                     entries.forEach(addJournalEntry)
                     let nextPage = page + 1
                     return fetchPage(nextPage)
+                } else { 
+                    navigateToEntry()
                 }
             }
         })
@@ -394,7 +412,7 @@ function addJournalEntry(journalEntry) {
     const entryContainerDiv = document.createElement("div")
     $(entryContainerDiv).attr("id", "journal-entry-container-" + journalEntry.slug)
     $(entryContainerDiv).attr("entrydate", journalEntry.date)
-    $(entryContainerDiv).addClass("p-2 mt-2 journal-entry-container")
+    $(entryContainerDiv).addClass("pl-3 pr-2 p-2 mt-2 journal-entry-container")
 
     const drEntriesDiv = document.createElement("div")
     const crEntriesDiv = document.createElement("div")
@@ -410,7 +428,22 @@ function addJournalEntry(journalEntry) {
         let col1Div = document.createElement("div") // account
         let col2Div = document.createElement("div") // dr amount
         let col3Div = document.createElement("div") // cr amount
-        $(col1Div).text(`(${jeLine.account__number}) ${jeLine.account__name}`)
+
+        let accNumberAnchor = document.createElement("a")
+        $(accNumberAnchor).attr("href", "/app/period/{{ period.slug }}/taccount/" + jeLine.account__slug + "/")
+        if("{{ user.userprofile.open_links_in_new_tabs }}" == "True") {
+            $(accNumberAnchor).attr("target", "_blank")
+        }
+        $(accNumberAnchor).text(jeLine.account__number)
+    
+        let accNameSpan = document.createElement("span")
+        $(accNameSpan).text(jeLine.account__name)
+
+        $(col1Div).append("(")
+        $(col1Div).append(accNumberAnchor)
+        $(col1Div).append(") ")
+        $(col1Div).append(accNameSpan)
+    
         $(col1Div).addClass("col-8 pb-1 pt-1")
         $(col2Div).addClass("col-2 pb-1 pt-1 border-right")
         $(col3Div).addClass("col-2 pb-1 pt-1")
