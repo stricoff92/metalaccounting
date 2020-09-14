@@ -48,6 +48,7 @@ class AccountViewTests(BaseTestBase):
         self.assertEqual(account.user, self.user)
         self.assertFalse(account.is_contra)
         self.assertTrue(account.is_current)
+        self.assertIsNone(account.is_operating)
 
 
     def test_user_can_create_an_non_current_account(self):
@@ -70,6 +71,7 @@ class AccountViewTests(BaseTestBase):
         account = Account.objects.first()
         self.assertFalse(account.is_current)
         self.assertFalse(account.is_contra)
+        self.assertIsNone(account.is_operating)
 
 
     def test_user_can_create_a_temporary_revenue_account(self):
@@ -83,6 +85,7 @@ class AccountViewTests(BaseTestBase):
             'type':Account.TYPE_REVENUE,
             'is_contra':False,
             'number':4500,
+            'is_operating':True,
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -91,6 +94,7 @@ class AccountViewTests(BaseTestBase):
         account = Account.objects.first()
         self.assertEqual(account.type, Account.TYPE_REVENUE)
         self.assertFalse(account.is_contra)
+        self.assertTrue(account.is_operating)
 
 
     def test_user_can_create_a_temporary_expense_account(self):
@@ -104,6 +108,7 @@ class AccountViewTests(BaseTestBase):
             'type':Account.TYPE_EXPENSE,
             'is_contra':False,
             'number':4500,
+            'is_operating':False,
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -112,6 +117,7 @@ class AccountViewTests(BaseTestBase):
         account = Account.objects.first()
         self.assertEqual(account.type, Account.TYPE_EXPENSE)
         self.assertFalse(account.is_contra)
+        self.assertFalse(account.is_operating)
 
 
     def test_user_can_create_a_temporary_contra_revenue_account(self):
@@ -125,6 +131,7 @@ class AccountViewTests(BaseTestBase):
             'type':Account.TYPE_REVENUE,
             'is_contra':True,
             'number':4500,
+            'is_operating':True,
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -133,6 +140,71 @@ class AccountViewTests(BaseTestBase):
         account = Account.objects.first()
         self.assertEqual(account.type, Account.TYPE_REVENUE)
         self.assertTrue(account.is_contra)
+
+
+    def test_user_cant_create_a_temporary_account_without_is_operational(self):
+        """ Test user cant create a temporary account without is_operational info
+        """
+        url = reverse("account-new")
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_REVENUE,
+            'is_contra':True,
+            'number':4500,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue("is_operating cannot be null for type revenue" in str(response.data))
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_EXPENSE,
+            'is_contra':True,
+            'number':4500,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue("is_operating cannot be null for type expense" in str(response.data))
+
+
+    def test_user_cant_create_a_non_temporary_account_with_is_operational(self):
+        """ Test user cant create a non temporary account with is_operational info
+        """
+        url = reverse("account-new")
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_ASSET,
+            'is_current':True,
+            'number':4500,
+            "is_operating":True,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue("is_operating must be null for type asset" in str(response.data))
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_LIABILITY,
+            'is_current':True,
+            'number':4500,
+            "is_operating":False,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue("is_operating must be null for type liability" in str(response.data))
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_EQUITY,
+            'is_contra':True,
+            'number':4500,
+            "is_operating":False,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue("is_operating must be null for type equity" in str(response.data))
 
 
     def test_user_can_create_a_temporary_contra_expense_account(self):
@@ -146,6 +218,7 @@ class AccountViewTests(BaseTestBase):
             'type':Account.TYPE_EXPENSE,
             'is_contra':True,
             'number':4500,
+            'is_operating':True,
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -168,6 +241,7 @@ class AccountViewTests(BaseTestBase):
             'is_contra':True,
             'is_current':True,
             'number':4500,
+            'is_operating':True,
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -193,6 +267,7 @@ class AccountViewTests(BaseTestBase):
             'is_contra':True,
             'is_current':True,
             'number':4500,
+            'is_operating':True,
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -368,12 +443,13 @@ class AccountViewTests(BaseTestBase):
         """
         account = self.factory.create_account(
             self.company, 'foobar', Account.TYPE_REVENUE, 1500,
-            is_current=None, is_contra=False)
+            is_current=None, is_contra=False, is_operating=True)
         
         url = reverse("account-edit", kwargs={'slug':account.slug})
         data = {
             "name":"cold hard cash",
             "number":1900,
+            "is_operating":False
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -382,6 +458,7 @@ class AccountViewTests(BaseTestBase):
         self.assertEqual(account.name, "cold hard cash")
         self.assertEqual(account.number, 1900)
         self.assertIsNone(account.is_current)
+        self.assertFalse(account.is_operating)
 
 
     def test_that_a_user_cant_attach_is_current_value_to_revenue_accounts(self):
@@ -389,13 +466,14 @@ class AccountViewTests(BaseTestBase):
         """
         account = self.factory.create_account(
             self.company, 'foobar', Account.TYPE_REVENUE, 1500,
-            is_current=None, is_contra=False)
+            is_current=None, is_contra=False, is_operating=True)
         
         url = reverse("account-edit", kwargs={'slug':account.slug})
         data = {
             "name":"cold hard cash",
             "number":1900,
             "is_current":False,
+            "is_operating":True
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -407,13 +485,14 @@ class AccountViewTests(BaseTestBase):
         """
         account = self.factory.create_account(
             self.company, 'foobar', Account.TYPE_EXPENSE, 1500,
-            is_current=None, is_contra=False)
+            is_current=None, is_contra=False, is_operating=True)
         
         url = reverse("account-edit", kwargs={'slug':account.slug})
         data = {
             "name":"cold hard cash",
             "number":1900,
             "is_current":False,
+            'is_operating':True,
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -497,6 +576,60 @@ class AccountViewTests(BaseTestBase):
         self.client.force_login(self.other_user)
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+    def test_that_a_user_cant_edit_their_temporary_account_to_have_null_is_operating(self):
+        """ Test that a user cant edit their temporary account such that it has an is_operating=Null
+        """
+        revenue_account = self.factory.create_account(
+            self.company, 'foobar', Account.TYPE_REVENUE, 1500,
+            is_current=None, is_contra=False, is_operating=True)
+        
+        url = reverse("account-edit", kwargs={'slug':revenue_account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1900,
+            "is_contra":False,
+            # is_operating is omitted
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual("is_operating cannot be null for type revenue", str(response.data))
+
+        expense_account = self.factory.create_account(
+            self.company, 'foobar2', Account.TYPE_EXPENSE, 3500,
+            is_current=None, is_contra=False, is_operating=True)
+        
+        url = reverse("account-edit", kwargs={'slug':expense_account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1900,
+            "is_contra":False,
+            # is_operating is omitted
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual("is_operating cannot be null for type expense", str(response.data))
+
+
+    def test_that_a_user_cant_edit_their_non_temporary_account_to_have_non_null_is_operating(self):
+        """ Test that a user cant edit their non temporary account such that it has a non-null is_operating value
+        """
+        account = self.factory.create_account(
+            self.company, 'foobar', Account.TYPE_ASSET, 1500,
+            is_current=True, is_contra=False, is_operating=None)
+        
+        url = reverse("account-edit", kwargs={'slug':account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1900,
+            "is_contra":False,
+            "is_current":True,
+            "is_operating":True,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual("is_operating must be null for type asset", str(response.data))
 
 
     def test_that_a_user_can_delete_their_own_account(self):
@@ -598,7 +731,7 @@ class AccountViewTests(BaseTestBase):
 
 
     def test_default_account_names_and_numbers_are_unique(self):
-        numbers = [r[3] for r in DEFAULT_ACCOUNTS]
-        names = [r[4] for r in DEFAULT_ACCOUNTS]
+        numbers = [r[4] for r in DEFAULT_ACCOUNTS]
+        names = [r[5] for r in DEFAULT_ACCOUNTS]
         self.assertEqual(len(numbers), len(set(numbers)))
         self.assertEqual(len(names), len(set(names)))

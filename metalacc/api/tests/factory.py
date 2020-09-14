@@ -29,7 +29,7 @@ class TestObjectFactory:
             type=type,
             amount=amount)
 
-    def create_account(self, company, name, acctype, number, is_current=None, is_contra=False):
+    def create_account(self, company, name, acctype, number, is_current=None, is_operating=None, is_contra=False):
         return Account.objects.create(
             company=company, user=company.user, name=name, type=acctype, number=number,
-            is_current=is_current, is_contra=is_contra)
+            is_current=is_current, is_contra=is_contra, is_operating=is_operating)
