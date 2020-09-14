@@ -15,11 +15,18 @@
     <p class="heading-2">
         {% if account.supports_is_current %}
             {% if account.is_current %}current{% else %}non-current{% endif %} 
-       {% endif %}
-       {% if account.is_contra %}
-           contra
-       {% endif %}
-       {{ account.type }} account
+        {% endif %}
+        {% if account.is_contra %}
+            contra
+        {% endif %}
+        {% if account.is_operating != None %}
+            {% if account.is_operating %}
+                operating
+            {% else %}
+                non-operating
+            {% endif %}
+        {% endif %}
+        {{ account.type }} account
     </p>
 </div>
 <div>
@@ -101,6 +108,27 @@
                 </div>
             </div>
        {% endif %}
+
+       {% if account.supports_is_operating %}
+            <div class="mt-3" id="is-current-input-wrapper">
+                <p class="mb-1">
+                    <strong>Operating or Non-Operating Account</strong>
+                    <i class="fas fa-question-circle"></i>
+                </p>
+                <div class="form-check">
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="edit-account-is-operating-input"
+                        {% if account.is_operating %}checked{% endif %}
+                    >
+                    <label class="form-check-label" for="edit-account-is-operating-input">
+                        Is Operating Account
+                    </label>
+                </div>
+            </div>
+        {% endif %}
+
        <div class="mt-3">
            <button class="btn btn-success" id="save-account-edits-btn">
                 <i class="fas fa-save"></i>
@@ -141,6 +169,7 @@ $(document).ready(()=>{
         const accountNewName = $("#edit-account-name-input").val().trim()
         const accountNewNumber = parseInt($("#edit-account-number-input").val())
         const accountIsCurrent = $("#is-current-input-wrapper").length ? $("#current-account-input").prop("checked") : null
+        const accountIsOperating = $("#edit-account-is-operating-input").length ? $("#edit-account-is-operating-input").prop("checked") : null
 
         let foundErrors = false
         if(accountNewName.length < 3 || accountNewName.length > 100) {
@@ -161,6 +190,7 @@ $(document).ready(()=>{
             name:accountNewName,
             number:accountNewNumber,
             is_current:accountIsCurrent,
+            is_operating:accountIsOperating,
         }
         postJson(url, data,
             (data, status, xhr)=>{

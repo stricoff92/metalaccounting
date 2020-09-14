@@ -192,6 +192,7 @@ def app_account_details(request, slug):
         }
     ]
     data = {
+        'company':company,
         'periods':periods,
         'account':account,
         'breadcrumbs':breadcrumbs,
