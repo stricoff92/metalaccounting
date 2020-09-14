@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST
 from django.urls import reverse
 from django.http import HttpResponseNotAllowed, HttpResponse
 
-from api.models import Company, Account, Period, JournalEntry
+from api.models import Company, Account, Period, JournalEntry, JournalEntryLine
 from api.models.account import DEFAULT_ACCOUNTS
 from api.utils import (
     generate_slug,
@@ -168,6 +168,12 @@ def app_account_details(request, slug):
         Account, company__user=request.user, slug=slug)
     company = account.company
 
+    periods_ids = (JournalEntryLine.objects
+        .filter(account=account)
+        .values_list("journal_entry__period_id", flat=True)
+        .distinct())
+    periods = Period.objects.filter(id__in=periods_ids)
+
     breadcrumbs = [
         {
             'value':'menu',
@@ -186,6 +192,7 @@ def app_account_details(request, slug):
         }
     ]
     data = {
+        'periods':periods,
         'account':account,
         'breadcrumbs':breadcrumbs,
     }
