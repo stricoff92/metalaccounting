@@ -36,7 +36,24 @@
             <div class="col-8 col-lg-10">
                 <p>
                     See a list of all account balances through this period before
-                    and after adjusting entries have been made. Closing entries are excluded.
+                    and after adjusting entries have been made. Closing entries for the current period are excluded.
+                </p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-4 col-lg-2">
+                <p>
+                    <a
+                        href="/app/period/{{ period.slug }}/income-statement/"
+                        {{ user.userprofile.target_attr }}
+                    >
+                        Income Statement
+                    </a>
+                </p>
+            </div>
+            <div class="col-8 col-lg-10">
+                <p>
+                    Measure the profitability of the company during this period.
                 </p>
             </div>
         </div>

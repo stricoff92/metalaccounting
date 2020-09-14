@@ -1,0 +1,9 @@
+{% extends 'base_app.html' %}
+{% load humanize %}
+{% block 'body' %}
+<div>
+    <p class="heading-1">Income Statement</p>
+    <p class="heading-2">{{ period.company.name }}</p>
+    <p>as of <strong>{{ period.end|date:"M j, Y" }}</strong></p>
+</div>
+{% endblock %}

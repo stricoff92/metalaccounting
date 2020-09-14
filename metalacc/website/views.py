@@ -346,6 +346,18 @@ def trial_balance_csv(request, slug):
 
     return response
 
+
+@login_required
+def income_statement(request, slug):
+    current_period = get_object_or_404(
+        Period, company__user=request.user, slug=slug)
+    breadcrumbs = get_report_page_breadcrumbs(current_period, "Income Statement")
+    data = {
+        'period':current_period,
+        'breadcrumbs':breadcrumbs,
+    }
+    return render(request, "app_report_income_statement.html", data)
+
 # END OF REPORT PAGES
 
 
