@@ -226,8 +226,9 @@ def app_company_add_default_accounts(request, slug):
             'type':a[0],
             'is_current':a[1],
             'is_contra':a[2],
-            'number':a[3],
-            'name':a[4],
+            'is_operating':a[3],
+            'number':a[4],
+            'name':a[5],
         } for a in DEFAULT_ACCOUNTS
     ]
     data = {
