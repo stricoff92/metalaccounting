@@ -33,8 +33,8 @@ urlpatterns = [
     path('account/delete/<slug:slug>/', views.account_delete, name="account-delete"),
 
     # Journal Entry Routes
-    path('period/<slug:slug>/je/list/', views.journal_entry_list, name="je-list"),
-    path('je/<slug:slug>/', views.journal_entry_details, name="je-details"),
     path('je/new/', views.journal_entry_new, name="je-new"),
+    path('je/<slug:slug>/', views.journal_entry_details, name="je-details"),
     path('je/delete/<slug:slug>/', views.journal_entry_delete, name="je-delete"),
+    path('period/<slug:slug>/je/list/', views.journal_entry_list, name="je-list"),
 ]
