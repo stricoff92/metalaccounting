@@ -490,8 +490,14 @@ function addJournalEntry(journalEntry) {
     $(deleteBtn).html('<i class="fas fa-trash-alt"></i> Delete')
     
     const jeMemoDiv = document.createElement("div") // memo & date
+
+    let entryDetails = ""
+    if (journalEntry.is_closing_entry || journalEntry.is_adjusting_entry) {
+        entryDetails = journalEntry.is_closing_entry ? "[CLOSING] " : "[ADJUSTING] "
+    }
+
     $(jeMemoDiv).text(
-        journalEntry.display_id + ". | " + moment(journalEntry.date).format("ll") + (journalEntry.memo ?" | " + journalEntry.memo : ""))
+        journalEntry.display_id + ". | " + moment(journalEntry.date).format("ll") + (journalEntry.memo ?" | " + entryDetails + journalEntry.memo : ""))
     $(jeMemoDiv).addClass("card p-2 bg-secondary ml-2")
     $(jeMemoDiv).css({'flex-grow':'1'})
 

@@ -36,6 +36,11 @@ class Period(models.Model):
         return self.company.period_set.exclude(id=self.id).filter(start__lt=self.start).order_by('-start').first()
 
 
+    @property
+    def period_after(self):
+        return self.company.period_set.exclude(id=self.id).filter(start__gt=self.start).order_by('start').first()
+
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = generate_slug(Period)
