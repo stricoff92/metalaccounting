@@ -4,3 +4,4 @@ applocals.py
 *.log
 *.sqlite3
 env/
+*.ipynb
