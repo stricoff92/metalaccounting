@@ -27,7 +27,7 @@ def account_list(request):
 
     account_fields = (
         "id", "slug", "number", "name", "type", 
-        "is_current", "is_contra")
+        "is_current", "is_contra", "is_operating",)
     accounts = list((Account.objects
         .filter(company=company)
         .order_by("number")
@@ -90,9 +90,22 @@ def account_new(request):
                 f"is_current cannot be null for type {account_type}",
                 status.HTTP_400_BAD_REQUEST)
     else:
-        if is_current is not None:
+        if not is_current is None:
             return Response(
                 f"is_current must be null for type {account_type}",
+                status.HTTP_400_BAD_REQUEST)
+
+    # Verify non null is_operating value is appropriate
+    is_operating = form.cleaned_data.get('is_operating')
+    if account_type in Account.OPERATING_TYPES:
+        if is_operating is None:
+            return Response(
+                f"is_operating cannot be null for type {account_type}",
+                status.HTTP_400_BAD_REQUEST)
+    else:
+        if not is_operating is None:
+            return Response(
+                f"is_operating must be null for type {account_type}",
                 status.HTTP_400_BAD_REQUEST)
 
 
@@ -168,6 +181,20 @@ def account_edit(request, slug):
         if is_current is not None:
             return Response(
                 f"is_current must be null for type {account_type}",
+                status.HTTP_400_BAD_REQUEST)
+
+
+    # Verify non null is_operating value is appropriate
+    is_operating = form.cleaned_data.get('is_operating')
+    if account.supports_is_operating:
+        if is_operating is None:
+            return Response(
+                f"is_operating cannot be null for type {account_type}",
+                status.HTTP_400_BAD_REQUEST)
+    else:
+        if not is_operating is None:
+            return Response(
+                f"is_operating must be null for type {account_type}",
                 status.HTTP_400_BAD_REQUEST)
 
 

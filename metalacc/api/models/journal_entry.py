@@ -9,6 +9,8 @@ from django.core.exceptions import ValidationError
 from api.utils import (
     generate_slug,
     get_next_journal_entry_display_id_for_company,
+    get_company_periods_up_to_and_excluding,
+    get_company_periods_up_to,
 )
 
 

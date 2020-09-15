@@ -23,9 +23,10 @@
             <th>Number</th>
             <th>Contra Account</th>
             <th>Current Account</th>
+            <th>Operating Revenue/Expense</th>
         </tr>
         {% for default_account in default_accounts %}
-            <tr>
+            <tr class="report-row">
                 <td>{{ default_account.type }}</td>
                 <td>{{ default_account.name }}</td>
                 <td>{{ default_account.number }}</td>
@@ -33,6 +34,11 @@
                 <td>
                     {% if default_account.is_current != None %}
                         {{ default_account.is_current }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if default_account.is_operating != None %}
+                        {{ default_account.is_operating }}
                     {% endif %}
                 </td>
             </tr>

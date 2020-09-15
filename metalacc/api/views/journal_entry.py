@@ -88,7 +88,7 @@ def journal_entry_list(request, slug):
     
     journal_entries = list(JournalEntry.objects
         .filter(id__in=journal_entry_ids)
-        .order_by("-date")
+        .order_by("-display_id")
         .values("id", "slug", "display_id", "date", "memo", "is_adjusting_entry", "is_closing_entry"))
 
     journal_entry_lines = list(JournalEntryLine.objects

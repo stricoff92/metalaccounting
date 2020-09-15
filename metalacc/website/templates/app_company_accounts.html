@@ -115,6 +115,19 @@
             </div>
         </div>
 
+        <div class="mt-3">
+            <p class="mb-1">
+                <strong>Operating Revenue/Expense Account</strong>
+                <i class="fas fa-question-circle"></i>
+            </p>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="new-account-is-operating-input">
+                <label class="form-check-label" for="new-account-is-operating-input">
+                    Is Operating Account
+                </label>
+            </div>
+        </div>
+
         <div class="mt-4">
             <button class="btn btn-success save-new-account-btn">
                 <i class="fas fa-save"></i>
@@ -153,6 +166,13 @@ $(document).ready(()=>{
         $('#open-new-account-form-btn').prop('disabled', true)
         $("#new-company-form").slideDown(350)
     })
+
+    const newAccountType = $('#new-account-type-input').val()
+    if(['asset', 'liability', 'equity'].indexOf(newAccountType) != -1) {
+        $("#new-account-is-operating-input").prop("checked", false)
+        $("#new-account-is-operating-input").prop("disabled", true)
+    }
+
     $('#new-account-type-input').change((e)=>{
         const newAccountType = $('#new-account-type-input').val()
         if(['asset', 'liability'].indexOf(newAccountType) != -1) {
@@ -166,6 +186,17 @@ $(document).ready(()=>{
             $("#non-current-account-input").prop("checked", false)
             $("#current-account-input").prop("disabled", true)
             $("#non-current-account-input").prop("disabled", true)
+        }
+        
+        const isOperatingWasDisabled = $("#new-account-is-operating-input").prop("disabled")
+        if(['asset', 'liability', 'equity'].indexOf(newAccountType) != -1) {
+            $("#new-account-is-operating-input").prop("checked", false)
+            $("#new-account-is-operating-input").prop("disabled", true)
+        } else {
+            $("#new-account-is-operating-input").prop("disabled", false)
+            if(isOperatingWasDisabled) {
+                $("#new-account-is-operating-input").prop("checked", true)
+            }
         }
     })
     $(".save-new-account-btn").click((event)=>{
@@ -204,6 +235,11 @@ $(document).ready(()=>{
             is_current:isCurrent,
             is_contra:isContra,
         }
+        
+        if(!$("#new-account-is-operating-input").prop("disabled") && ['revenue', 'expense'].indexOf(newAccountType) != -1) {
+            data.is_operating = $("#new-account-is-operating-input").prop("checked")
+        }
+
         postJson(accountNewUrl, data, 
             (data, status, xhr)=>{
                 if(xhr.status != 201) {
@@ -282,7 +318,14 @@ function addAccountToList(accountData) {
     $(accountRowDiv).append(accountRowInnerDivTop)
 
     const accountRowInnerDivBottom = document.createElement("div");
-    $(accountRowInnerDivBottom).append(`<span>${accountData.type}</span>`)
+    let typePrefix = ""
+    if(accountData.is_operating === true) {
+        typePrefix = "operating "
+    } else if (accountData.is_operating === false) {
+        typePrefix = "non-operating "
+    }
+    $(accountRowInnerDivBottom).append(`<span>${typePrefix}${accountData.type}</span>`)
+
     if(accountData.is_contra){
         $(accountRowInnerDivBottom).append(`
             <span class="badge badge-pill badge-info">
