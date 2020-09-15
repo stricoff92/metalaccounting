@@ -3,7 +3,39 @@
 {% block 'body' %}
 <div>
     <p class="heading-1">Income Statement</p>
-    <p class="heading-2">{{ period.company.name }}</p>
-    <p>as of <strong>{{ period.end|date:"M j, Y" }}</strong></p>
+    <p class="heading-2">{{ current_period.company.name }}</p>
+    <p>as of <strong>{{ current_period.end|date:"M j, Y" }}</strong></p>
+</div>
+<div class="mb-4">
+    <div class="row">
+        <div class="col-lg-7 col-4">
+
+        </div>
+        <div class="col-lg-2 col-4">
+            {% if previous_period %}
+                {{ previous_period.end|date:"M j, Y" }}
+            {% endif %}
+        </div>
+        <div class="col-lg-2 col-4">
+                {{ current_period.end|date:"M j, Y" }}
+        </div>
+    </div>
+
+    {% for row in rows %}
+        <div 
+            class="row report-row pt-1 pb-1 {% if row.border %}{{ row.border }}{% endif %} {% if row.new_section %}mt-4{% else %}mt-2{% endif %}"
+        >
+            <div class="col-lg-7 col-4 pl-{{ row.padding }} {% if row.bold %}font-weight-bold{% endif %}">
+                {% if row.col1value != None %}{{ row.col1value }}{% endif %}
+            </div>
+            <div class="col-lg-2 col-4">
+                {% if row.col2value != None %}{{ row.col2value|intcomma }}{% endif %}
+            </div>
+            <div class="col-lg-2 col-4">
+                {% if row.col3value != None %}{{ row.col3value|intcomma }}{% endif %}
+            </div>
+        </div>
+    {% endfor %}
+
 </div>
 {% endblock %}

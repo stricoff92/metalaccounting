@@ -58,12 +58,6 @@ def get_report_page_breadcrumbs(period, report_name:str) -> list:
     date_format = "%b %-d, %Y"
     return [
         {
-            'value':'menu',
-            'href':reverse("app-main-menu")
-        }, {
-            'value':'companies',
-            'href':reverse("app-landing"),
-        }, {
             'value':company.name,
             'href':reverse("app-company", kwargs={'slug':company.slug}),
         }, {

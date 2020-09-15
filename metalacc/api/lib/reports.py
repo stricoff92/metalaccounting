@@ -178,3 +178,123 @@ def get_t_account_data_for_account(account, current_period) -> tuple:
         curr_cr_total,
     )
 
+
+KEY_OPERATING_REVENUE = 'operating_revenue'
+KEY_NON_OPERATING_REVENUE = 'non_operating_revenue'
+KEY_OPERATING_EXPENSE = 'operating_expense'
+KEY_NON_OPERATING_EXPENSE = 'non_operating_expense'
+KEY_BALANCE = 'balance'
+
+
+def get_income_statement_data(current_period) -> dict:
+    current_data = _invoice_statement_date_for_period(current_period)
+
+    period_before = current_period.period_before
+    if period_before:
+        previous_data = _invoice_statement_date_for_period(period_before)
+    else:
+        previous_data = None
+    
+    return (previous_data, current_data,)
+
+
+def union_account_slugs_across_income_statement_data(list_of_income_statements_data:list, key:str) -> set:
+    # TODO: list comprehension this for moar speed
+    account_slugs = set()
+    for income_statement_data in list_of_income_statements_data:
+        if not income_statement_data:
+            continue
+        for row in income_statement_data[key]['rows']:
+            account_slugs.add(row['account']['slug'])
+    return account_slugs
+
+
+def _invoice_statement_date_for_period(period) -> dict:
+    """ Get operating income, operating expenses, operating income,
+        non-operating income, non-operating expenses, net income data
+    """
+    operating_accounts = (period.company.account_set
+        .filter(type__in=Account.OPERATING_TYPES)
+        .values('slug', 'name', 'number', 'type', 'is_contra', 'is_operating'))
+    operating_accounts = {a['slug']:a for a in operating_accounts}
+
+    operating_account_slugs = (period.company.account_set
+        .filter(type__in=Account.OPERATING_TYPES, is_operating=True)
+        .values_list('slug', flat=True))
+
+    data = {
+        KEY_OPERATING_REVENUE:{
+            'rows':[],
+            'rows_by_account':{},
+            'total':0,
+        },
+        KEY_NON_OPERATING_REVENUE:{
+            'rows':[],
+            'rows_by_account':{},
+            'total':0,
+        },
+        KEY_OPERATING_EXPENSE:{
+            'rows':[],
+            'rows_by_account':{},
+            'total':0,
+        },
+        KEY_NON_OPERATING_EXPENSE:{
+            'rows':[],
+            'rows_by_account':{},
+            'total':0,
+        },
+    }
+
+
+    journal_entries = JournalEntry.objects.filter_for_adjusted_trial(period)
+    journal_entry_lines = (JournalEntryLine.objects
+        .filter(journal_entry__in=journal_entries, account__type__in=Account.OPERATING_TYPES)
+        .values(
+            "account__slug", "journal_entry__period__id", "type", "amount"))
+
+    get_default_row = lambda: {
+        JournalEntryLine.TYPE_DEBIT:0,
+        JournalEntryLine.TYPE_CREDIT:0,
+        KEY_BALANCE:0,
+    }
+    amounts_by_account = defaultdict(get_default_row)
+    for jel in journal_entry_lines:
+        account_slug = jel['account__slug']
+        if jel['type'] == JournalEntryLine.TYPE_DEBIT:
+            amounts_by_account[account_slug][JournalEntryLine.TYPE_DEBIT] += jel['amount']
+        else:
+            amounts_by_account[account_slug][JournalEntryLine.TYPE_CREDIT] += jel['amount']
+
+    for account_slug in amounts_by_account:
+        balance = get_dr_cr_balance(
+            amounts_by_account[account_slug][JournalEntryLine.TYPE_DEBIT],
+            amounts_by_account[account_slug][JournalEntryLine.TYPE_CREDIT])
+
+        if balance == 0:
+            continue
+        
+        account = operating_accounts[account_slug]
+        row = {
+            KEY_BALANCE:(balance * -1) if account['is_contra'] else balance,
+            'account':account,
+        }
+        if account['type'] == Account.TYPE_REVENUE:
+            if account['slug'] in operating_account_slugs:
+                data[KEY_OPERATING_REVENUE]['rows'].append(row)
+            else:
+                data[KEY_NON_OPERATING_REVENUE]['rows'].append(row)
+    
+        elif account['type'] == Account.TYPE_EXPENSE:
+            if account['slug'] in operating_account_slugs:
+                data[KEY_OPERATING_EXPENSE]['rows'].append(row)
+            else:
+                data[KEY_NON_OPERATING_EXPENSE]['rows'].append(row)
+        else:
+            raise NotImplementedError()
+
+    for key in data:
+        data[key]['rows'].sort(key=lambda r: r['account']['number'])
+        data[key]['rows_by_account'] = {r['account']['slug']:r for r in data[key]['rows']}
+        data[key]['total'] = sum(row[KEY_BALANCE] for row in data[key]['rows'])
+    
+    return data

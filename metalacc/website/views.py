@@ -6,13 +6,14 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.urls import reverse
-from django.http import HttpResponseNotAllowed, HttpResponse
+from django.http import HttpResponseNotAllowed, HttpResponse, HttpResponseBadRequest
 
 from api.models import Company, Account, Period, JournalEntry, JournalEntryLine
 from api.models.account import DEFAULT_ACCOUNTS
 from api.utils import (
     generate_slug,
     get_report_page_breadcrumbs,
+    is_valid_slug
 )
 from api.lib import reports as reports_lib
 from website.forms import LoginForm
@@ -351,9 +352,215 @@ def trial_balance_csv(request, slug):
 def income_statement(request, slug):
     current_period = get_object_or_404(
         Period, company__user=request.user, slug=slug)
+
     breadcrumbs = get_report_page_breadcrumbs(current_period, "Income Statement")
+
+    (previous_is_data,
+    current_is_data) = reports_lib.get_income_statement_data(current_period)
+
+    print(previous_is_data)
+
+    # union accounts accross mulple periods
+    operating_revenue_accounts = reports_lib.union_account_slugs_across_income_statement_data(
+        [current_is_data, previous_is_data], reports_lib.KEY_OPERATING_REVENUE)
+    non_operating_revenue_accounts = reports_lib.union_account_slugs_across_income_statement_data(
+        [current_is_data, previous_is_data], reports_lib.KEY_NON_OPERATING_REVENUE)
+    operating_expense_accounts = reports_lib.union_account_slugs_across_income_statement_data(
+        [current_is_data, previous_is_data], reports_lib.KEY_OPERATING_EXPENSE)
+    non_operating_expense_accounts = reports_lib.union_account_slugs_across_income_statement_data(
+        [current_is_data, previous_is_data], reports_lib.KEY_NON_OPERATING_EXPENSE)
+    operating_revenue_accounts = Account.objects.filter(slug__in=operating_revenue_accounts).order_by("number")
+    non_operating_revenue_accounts = Account.objects.filter(slug__in=non_operating_revenue_accounts).order_by("number")
+    operating_expense_accounts = Account.objects.filter(slug__in=operating_expense_accounts).order_by("number")
+    non_operating_expense_accounts = Account.objects.filter(slug__in=non_operating_expense_accounts).order_by("number")
+
+
+    def _get_amount_info_from_is_data(rows, account):
+        try:
+            return next(r['balance'] for r in rows if r['account']['slug'] == account.slug)
+        except StopIteration:
+            return None
+
+    rows = []
+
+    # Operating
+    # Operating Income
+    if operating_revenue_accounts.exists():
+        rows.append({
+            'padding':1,
+            'bold':True,
+            'col1value':"Operating Revenue",
+        })
+        for account in operating_revenue_accounts:
+            rows.append({
+                'padding':3,
+                'col1value':f"({account.number}) {account.name}",
+                'col2value':_get_amount_info_from_is_data(
+                    previous_is_data[reports_lib.KEY_OPERATING_REVENUE]['rows'], account) if previous_is_data else None,
+                'col3value':_get_amount_info_from_is_data(
+                    current_is_data[reports_lib.KEY_OPERATING_REVENUE]['rows'], account),
+            })
+
+        rows.append({
+            'border':'border-top',
+            'padding':4,
+            'col1value':"Total Operating Revenue",
+            'col2value':(
+                previous_is_data[reports_lib.KEY_OPERATING_REVENUE]['total'] if previous_is_data else None),
+            'col3value':(
+                current_is_data[reports_lib.KEY_OPERATING_REVENUE]['total']),
+        })
+    
+
+    # Operating Expenses
+    if operating_expense_accounts.exists():
+        rows.append({
+            'new_section':True,
+            'padding':1,
+            'bold':True,
+            'col1value':"Operating Expenses",
+        })
+        for account in operating_expense_accounts:
+            rows.append({
+                'padding':3,
+                'col1value':f"({account.number}) {account.name}",
+                'col2value':_get_amount_info_from_is_data(
+                    previous_is_data[reports_lib.KEY_OPERATING_EXPENSE]['rows'], account) if previous_is_data else None,
+                'col3value':_get_amount_info_from_is_data(
+                    current_is_data[reports_lib.KEY_OPERATING_EXPENSE]['rows'], account),
+            })
+
+        rows.append({
+            'border':'border-top',
+            'padding':4,
+            'col1value':"Total Operating Expenses",
+            'col2value':(
+                previous_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total'] if previous_is_data else None),
+            'col3value':(
+                current_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total']),
+        })
+
+        operating_income_row = {
+            'padding':4,
+            'border':'border-top',
+            'col1value':"Operating Income",
+            "col3value": (
+                current_is_data[reports_lib.KEY_OPERATING_REVENUE]['total']
+                - current_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total']
+            )
+        }
+        if previous_is_data:
+            operating_income_row['col2value'] = (
+                previous_is_data[reports_lib.KEY_OPERATING_REVENUE]['total']
+                - previous_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total']
+            )
+        rows.append(operating_income_row)
+
+
+    # Non Operating
+    # Non Operating Income
+    if non_operating_revenue_accounts.exists():
+        rows.append({
+            'new_section':True,
+            'padding':1,
+            'bold':True,
+            'col1value':"Non-Operating Revenue",
+        })
+        for account in non_operating_revenue_accounts:
+            rows.append({
+                'padding':3,
+                'col1value':f"({account.number}) {account.name}",
+                'col2value':_get_amount_info_from_is_data(
+                    previous_is_data[reports_lib.KEY_NON_OPERATING_REVENUE]['rows'], account) if previous_is_data else None,
+                'col3value':_get_amount_info_from_is_data(
+                    current_is_data[reports_lib.KEY_NON_OPERATING_REVENUE]['rows'], account),
+            })
+
+        rows.append({
+            'border':'border-top',
+            'padding':4,
+            'col1value':"Total Non-Operating Revenue",
+            'col2value':(
+                previous_is_data[reports_lib.KEY_NON_OPERATING_REVENUE]['total'] if previous_is_data else None),
+            'col3value':(
+                current_is_data[reports_lib.KEY_NON_OPERATING_REVENUE]['total']),
+        })
+    
+
+    # Non Operating
+    # Non Operating Expenses
+    if non_operating_expense_accounts.exists():
+        rows.append({
+            'padding':1,
+            'bold':True,
+            'col1value':"Non-Operating Expenses",
+        })
+        for account in non_operating_expense_accounts:
+            rows.append({
+                'padding':3,
+                'col1value':f"({account.number}) {account.name}",
+                'col2value':_get_amount_info_from_is_data(
+                    previous_is_data[reports_lib.KEY_NON_OPERATING_EXPENSE]['rows'], account) if previous_is_data else None,
+                'col3value':_get_amount_info_from_is_data(
+                    current_is_data[reports_lib.KEY_NON_OPERATING_EXPENSE]['rows'], account),
+            })
+
+        rows.append({
+            'border':'border-top',
+            'padding':4,
+            'col1value':"Total Non-Operating Expenses",
+            'col2value':(
+                previous_is_data[reports_lib.KEY_NON_OPERATING_EXPENSE]['total'] if previous_is_data else None),
+            'col3value':(
+                current_is_data[reports_lib.KEY_NON_OPERATING_EXPENSE]['total']),
+        })
+
+
+        non_operating_income_row = {
+            'padding':4,
+            'border':'border-top',
+            'col1value':"Non-Operating Income",
+            "col3value": (
+                current_is_data[reports_lib.KEY_NON_OPERATING_REVENUE]['total']
+                - current_is_data[reports_lib.KEY_NON_OPERATING_EXPENSE]['total']
+            )
+        }
+        if previous_is_data:
+            non_operating_income_row['col2value'] = (
+                previous_is_data[reports_lib.KEY_NON_OPERATING_REVENUE]['total']
+                - previous_is_data[reports_lib.KEY_NON_OPERATING_EXPENSE]['total']
+            )
+        rows.append(non_operating_income_row)
+
+
+        net_income_row = {
+            'new_section':True,
+            'padding':4,
+            'border':'border-top',
+            'col1value':"Net Income",
+            "col3value": (
+                (current_is_data[reports_lib.KEY_OPERATING_REVENUE]['total']
+                + current_is_data[reports_lib.KEY_NON_OPERATING_REVENUE]['total'])
+                - (current_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total']
+                + current_is_data[reports_lib.KEY_NON_OPERATING_EXPENSE]['total'])
+            )
+        }
+        if previous_is_data:
+            net_income_row['col2value'] = (
+                (previous_is_data[reports_lib.KEY_OPERATING_REVENUE]['total']
+                + previous_is_data[reports_lib.KEY_NON_OPERATING_REVENUE]['total'])
+                - (previous_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total']
+                + previous_is_data[reports_lib.KEY_NON_OPERATING_EXPENSE]['total'])
+            )
+        rows.append(net_income_row)
+
+
+
+
     data = {
-        'period':current_period,
+        'rows':rows,
+        'current_period':current_period,
+        'previous_period':current_period.period_before,
         'breadcrumbs':breadcrumbs,
     }
     return render(request, "app_report_income_statement.html", data)

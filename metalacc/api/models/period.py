@@ -30,6 +30,11 @@ class Period(models.Model):
     def days_count(self):
         delta = self.end - self.start
         return delta.days + 1
+    
+    @property
+    def period_before(self):
+        return self.company.period_set.exclude(id=self.id).filter(start__lt=self.start).order_by('-start').first()
+
 
     def save(self, *args, **kwargs):
         if not self.slug:
