@@ -563,6 +563,27 @@ def income_statement(request, slug):
     }
     return render(request, "app_report_income_statement.html", data)
 
+
+@login_required
+def balance_sheet(request, slug):
+    current_period = get_object_or_404(
+        Period, company__user=request.user, slug=slug)
+    
+    balance_sheet_data = reports_lib.get_balance_sheet_data(current_period)
+
+    print(balance_sheet_data)
+
+    breadcrumbs = get_report_page_breadcrumbs(current_period, "Balance Sheet")
+    is_balanced = balance_sheet_data.get("total_assets") == balance_sheet_data.get("total_liabilities_and_equity")
+    data = {
+        'is_balanced':is_balanced,
+        'balance_sheet_data':balance_sheet_data,
+        'current_period':current_period,
+        'breadcrumbs':breadcrumbs,
+    }
+    return render(request, "app_report_balance_sheet.html", data)
+
+
 # END OF REPORT PAGES
 
 

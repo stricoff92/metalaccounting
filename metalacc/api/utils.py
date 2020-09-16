@@ -101,3 +101,7 @@ def get_dr_cr_balance(dr_total:int, cr_total:int):
         balance = dr_total - cr_total
     
     return balance
+
+
+def force_negative(val):
+    return abs(val) * -1

@@ -214,9 +214,16 @@
         entryContainerDiv.append(drEntriesDiv)
         entryContainerDiv.append(crEntriesDiv)
 
+        let memoAnotation = ""
+        if(journalEntry.is_closing_entry){
+            memoAnotation = "[CLOSING] "
+        }else if(journalEntry.is_adjusting_entry){
+            memoAnotation = "[ADJUSTING] "
+        }
+
         const jeMemoDiv = document.createElement("div") // memo & date
         $(jeMemoDiv).text(
-            journalEntry.display_id + ". | " + moment(journalEntry.date).format("ll") + (journalEntry.memo ?" | " + journalEntry.memo : ""))
+            journalEntry.display_id + ". | " + moment(journalEntry.date).format("ll") + (journalEntry.memo ? ` | ${memoAnotation}` + journalEntry.memo : ""))
         $(jeMemoDiv).addClass("card p-2 bg-secondary ml-2")
         $(jeMemoDiv).css({'flex-grow':'1'})
         

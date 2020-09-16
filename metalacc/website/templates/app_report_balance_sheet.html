@@ -1,0 +1,205 @@
+{% extends 'base_app.html' %}
+{% load humanize %}
+{% block 'body' %}
+<div>
+    <p class="heading-1">Balance Sheet</p>
+    <p class="heading-2">{{ current_period.company.name }}</p>
+    <p>as of <strong>{{ current_period.end|date:"M j, Y" }}</strong></p>
+</div>
+{% if not is_balanced %}
+    <div class="alert alert-primary p-4">
+        <p class="heading-2">
+            <i class="fas fa-exclamation-triangle"></i>
+            Your balance sheet is not balanced.
+        </p>
+        <p>
+            Why is this happening? Temporary account balances are not automatically aggregated into shareholder equity.
+            To balance this report close out all temporary account balances.
+        </p>
+        <p>
+            <a href="#">Show me how</a>
+        </p>
+    </div>
+{% else %}
+    <hr>
+{% endif %}
+<div class="mt-4 mb-4">
+    <div class="row">
+
+        <!--assets section-->
+        <div class="col-12 col-lg-6 mb-4">
+            <div class="row">
+                <div class="col-12">
+                    <p class="heading-2"><strong>Assets</strong></p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="pl-3">
+                    <strong>Current Assets</strong>
+                </div>
+            </div>
+            {% for row in balance_sheet_data.current_assets.rows %}
+                <div class="row pl-4 pt-1 pb-1 report-row">
+                    <div class="col-6">
+                        ({{ row.account.number }}) {{ row.account.name }}
+                    </div>
+                    <div class="col-6 text-right pr-4">
+                        {{ row.balance|intcomma }}
+                    </div>
+                </div>
+            {% endfor %}
+            <div class="row mt-3 pt-1 pb-1 report-row border-bottom">
+                <div class="col-6">
+                    Total Current Assets
+                </div>
+                <div class="col-6 text-right pr-4">
+                    {{ balance_sheet_data.current_assets.total|intcomma }}
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="pl-3">
+                    <strong>Non-Current Assets</strong>
+                </div>
+            </div>
+            {% for row in balance_sheet_data.non_current_asset.rows %}
+                <div class="row pl-4 pt-1 pb-1 report-row">
+                    <div class="col-6">
+                        ({{ row.account.number }}) {{ row.account.name }}
+                    </div>
+                    <div class="col-6 text-right pr-4">
+                        {{ row.balance|intcomma }}
+                    </div>
+                </div>
+            {% endfor %}
+            <div class="row mt-3 pt-1 pb-1 report-row">
+                <div class="col-6">
+                    Total Non-Current Assets
+                </div>
+                <div class="col-6 text-right pr-4">
+                    {{ balance_sheet_data.non_current_asset.total|intcomma }}
+                </div>
+            </div>
+            <div class="row pt-1 pb-1 report-row border-bottom">
+                <div class="col-6">
+                    Total Assets
+                </div>
+                <div class="col-6 text-right pr-4">
+                    {% if is_balanced %}
+                        <i class="fas fa-check-double"></i>
+                    {% else %}
+                        <i class="fas fa-exclamation-triangle"></i>
+                    {% endif %}
+                    {{ balance_sheet_data.total_assets|intcomma }}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- liabilities section-->
+        <div class="col-12 col-lg-6">
+            <div class="row">
+                <div class="col-12">
+                    <p class="heading-2">
+                        <strong>Liabilities and Equity</strong>
+                    </p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="pl-3">
+                    <strong>Current Liabilities</strong>
+                </div>
+            </div>
+            {% for row in balance_sheet_data.current_liability.rows %}
+                <div class="row pl-4 pt-1 pb-1 report-row">
+                    <div class="col-6">
+                        ({{ row.account.number }}) {{ row.account.name }}
+                    </div>
+                    <div class="col-6 text-right pr-4">
+                        {{ row.balance|intcomma }}
+                    </div>
+                </div>
+            {% endfor %}
+            <div class="row mt-3 pt-1 pb-1 report-row border-bottom">
+                <div class="col-6">
+                    Total Current Liabilities
+                </div>
+                <div class="col-6 text-right pr-4">
+                    {{ balance_sheet_data.current_liability.total|intcomma }}
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="pl-3">
+                    <strong>Non-Current Liabilities</strong>
+                </div>
+            </div>
+            {% for row in balance_sheet_data.non_current_liability.rows %}
+                <div class="row pl-4 pt-1 pb-1 report-row">
+                    <div class="col-6">
+                        ({{ row.account.number }}) {{ row.account.name }}
+                    </div>
+                    <div class="col-6 text-right pr-4">
+                        {{ row.balance|intcomma }}
+                    </div>
+                </div>
+            {% endfor %}
+            <div class="row mt-3 pt-1 pb-1 report-row ">
+                <div class="col-6">
+                    Total Non-Current Liabilities
+                </div>
+                <div class="col-6 text-right pr-4">
+                    {{ balance_sheet_data.non_current_liability.total|intcomma }}
+                </div>
+            </div>
+            <div class="row border-bottom pt-1 pb-1 report-row ">
+                <div class="col-6">
+                    Total Liabilities
+                </div>
+                <div class="col-6 text-right pr-4">
+                    {{ balance_sheet_data.total_liabilities|intcomma }}
+                </div>
+            </div>
+
+            <!-- equity section-->
+            <div class="row mt-4">
+                <div class="pl-3">
+                    <strong>Shareholder Equity</strong>
+                </div>
+            </div>
+            {% for row in balance_sheet_data.equity.rows %}
+                <div class="row pl-4 pt-1 pb-1 report-row">
+                    <div class="col-6">
+                        ({{ row.account.number }}) {{ row.account.name }}
+                    </div>
+                    <div class="col-6 text-right pr-4">
+                        {{ row.balance|intcomma }}
+                    </div>
+                </div>
+            {% endfor %}
+            <div class="row mt-3 pt-1 pb-1 report-row border-bottom">
+                <div class="col-6">
+                    Total Shareholder Equity
+                </div>
+                <div class="col-6 text-right pr-4">
+                    {{ balance_sheet_data.total_equity|intcomma }}
+                </div>
+            </div>
+            <div class="row mt-3 pt-1 pb-1 report-row border-bottom">
+                <div class="col-6">
+                    Total Liabilities and Equity
+                </div>
+                <div class="col-6 text-right pr-4">
+                    {% if is_balanced %}
+                        <i class="fas fa-check-double"></i>
+                    {% else %}
+                        <i class="fas fa-exclamation-triangle"></i>
+                    {% endif %}
+                    {{ balance_sheet_data.total_liabilities_and_equity|intcomma }}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

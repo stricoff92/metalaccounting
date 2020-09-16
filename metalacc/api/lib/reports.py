@@ -8,6 +8,7 @@ from api.utils import (
     get_company_periods_up_to_and_excluding,
     get_company_periods_up_to,
     get_dr_cr_balance,
+    force_negative,
 )
 
 def get_trial_balance_data(current_period):
@@ -155,11 +156,11 @@ def get_t_account_data_for_account(account, current_period) -> tuple:
                 prev_dr_total += jel['amount']
             else:
                 prev_cr_total += jel['amount']
+
+        if jel['type'] == JournalEntryLine.TYPE_DEBIT:
+            curr_dr_total += jel['amount']
         else:
-            if jel['type'] == JournalEntryLine.TYPE_DEBIT:
-                curr_dr_total += jel['amount']
-            else:
-                curr_cr_total += jel['amount']
+            curr_cr_total += jel['amount']
         
         if jel['journal_entry__period_id'] == current_period.id:
             rows.append(jel)
@@ -296,5 +297,166 @@ def _invoice_statement_date_for_period(period) -> dict:
         data[key]['rows'].sort(key=lambda r: r['account']['number'])
         data[key]['rows_by_account'] = {r['account']['slug']:r for r in data[key]['rows']}
         data[key]['total'] = sum(row[KEY_BALANCE] for row in data[key]['rows'])
+    
+    return data
+
+KEY_TOTAL_ASSETS = 'total_assets'
+KEY_TOTAL_LIABILITIES = 'total_liabilities'
+KEY_TOTAL_EQUITY = 'total_equity'
+KEY_TOTAL_LIABILITIES_AND_EQUITY = 'total_liabilities_and_equity'
+KEY_CURR_ASSET = 'current_assets'
+KEY_NON_CURR_ASSET = 'non_current_asset'
+KEY_CURR_LIABILITY = 'current_liability'
+KEY_NON_CURR_LIABILITY = 'non_current_liability'
+KEY_EQUITY = 'equity'
+
+def get_balance_sheet_data(current_period):
+    journal_entries = JournalEntry.objects.filter_for_balance_sheet(
+        current_period)
+    journal_entry_lines = JournalEntryLine.objects.filter(
+        journal_entry__in=journal_entries, account__type__in=Account.BALANCE_SHEET_TYPES)
+
+    # Aggregate DR/CR amounts by Account
+    get_default_row = lambda: {
+        JournalEntryLine.TYPE_DEBIT:0,
+        JournalEntryLine.TYPE_CREDIT:0,
+        'balance':0,
+        "account__type":None,
+    }
+    amounts_by_account = defaultdict(get_default_row)
+
+    for jel in journal_entry_lines.values("account__slug", "account__type", "type", "amount"):
+        account_slug = jel['account__slug']
+        amounts_by_account[account_slug]["account__type"] = jel["account__type"]
+        if jel['type'] == JournalEntryLine.TYPE_DEBIT:
+            amounts_by_account[account_slug][JournalEntryLine.TYPE_DEBIT] += jel['amount']
+        elif jel['type'] == JournalEntryLine.TYPE_CREDIT:
+            amounts_by_account[account_slug][JournalEntryLine.TYPE_CREDIT] += jel['amount']
+        else:
+            raise NotImplementedError()
+    
+    for account_slug in amounts_by_account:
+        dr_amount = amounts_by_account[account_slug][JournalEntryLine.TYPE_DEBIT]
+        cr_amount = amounts_by_account[account_slug][JournalEntryLine.TYPE_CREDIT]
+        balance = get_dr_cr_balance(dr_amount, cr_amount)
+
+        if cr_amount > dr_amount and amounts_by_account[account_slug]['account__type'] == Account.TYPE_ASSET:
+            balance = force_negative(balance)
+        elif cr_amount < dr_amount and amounts_by_account[account_slug]['account__type'] == Account.TYPE_LIABILITY:
+            balance = force_negative(balance)
+
+        amounts_by_account[account_slug]['balance'] = balance
+    
+    account_slugs = set(amounts_by_account.keys())
+    accounts = Account.objects.filter(slug__in=account_slugs)
+
+    data = {
+        KEY_CURR_ASSET:{
+            'rows':[],
+            'total':0,
+        },
+        KEY_NON_CURR_ASSET:{
+            'rows':[],
+            'total':0,
+        },
+        KEY_CURR_LIABILITY:{
+            'rows':[],
+            'total':0,
+        },
+        KEY_NON_CURR_LIABILITY:{
+            'rows':[],
+            'total':0,
+        },
+        KEY_EQUITY:{
+            'rows':[],
+            'total':0,
+        },
+        KEY_TOTAL_ASSETS:0,
+        KEY_TOTAL_LIABILITIES:0,
+        KEY_TOTAL_EQUITY:0,
+        KEY_TOTAL_LIABILITIES_AND_EQUITY:0,
+    }
+
+    # current assets
+    for acc in (accounts
+            .filter(type=Account.TYPE_ASSET, is_current=True)
+            .order_by('number')
+            .values("slug", "name", "number", "type", "is_contra", "is_current", "is_operating")):
+    
+        balance = amounts_by_account[acc['slug']]['balance']
+        if balance == 0:
+            continue
+        data[KEY_CURR_ASSET]['total'] += balance
+        data[KEY_TOTAL_ASSETS] += balance
+        data[KEY_CURR_ASSET]['rows'].append({
+            "account":acc,
+            "balance":balance,
+        })
+
+    # non current assets
+    for acc in (accounts
+            .filter(type=Account.TYPE_ASSET, is_current=False)
+            .order_by('number')
+            .values("slug", "name", "number", "type", "is_contra", "is_current", "is_operating")):
+
+        balance = amounts_by_account[acc['slug']]['balance']
+        if balance == 0:
+            continue
+        data[KEY_NON_CURR_ASSET]['total'] += balance
+        data[KEY_TOTAL_ASSETS] += balance
+        data[KEY_NON_CURR_ASSET]['rows'].append({
+            "account":acc,
+            "balance":balance,
+        })
+
+    # current liabilities
+    for acc in (accounts
+            .filter(type=Account.TYPE_LIABILITY, is_current=True)
+            .order_by('number')
+            .values("slug", "name", "number", "type", "is_contra", "is_current", "is_operating")):
+        balance = amounts_by_account[acc['slug']]['balance']
+        if balance == 0:
+            continue
+        data[KEY_CURR_LIABILITY]['total'] += balance
+        data[KEY_TOTAL_LIABILITIES] += balance
+        data[KEY_TOTAL_LIABILITIES_AND_EQUITY] += balance
+        data[KEY_CURR_LIABILITY]['rows'].append({
+            "account":acc,
+            "balance":balance,
+        })
+
+    # non current liabilities
+    for acc in (accounts
+            .filter(type=Account.TYPE_LIABILITY, is_current=False)
+            .order_by('number').values("slug", "name", "number", "type", "is_contra", "is_current", "is_operating")):
+
+        balance = amounts_by_account[acc['slug']]['balance']
+        if balance == 0:
+            continue
+        data[KEY_NON_CURR_LIABILITY]['total'] += balance
+        data[KEY_TOTAL_LIABILITIES] += balance
+        data[KEY_TOTAL_LIABILITIES_AND_EQUITY] += balance
+        data[KEY_NON_CURR_LIABILITY]['rows'].append({
+            "account":acc,
+            "balance":balance,
+        })
+
+    # equity
+    for acc in (accounts
+            .filter(type=Account.TYPE_EQUITY)
+            .order_by('number')
+            .values("slug", "name", "number", "type", "is_contra", "is_current", "is_operating")):
+
+    
+        balance = amounts_by_account[acc['slug']]['balance']
+        if balance == 0:
+            continue
+        data[KEY_EQUITY]['total'] += balance
+        data[KEY_TOTAL_EQUITY] += balance
+        data[KEY_TOTAL_LIABILITIES_AND_EQUITY] += balance
+        data[KEY_EQUITY]['rows'].append({
+            "account":acc,
+            "balance":balance,
+        })
     
     return data
