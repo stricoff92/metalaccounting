@@ -10,6 +10,8 @@ HELP    <i class="fas fa-question-circle"></i>
 WARN    <i class="fas fa-exclamation-triangle"></i>
 MACRO   <i class="fas fa-bolt"></i>
 CSV     <i class="fas fa-file-csv"></i>
+DOUBLE CHECK <i class="fas fa-check-double"></i>
+
 
 DATE RANGE <i class="fas fa-arrow-right"></i>
 

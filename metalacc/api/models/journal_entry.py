@@ -44,6 +44,13 @@ class JounralEntryManager(models.Manager):
         )
 
 
+    def filter_for_balance_sheet(self, period):
+        """ Get all entries from current and pervious periods.
+        """
+        periods = get_company_periods_up_to(period)
+        return self.filter(period__in=periods)
+
+
 
 class JournalEntry(models.Model):
 

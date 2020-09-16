@@ -53,7 +53,24 @@
             </div>
             <div class="col-8 col-lg-10">
                 <p>
-                    Measure the profitability of the company during this period.
+                    Measure profitability of the company through this period. Performance is compared to the company's previous period.
+                </p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-4 col-lg-2">
+                <p>
+                    <a
+                        href="/app/period/{{ period.slug }}/balance-sheet/"
+                        {{ user.userprofile.target_attr }}
+                    >
+                        Balance Sheet
+                    </a>
+                </p>
+            </div>
+            <div class="col-8 col-lg-10">
+                <p>
+                   See a spanshot of assets, liabilities, and equity associated with this company through this period.
                 </p>
             </div>
         </div>
