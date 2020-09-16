@@ -15,6 +15,11 @@ DOUBLE CHECK <i class="fas fa-check-double"></i>
 
 DATE RANGE <i class="fas fa-arrow-right"></i>
 
+Balance sheet       <i class="fas fa-balance-scale"></i>
+Income Statement    <i class="fas fa-chart-line"></i>
+TRIAL BALANCE        <i class="fas fa-file-alt"></i>
+
+
 
 CONTRA ACCOUNT
 <span class="badge badge-pill badge-info">

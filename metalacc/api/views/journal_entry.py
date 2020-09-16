@@ -57,6 +57,8 @@ class JournalEntrySerializer(serializers.ModelSerializer):
         fields = (
             "slug",
             "display_id",
+            "is_closing_entry",
+            "is_adjusting_entry",
             "date",
             "period",
             "memo",
