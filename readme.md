@@ -3,7 +3,7 @@
 
 ### Metal Accounting is a tool for aggregating journal entries into financial statements.
 
-## Installation
+## Installing Locally
 
 ### Python
 Install python3.6.X from <a href="https://www.python.org" target="_blank">python.org</a>
