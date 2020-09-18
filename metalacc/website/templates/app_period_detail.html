@@ -403,9 +403,10 @@ function navigateToEntry() {
         jeslug = urlParams.get('jegoto')
         let jeDiv = $("#journal-entry-container-" + jeslug)
         $([document.documentElement, document.body]).animate({
-            scrollTop: jeDiv.offset().top
+            scrollTop: jeDiv.offset().top - 10
         }, 250, ()=>{
             $(jeDiv).addClass("border border-info")
+            $(jeDiv).css("border-radius", "6px")
         });
     }
 }
