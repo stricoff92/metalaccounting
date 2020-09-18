@@ -159,6 +159,7 @@ def app_company_accounts(request, slug):
     data = {
         'company':company,
         'breadcrumbs':breadcrumbs,
+        'tags':Account.ACCOUNT_TAGS_CHOICES,
     }
     return render(request, "app_company_accounts.html", data)
 
@@ -197,6 +198,8 @@ def app_account_details(request, slug):
         'periods':periods,
         'account':account,
         'breadcrumbs':breadcrumbs,
+        'tags':Account.ACCOUNT_TAGS_CHOICES,
+        'available_tag_options':account.available_tag_options,
     }
     return render(request, "app_account_details.html", data)
 
@@ -231,6 +234,7 @@ def app_company_add_default_accounts(request, slug):
             'is_operating':a[3],
             'number':a[4],
             'name':a[5],
+            'tag':Account.ACCOUNT_TAG_NAME_DICT[a[6]] if a[6] else None,
         } for a in DEFAULT_ACCOUNTS
     ]
     data = {

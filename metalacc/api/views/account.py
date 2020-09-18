@@ -27,11 +27,11 @@ def account_list(request):
 
     account_fields = (
         "id", "slug", "number", "name", "type", 
-        "is_current", "is_contra", "is_operating",)
-    accounts = list((Account.objects
+        "is_current", "is_contra", "is_operating","tag")
+    accounts = list(Account.objects
         .filter(company=company)
         .order_by("number")
-        .values(*account_fields)))
+        .values(*account_fields))
 
     account_ids = [a['id'] for a in accounts]
     account_ids_with_entries = set(JournalEntryLine.objects
@@ -45,6 +45,9 @@ def account_list(request):
         # Remove id field
         accounts[ix] = {
             k:v for k,v in account.items() if k != "id"}
+        
+        if account['tag']:
+            accounts[ix]['tag'] = Account.ACCOUNT_TAG_NAME_DICT[account['tag']]
     
     return Response(accounts, status.HTTP_200_OK)
 
@@ -124,6 +127,7 @@ def account_new(request):
         'type':account.type,
         'is_contra':account.is_contra,
         'is_current':account.is_current,
+        'tag':account.tag,
     }
     return Response(data, status.HTTP_201_CREATED)
 
@@ -202,7 +206,7 @@ def account_edit(request, slug):
         account = form.save()
     except ValidationError as e:
         return Response(e, status.HTTP_400_BAD_REQUEST)
-
+    
     data = {
         'slug':account.slug,
         'name':account.name,
@@ -210,6 +214,7 @@ def account_edit(request, slug):
         'type':account.type,
         'is_contra':account.is_contra,
         'is_current':account.is_current,
+        'tag':account.tag,
     }
     return Response(data, status.HTTP_200_OK)
 
