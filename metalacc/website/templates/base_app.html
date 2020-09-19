@@ -231,6 +231,23 @@
                 $("body").data('uidsInUse', uidsInUse)
                 return newUID
             }
+
+
+            function accountTypeSupportsTag(tag, account_type, is_contra) {
+                if (tag == "cogs") {
+                    if (account_type == "liability" && !is_contra) {
+                        return true
+                    }
+                    if (account_type == "revenue" && is_contra) {
+                        return true
+                    }
+                    return false
+                }
+                if (tag == "div") {
+                    return account_type == "equity" && !is_contra
+                }
+                throw new Error("NotImplementedError")
+            }
         </script>
     </body>
 </html>
