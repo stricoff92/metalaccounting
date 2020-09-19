@@ -151,3 +151,36 @@ class ObjectExportViewTests(BaseTestBase):
         url = reverse("app-company-export", kwargs={"slug":self.company.slug})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+    def test_a_user_cannot_import_a_company_if_at_the_object_limit(self):
+        """ Test that a user cannot import a company if they are already at the object limit for companies.
+        """
+        userprofile = self.other_user.userprofile
+        userprofile.object_limit_companies = 0
+        userprofile.save(update_fields=['object_limit_companies'])
+
+        self.assertEqual(Company.objects.count(), 1)
+        self.assertEqual(Period.objects.count(), 1)
+        self.assertEqual(Account.objects.count(), len(DEFAULT_ACCOUNTS))
+        self.assertEqual(JournalEntry.objects.count(), 1)
+        self.assertEqual(JournalEntryLine.objects.count(), 2)
+
+        # export company info to serialized data
+        url = reverse("app-company-export", kwargs={"slug":self.company.slug})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        signed_jwt = response.content.decode()
+        self.assertTrue(len(signed_jwt) > 0)
+
+        # authenticate as another user and import data
+        self.client.force_login(self.other_user)
+        url = reverse("company-import")
+        data = {
+            'data':signed_jwt,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue("user cannot add additional companies" in str(response.data))
+    
