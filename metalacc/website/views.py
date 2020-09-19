@@ -291,6 +291,9 @@ def app_import_company(request):
             'value':'menu',
             'href':reverse("app-main-menu")
         }, {
+            'value':'companies',
+            'href':reverse("app-landing"),
+        }, {
             'value':'Import a Company',
         },
     ]
