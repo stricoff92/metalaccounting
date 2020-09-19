@@ -195,7 +195,11 @@ class Account(models.Model):
                 raise ValidationError(f"Accounts with tag {self.ACCOUNT_TAG_NAME_DICT[self.tag]} must be a contra equity account.")
 
         if self.tag == self.TAG_COST_OF_GOODS:
-            if self.type != self.TYPE_EXPENSE:
+            if not self.type in [self.TYPE_REVENUE, self.TYPE_EXPENSE]:
                 raise ValidationError(f"Accounts with tag {self.ACCOUNT_TAG_NAME_DICT[self.tag]} must be an expense account.")
+            if self.type == self.TYPE_REVENUE and not self.is_contra:
+                raise ValidationError(f"Revenue account must be marked as a contra account to hold a Cost of Goods sold tag.")
+            if self.type == self.TYPE_EXPENSE and self.is_contra:
+                raise ValidationError(f"Expense accounts cannot be marked as a contra account to hold a Cost of Goods sold tag.")
 
         return super().save(*args, **kwargs)

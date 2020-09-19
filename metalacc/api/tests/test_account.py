@@ -21,7 +21,157 @@ class AccountViewTests(BaseTestBase):
     
     def tearDown(self):
         super().tearDown()
-    
+
+
+    def test_user_cant_create_account_with_invalid_use_of_cogs_tag(self):
+        """ Test user cant create an account with invalid use of a CoGS tag 
+        """
+        url = reverse("account-new")
+        for acc_type in [Account.TYPE_ASSET, Account.TYPE_LIABILITY]:
+            data = {
+                'company':self.company.slug,
+                'name':'foobar',
+                'type':acc_type,
+                'is_contra':False,
+                'is_current':False,
+                'number':1500,
+                'tag':Account.TAG_COST_OF_GOODS,
+            }
+            response = self.client.post(url, data, format="json")
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertEqual(str(response.data), "['Accounts with tag Cost of Goods Sold must be an expense account.']")
+
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_EQUITY,
+            'is_contra':False,
+            'number':1500,
+            'tag':Account.TAG_COST_OF_GOODS,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(str(response.data), "['Accounts with tag Cost of Goods Sold must be an expense account.']")
+
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_REVENUE,
+            'is_contra':False,
+            'number':1500,
+            'tag':Account.TAG_COST_OF_GOODS,
+            'is_operating':True,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(str(response.data), "['Revenue account must be marked as a contra account to hold a Cost of Goods sold tag.']")
+
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_EXPENSE,
+            'is_contra':True,
+            'number':1500,
+            'tag':Account.TAG_COST_OF_GOODS,
+            'is_operating':True,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(str(response.data), "['Expense accounts cannot be marked as a contra account to hold a Cost of Goods sold tag.']")
+
+
+    def test_user_cant_create_account_with_invalid_use_of_dividends_tag(self):
+        """ Test user cant create an account with invalid use of a CoGS tag 
+        """
+        url = reverse("account-new")
+        for acc_type in [Account.TYPE_ASSET, Account.TYPE_LIABILITY,]:
+            data = {
+                'company':self.company.slug,
+                'name':'foobar',
+                'type':acc_type,
+                'is_contra':True,
+                'is_current':False,
+                'number':1500,
+                'tag':Account.TAG_DIVIDENDS,
+            }
+            response = self.client.post(url, data, format="json")
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertEqual(str(response.data), "['Accounts with tag Dividends must be a contra equity account.']")
+
+        for acc_type in [Account.TYPE_REVENUE, Account.TYPE_REVENUE,]:
+            data = {
+                'company':self.company.slug,
+                'name':'foobar',
+                'type':acc_type,
+                'is_contra':True,
+                'is_operating':True,
+                'number':1500,
+                'tag':Account.TAG_DIVIDENDS,
+            }
+            response = self.client.post(url, data, format="json")
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertEqual(str(response.data), "['Accounts with tag Dividends must be a contra equity account.']")
+
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_EQUITY,
+            'is_contra':False,
+            'number':1500,
+            'tag':Account.TAG_DIVIDENDS,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(str(response.data), "['Accounts with tag Dividends must be a contra equity account.']")
+
+
+    def test_user_can_create_account_with_using_cogs_tag(self):
+        """ Test user cant create an account with invalid use of a CoGS tag 
+        """
+        url = reverse("account-new")
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_EXPENSE,
+            'is_contra':False,
+            'number':1500,
+            'tag':Account.TAG_COST_OF_GOODS,
+            'is_operating':True,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Account.objects.get(slug=response.data['slug']).tag, Account.TAG_COST_OF_GOODS)
+
+        data = {
+            'company':self.company.slug,
+            'name':'foobar2',
+            'type':Account.TYPE_REVENUE,
+            'is_contra':True,
+            'number':1501,
+            'tag':Account.TAG_COST_OF_GOODS,
+            'is_operating':True,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Account.objects.get(slug=response.data['slug']).tag, Account.TAG_COST_OF_GOODS)
+
+
+    def test_user_can_create_account_with_using_dividends_tag(self):
+        """ Test user cant create an account with invalid use of a CoGS tag 
+        """
+        url = reverse("account-new")
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_EQUITY,
+            'is_contra':True,
+            'number':1500,
+            'tag':Account.TAG_DIVIDENDS,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Account.objects.get(slug=response.data['slug']).tag, Account.TAG_DIVIDENDS)
+
 
     def test_user_can_create_an_account(self):
         """ Test user can create a current account
