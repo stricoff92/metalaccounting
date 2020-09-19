@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# You need to install coverage before running this.
+# Run `pip install coverage` from inside the python environment
+
+rm -rf htmlcov
+rm .coverage
+
+set -e
+
+coverage run ./manage.py test $1 --settings=metalacc.test_settings
+echo 'generating html reports..'
+coverage html
+
+echo 'reports generated in /metalacc/metalacc/htmlcov/'
+cd htmlcov
+
+echo 'starting dev server to serve reports'
+python -m http.server 1337
+
+echo "bye"
+cd ..
