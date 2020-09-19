@@ -32,8 +32,8 @@ DEFAULT_ACCOUNTS = (
     ('equity', None, False, None, 3000, 'Common Stock', None,),
     ('equity', None, False, None, 3050, 'Prefered stock', None,),
     ('equity', None, False, None, 3400, 'APIC', None,),
-    ('equity', None, False, None, 3700, 'Retained Earnings', None,),
-    ('equity', None, True, None, 3901, 'Dividends', 'div',), # DIV TAG
+    ('equity', None, False, None, 3700, 'Retained Earnings', 're',), # RE TAG
+    ('equity', None, True, None, 3901, 'Dividends', 'div',),         # DIV TAG
 
     ('revenue', None, False, True, 4100, 'Sales Revenue', None,),
     ('revenue', None, True, True, 4159, 'Sales Returns and Allowances', None,),
@@ -79,9 +79,11 @@ class Account(models.Model):
     slug = models.SlugField(unique=True, editable=False)
 
     TAG_DIVIDENDS = 'div'
+    TAG_RETAINED_EARNINGS = 're'
     TAG_COST_OF_GOODS = 'cogs'
     ACCOUNT_TAGS_CHOICES = (
         (TAG_DIVIDENDS, "Dividends",),
+        (TAG_RETAINED_EARNINGS, "Retained Earnings",),
         (TAG_COST_OF_GOODS, "Cost of Goods Sold",),
     )
     ACCOUNT_TAG_NAME_DICT = {r[0]:r[1] for r in ACCOUNT_TAGS_CHOICES}
@@ -144,6 +146,8 @@ class Account(models.Model):
             return ((self.TAG_COST_OF_GOODS, "Cost of Goods Sold"),)
         elif self.type == self.TYPE_EQUITY and self.is_contra:
             return ((self.TAG_DIVIDENDS, "Dividends"),)
+        elif self.type == self.TYPE_EQUITY and not self.is_contra:
+            return ((self.TAG_RETAINED_EARNINGS, "Retained Earnings"),)
         else:
             return tuple()
 
@@ -204,5 +208,9 @@ class Account(models.Model):
                 raise ValidationError(f"Expense accounts cannot be marked as a contra account to hold a Cost of Goods sold tag.")
             if not self.is_operating:
                 raise ValidationError(f"Accounts with the tag Cost of Goods Sold must be operating accounts.")
+
+        if self.tag == self.TAG_RETAINED_EARNINGS:
+            if self.type != self.TYPE_EQUITY or self.is_contra:
+                raise ValidationError(f"Accounts with tag {self.ACCOUNT_TAG_NAME_DICT[self.tag]} must be a non-contra equity account.")
 
         return super().save(*args, **kwargs)

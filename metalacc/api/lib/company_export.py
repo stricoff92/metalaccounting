@@ -7,6 +7,7 @@ from django.core.signing import Signer
 from django.db.models.functions import Cast
 from django.db.models import CharField
 from django.db import transaction
+from django.utils import timezone
 
 from api.utils import generate_slug, generate_slugs_batch
 
@@ -17,7 +18,10 @@ signer = Signer(key=settings.OBJECT_SIGNING_KEY)
 
 def export_company_to_jwt(company):
     data = {
-        'version':settings.OBJECT_SERIALIZATION_VERSION,
+        "meta":{
+            'version':settings.OBJECT_SERIALIZATION_VERSION,
+            'issued_at':timezone.now().strftime("%s"),
+        }
     }
 
     # Serialize company.

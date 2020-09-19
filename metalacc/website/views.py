@@ -614,8 +614,6 @@ def balance_sheet(request, slug):
     
     balance_sheet_data = reports_lib.get_balance_sheet_data(current_period)
 
-    print(balance_sheet_data)
-
     breadcrumbs = get_report_page_breadcrumbs(current_period, "Balance Sheet")
     is_balanced = balance_sheet_data.get("total_assets") == balance_sheet_data.get("total_liabilities_and_equity")
     data = {
@@ -626,6 +624,22 @@ def balance_sheet(request, slug):
     }
     return render(request, "app_report_balance_sheet.html", data)
 
+
+@login_required
+def retained_earnings(request, slug):
+    current_period = get_object_or_404(
+        Period, company__user=request.user, slug=slug)
+    
+    has_dividends_account = Account.objects.filter(
+        company=current_period.company, tag=Account.TAG_DIVIDENDS).exists()
+
+    breadcrumbs = get_report_page_breadcrumbs(current_period, "Retained Earnings")
+    data = {
+        'current_period':current_period,
+        'has_dividends_account':has_dividends_account,
+        'breadcrumbs':breadcrumbs,
+    }
+    return render(request, "app_report_retained_earnings.html", data)
 
 # END OF REPORT PAGES
 

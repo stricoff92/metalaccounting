@@ -1,0 +1,20 @@
+{% extends 'base_app.html' %}
+{% load humanize %}
+{% block 'body' %}
+<div>
+    <p class="heading-1">Statement of Retained Earnings</p>
+    <p class="heading-2">{{ current_period.company.name }}</p>
+    <p>as of <strong>{{ current_period.end|date:"M j, Y" }}</strong></p>
+</div>
+{% if not has_dividends_account %}
+    <div class="alert alert-warning mt-3 p-4">
+        <p class="heading-2">
+            <i class="fas fa-exclamation-triangle"></i>
+            None of Your Accounts Use the Dividends Tag
+        </p>
+        <p>
+            In order for this report to properly display you need a contra equity account with the Dividends tag applied.
+        </p>
+    </div>
+{% endif %}
+{% endblock %}
