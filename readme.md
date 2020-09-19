@@ -35,6 +35,8 @@ Add `applocals.py` file to the django project directory (`metalacc/metalacc/appl
 example `applocals.py`
 ```python
 SECRET_KEY = 'ADD A SECRET KEY HERE'
+OBJECT_SERIALIZATION_KEY = 'ADD A SECRET KEY HERE'
+OBJECT_SIGNING_KEY = 'ADD A SECRET KEY HERE'
 
 ADDITIONAL_ALLOWED_HOSTS = []
 
@@ -46,7 +48,7 @@ DB_USERNAME = 'root'
 DB_PASSWORD = 'YOUR DATABASE PASSWORD GOES HERE'
 ```
 
-To create a secret key
+To create secure keys:
 ```bash
 $ python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
 ```
