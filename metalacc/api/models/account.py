@@ -63,7 +63,7 @@ class AccountManager(models.Manager):
                 accounts.append(self.model(
                     user=company.user, company=company, type=row[0], is_current=row[1],
                     is_contra=row[2], is_operating=row[3], number=row[4], name=row[5], tag=row[6], slug=slugs[ix]))
-            accounts = self.model.objects.bulk_create(accounts)
+            accounts = self.bulk_create(accounts)
         return accounts
 
 
