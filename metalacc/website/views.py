@@ -268,7 +268,7 @@ def app_profile(request):
 
 
 @login_required
-def export_company(request, slug):
+def app_export_company(request, slug):
     company = get_object_or_404(Company, slug=slug, user=request.user)
 
     response = HttpResponse(content_type='text/plain')
