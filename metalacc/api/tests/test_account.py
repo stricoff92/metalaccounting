@@ -859,6 +859,60 @@ class AccountViewTests(BaseTestBase):
             str(response.data))
 
 
+    def test_that_a_user_can_edit_their_account_to_have_an_valid_use_of_the_cogs_tag(self):
+        """ Test that a user can edit their account to have tag cogs
+        """
+        revenue_account = self.factory.create_account(
+            self.company, 'foobar4', Account.TYPE_REVENUE, 1503, is_operating=True, is_contra=True)
+        expense_account = self.factory.create_account(
+            self.company, 'foobar5', Account.TYPE_EXPENSE, 1504, is_operating=True, is_contra=False)
+
+
+        url = reverse("account-edit", kwargs={'slug':revenue_account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1900,
+            "is_contra":True,
+            "is_operating":True,
+            'tag':Account.TAG_COST_OF_GOODS,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        revenue_account.refresh_from_db()
+        self.assertEqual(revenue_account.tag, Account.TAG_COST_OF_GOODS)
+
+        url = reverse("account-edit", kwargs={'slug':expense_account.slug})
+        data = {
+            "name":"cold hard cashhhh",
+            "number":19001,
+            "is_contra":False,
+            "is_operating":True,
+            'tag':Account.TAG_COST_OF_GOODS,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        expense_account.refresh_from_db()
+        self.assertEqual(expense_account.tag, Account.TAG_COST_OF_GOODS)
+
+
+    def test_that_a_user_can_edit_their_account_to_have_an_valid_use_of_the_div_tag(self):
+        """ Test that a user can edit their account to have tag div
+        """
+        dividends_account = self.factory.create_account(
+            self.company, 'dividends', Account.TYPE_EQUITY, 1502, is_contra=True)
+        url = reverse("account-edit", kwargs={'slug':dividends_account.slug})
+        data = {
+            "name":"illegal dividends", # criminal activities legally require tax reporting.
+            "number":190011,
+            "is_contra":True,
+            'tag':Account.TAG_DIVIDENDS,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dividends_account.refresh_from_db()
+        self.assertEqual(dividends_account.tag, Account.TAG_DIVIDENDS)
+
+
     def test_that_a_user_cant_edit_their_account_to_have_an_invalid_use_of_the_dividends_tag(self):
         """ Test that a user cant edit their non temporary account such that it has a non-null is_operating value
         """

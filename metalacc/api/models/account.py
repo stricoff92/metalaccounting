@@ -36,6 +36,7 @@ DEFAULT_ACCOUNTS = (
     ('equity', None, True, None, 3901, 'Dividends', 'div',), # DIV TAG
 
     ('revenue', None, False, True, 4100, 'Sales Revenue', None,),
+    ('revenue', None, True, True, 4159, 'Sales Returns and Allowances', None,),
     ('revenue', None, False, True, 4200, 'Consulting Revenue', None,),
     ('revenue', None, False, False, 4300, 'Fee Revenue', None,),
     ('revenue', None, True, True, 4400, 'Discounts', None,),
