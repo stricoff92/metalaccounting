@@ -1,6 +1,7 @@
 
 from django import forms
 from django.core.signing import BadSignature
+from django.conf import settings
 import jwt
 
 from api.models import Company
@@ -26,6 +27,10 @@ class ImportCompanyForm(forms.Form):
         try:
             cleaned_data['decoded_data'] = company_export.decode_signed_jwt(cleaned_data['data'])
         except (BadSignature, jwt.InvalidSignatureError):
-            raise forms.ValidationError("invalid data")
+            raise forms.ValidationError("Invalid Data")
         
+        version = cleaned_data['decoded_data']['version']
+        if version not in settings.OBJECT_SERIALIZATION_SUPPORTED_VERSIONS:
+            raise forms.ValidationError("Unsupported Version")
+
         return cleaned_data
