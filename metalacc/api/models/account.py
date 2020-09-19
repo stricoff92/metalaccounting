@@ -86,7 +86,7 @@ class Account(models.Model):
         (TAG_RETAINED_EARNINGS, "Retained Earnings",),
         (TAG_COST_OF_GOODS, "Cost of Goods Sold",),
     )
-    ACCOUNT_TAG_NAME_DICT = {r[0]:r[1] for r in ACCOUNT_TAGS_CHOICES}
+    ACCOUNT_TAG_NAME_DICT = dict(ACCOUNT_TAGS_CHOICES)
     tag = models.CharField(
         choices=ACCOUNT_TAGS_CHOICES, max_length=5, blank=True, null=True, default=None)
 
