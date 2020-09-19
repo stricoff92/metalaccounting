@@ -6,7 +6,33 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from api.models import Company
-from api.forms.company import CompanyForm
+from api.forms.company import CompanyForm, ImportCompanyForm
+from api.lib import company_export
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def company_import(request):
+
+    # Check object limit.
+    max_companies = request.user.userprofile.object_limit_companies
+    if Company.objects.filter(user=request.user).count() >= max_companies:
+        return Response(
+            "user cannot add additional companies",
+            status.HTTP_400_BAD_REQUEST)
+
+    form = ImportCompanyForm(request.data)
+    if not form.is_valid():
+        return Response("Invalid data.", status.HTTP_400_BAD_REQUEST)
+    
+    new_company = company_export.import_company_data(
+        form.cleaned_data['decoded_data'], request.user)
+
+    data = {
+        'slug':new_company.slug,
+        'name':new_company.name,
+    }
+    return Response(data, status.HTTP_201_CREATED)
 
 
 @api_view(['GET'])

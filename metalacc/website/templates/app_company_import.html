@@ -1,0 +1,53 @@
+{% extends 'base_app.html' %} 
+{% block 'body' %}
+<div class="card p-3 mt-2">
+    <p class="heading-2">
+        Import a Company
+    </p>
+    {% if at_object_limit %}
+        <div class="alert alert-warning mt-3 p-3">
+            <i class="fas fa-exclamation-triangle"></i>
+            You already have the maxumim number of companies. You must delete a company before you can import another.
+        </div>
+    {% endif %}
+    <div>
+        <textarea
+            id="new-account-import-text-area-import"
+            class="p-1 text-input-max-400 form-control"
+            placeholder="Paste Company Data Here"
+        ></textarea>
+    </div>
+    <div class="mt-3">
+        <button
+            class="btn btn-primary"
+            id="import-company-btn"
+            {% if at_object_limit%}disabled{% endif %}
+        >
+            <i class="fas fa-bolt"></i>
+            Import Company
+        </button>
+    </div>
+</div>
+<script>
+$(document).ready(()=>{
+    $("#import-company-btn").click(()=>{
+        const serializedData = $("#new-account-import-text-area-import").val().trim()
+        if(!!!serializedData) {
+            return
+        }
+        const url = importCompanyUrl
+        const data = {data:serializedData}
+        postJson(url, data,
+            (data, status, xhr)=>{
+                if(xhr.status == 201) {
+                    window.location = `/app/company/${data.slug}/`
+                }
+            },
+            (data, status, xhr)=>{
+                alert("An error occured")
+            },
+        )
+    })
+})
+</script>
+{% endblock %}

@@ -15,7 +15,7 @@ from api.utils import (
     get_report_page_breadcrumbs,
     is_valid_slug
 )
-from api.lib import reports as reports_lib
+from api.lib import reports as reports_lib, company_export
 from website.forms import LoginForm
 
 
@@ -35,6 +35,10 @@ def app_main_menu(request):
 
 @login_required
 def app_landing(request):
+    # Check object limit.
+    max_companies = request.user.userprofile.object_limit_companies
+    at_object_limit = Company.objects.filter(user=request.user).count() >= max_companies
+
     breadcrumbs = [
         {
             'value':'menu',
@@ -46,6 +50,7 @@ def app_landing(request):
     data = {
         'skip_moment_import':True,
         'breadcrumbs':breadcrumbs,
+        'at_object_limit':at_object_limit,
     }
     return render(request, "app_landing.html", data)
 
@@ -261,6 +266,40 @@ def app_profile(request):
     }
     return render(request, "app_profile.html", data)
 
+
+@login_required
+def app_export_company(request, slug):
+    company = get_object_or_404(Company, slug=slug, user=request.user)
+
+    response = HttpResponse(content_type='text/plain')
+    response['Content-Disposition'] = f'attachment; filename="company-export-{slug}.txt"'
+    
+    data = company_export.export_company_to_jwt(company)
+    response.write(company_export.sign_comapny_export_jwt(data))
+
+    return response
+
+
+@login_required
+def app_import_company(request):
+    # Check object limit.
+    max_companies = request.user.userprofile.object_limit_companies
+    at_object_limit = Company.objects.filter(user=request.user).count() >= max_companies
+
+    breadcrumbs = [
+        {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
+            'value':'Import a Company',
+        },
+    ]
+    data = {
+        'breadcrumbs':breadcrumbs,
+        'skip_moment_import':True,
+        'at_object_limit':at_object_limit,
+    }
+    return render(request, "app_company_import.html", data)
 
 
 # REPORT PAGES

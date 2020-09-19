@@ -228,5 +228,4 @@ def account_delete(request, slug):
             "Cannot Delete. This account is referenced by a journal entry.",
             status.HTTP_400_BAD_REQUEST)
     account.delete()
-    print("returning and we're done :)")
     return Response({}, status.HTTP_204_NO_CONTENT)
