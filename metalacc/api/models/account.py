@@ -201,5 +201,7 @@ class Account(models.Model):
                 raise ValidationError(f"Revenue account must be marked as a contra account to hold a Cost of Goods sold tag.")
             if self.type == self.TYPE_EXPENSE and self.is_contra:
                 raise ValidationError(f"Expense accounts cannot be marked as a contra account to hold a Cost of Goods sold tag.")
+            if not self.is_operating:
+                raise ValidationError(f"Accounts with the tag Cost of Goods Sold must be operating accounts.")
 
         return super().save(*args, **kwargs)
