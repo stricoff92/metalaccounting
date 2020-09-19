@@ -8,7 +8,6 @@ urlpatterns = [
     path('', include('website.urls')),
 ]
 
-handler404 = 'website.views.handler404'
 
 if settings.DEBUG:
     urlpatterns.append(path('admin/', admin.site.urls))
