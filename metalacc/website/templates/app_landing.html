@@ -8,8 +8,18 @@
         <i class="fas fa-plus-square"></i>
         New Company
     </button>
+    <button class="btn btn-primary ml-3" id="open-import-company-form-btn">
+            <i class="fas fa-bolt"></i>
+        Import a Company
+    </button>
     <div id="new-company-form" style="display:none" class="card mt-4 mb-3 p-3">
         <p class="heading-2">Create a New Company</p>
+        {% if at_object_limit %}
+            <div class="alert alert-warning mt-3 p-3">
+                <i class="fas fa-exclamation-triangle"></i>
+                You already have the maxumim number of companies. You must delete a company before you can add another.
+            </div>
+        {% endif %}
         <div
             id="new-company-form-errors"
             class="mt-2 mb-2 p-2 alert alert-danger"
@@ -23,7 +33,13 @@
             class="form-control text-input-max-400"
         >
         <div class="mt-3">
-            <button class="btn btn-success" id="save-new-company-btn">
+            <button 
+                class="btn btn-success"
+                id="save-new-company-btn"
+                {% if at_object_limit %}
+                    disabled
+                {% endif %}
+            >
                 <i class="fas fa-save"></i> Save
             </button>
         </div>
@@ -34,32 +50,37 @@ function drawFormError(error) {
     $("#new-company-form-errors").text(error)
     $("#new-company-form-errors").css("display", "block")
 }
-$("#open-new-company-form-btn").click(()=>{
-    $("#new-company-form").slideDown(350)
-    $("#open-new-company-form-btn").attr("disabled", true)
-    $("#new-company-name-field").focus()
-})
-$("#save-new-company-btn").click(()=>{
-    $("#new-company-form-errors").css("display", "none")
-    $("#new-company-form-errors").html("")
-    const newCompanyName = $("#new-company-name-field").val().trim()
-    if(newCompanyName.length < 3 || newCompanyName.length > 100) {
-        drawFormError("Company name must be between 3 and 100 characters.")
-        return
-    }
-    postJson(companyNewUrl, {name: newCompanyName}, 
-        (data, status, xhr)=>{
-            if (xhr.status == 201) {
-                window.location = "/app/company/" + data.slug + "/"
-            } else {
-                drawFormError("An Error Occured")
-            }
-        }, 
-        (data, status, xhr)=>{
-            console.error(data)
-            drawFormError(errorToString(data.responseJSON))
+$(document).ready(()=>{
+    $("#open-new-company-form-btn").click(()=>{
+        $("#new-company-form").slideDown(350)
+        $("#open-new-company-form-btn").attr("disabled", true)
+        $("#new-company-name-field").focus()
+    })
+    $("#open-import-company-form-btn").click(()=>{
+        window.location = "/app/company/import/"
+    })
+    $("#save-new-company-btn").click(()=>{
+        $("#new-company-form-errors").css("display", "none")
+        $("#new-company-form-errors").html("")
+        const newCompanyName = $("#new-company-name-field").val().trim()
+        if(newCompanyName.length < 3 || newCompanyName.length > 100) {
+            drawFormError("Company name must be between 3 and 100 characters.")
+            return
         }
-    )
+        postJson(companyNewUrl, {name: newCompanyName}, 
+            (data, status, xhr)=>{
+                if (xhr.status == 201) {
+                    window.location = "/app/company/" + data.slug + "/"
+                } else {
+                    drawFormError("An Error Occured")
+                }
+            }, 
+            (data, status, xhr)=>{
+                console.error(data)
+                drawFormError(errorToString(data.responseJSON))
+            }
+        )
+    })
 })
 </script>
 
