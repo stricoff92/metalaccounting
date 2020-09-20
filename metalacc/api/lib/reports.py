@@ -1,7 +1,7 @@
 
 from collections import defaultdict
 
-from django.db.models import Sum
+from django.db.models import Q, Sum
 
 from api.models import JournalEntry, JournalEntryLine, Account
 from api.utils import (
@@ -509,3 +509,60 @@ def get_retained_earnings_data(current_period):
     data['dividends'] = dividends
 
     return data
+
+
+def period_requires_cash_flow_worksheet(period) -> bool:
+    """ Determine whether or not a period requires a cashflow worksheet to be
+        completed before a statement of cash flows can be assembled.
+
+        A worksheet is required if the period has a 1 or more journal entries that
+        touches both CASH as well as a Non-Cash Current asset. A worksheet is needed in this
+        case because transactions that touch CASH as well as a Non-Cash Current asset
+        could be classified as activity from operations, OR activity from Investing.
+        We can't know for sure so we need user input via a cashflow worksheet if any
+        of these transactions exist for the period.
+    """
+    company = period.company
+
+    # Fetch cash accounts
+    cash_accounts = (Account.objects
+        .filter(
+            company=company, tag=Account.TAG_CASH, type=Account.TYPE_ASSET,
+            is_current=True, is_contra=False)
+        .values_list("id", flat=True))
+
+    # fetch non-cash current asset accounts
+    non_cash_current_asset_accounts = (Account.objects
+        .filter(
+            company=company, type=Account.TYPE_ASSET,
+            is_current=True, is_contra=False)
+        .filter(~Q(tag=Account.TAG_CASH))
+        .values_list("id", flat=True))
+
+    # Fetch journal entry lines that involve a cash account
+    cash_journal_entries = (JournalEntryLine.objects
+        .filter(account_id__in=cash_accounts)
+        .values_list("journal_entry_id", flat=True))
+
+    journal_entry_lines = (JournalEntryLine.objects
+        .filter(journal_entry_id__in=cash_journal_entries)
+        .values("account_id", "journal_entry_id"))
+    
+    # group up accounts by the jounral entries they fall into
+    entry_accounts = defaultdict(set)
+    for jel in journal_entry_lines:
+        entry_accounts[jel['journal_entry_id']].add(jel['account_id'])
+    
+    # check for entries that touch both a cash account and a non-cash current asset account.
+    for account_ids in entry_accounts.values():
+        if (
+            any(aid in cash_accounts for aid in account_ids)
+            and any(aid in non_cash_current_asset_accounts for aid in account_ids)):
+
+            return True
+
+    return False
+
+
+def get_worksheet_page_data(period) -> dict:
+    pass

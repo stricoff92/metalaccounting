@@ -11,14 +11,18 @@
         <strong>{{ period.end|date:"M j, Y" }}</strong>
     </p>
 </div>
-<div class="alert alert-primary p-4">
-    <p class="heading-2">
-        <i class="fas fa-bullhorn mr-3"></i>
-        This Worksheet must be Completed
-    </p>
-    <p>
-        Cash transactions that impact non-cash current assets could be from either
-        operations activity or investing activity.
-    </p>
-</div>
+{% if not worksheet_completed %}
+    <div class="alert alert-primary p-4">
+        <p class="heading-2">
+            <i class="fas fa-bullhorn mr-3"></i>
+            This Worksheet must be Completed
+        </p>
+        <p>
+            Before the statement of cash flows can be assembled 1 or more transactions requires further classification.
+        </p>
+        <p>
+            Cash transactions that impact non-cash current assets can be associated with more than 1 type of activity.
+        </p>
+    </div>
+{% endif %}
 {% endblock %}

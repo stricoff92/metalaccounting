@@ -651,27 +651,52 @@ def retained_earnings(request, slug):
 
 
 @login_required
-def statement_of_cash_flows(request, slug):
+def statement_of_cash_flows_worksheet(request, slug):
     current_period = get_object_or_404(
         Period, company__user=request.user, slug=slug)
 
-    # If there is no worksheet filled in, or the worksheet is out of date
-    # return the worksheet template
     try:
         cash_flow_worksheet = current_period.cashflowworksheet
     except ObjectDoesNotExist:
         cash_flow_worksheet = None
+    worksheet_required = reports_lib.period_requires_cash_flow_worksheet(current_period)
 
-    if not cash_flow_worksheet or not cash_flow_worksheet.in_sync:
-        data = {
-            'period':current_period,
-        }
-        return render(request, "app_report_cash_flow_worksheet.html", data)
+    worksheet_completed = False
+    if not worksheet_required:
+        worksheet_completed = True
+    elif cash_flow_worksheet and cash_flow_worksheet.is_sync:
+        worksheet_completed = True
+
+
+    breadcrumbs = get_report_page_breadcrumbs(current_period, "Cash Flow Worksheet")
+    data = {
+        'worksheet_completed':worksheet_completed,
+        'period':current_period,
+        'breadcrumbs':breadcrumbs,
+    }
+    return render(request, "app_report_cash_flow_worksheet.html", data)
+
+
+
+@login_required
+def statement_of_cash_flows(request, slug):
+    current_period = get_object_or_404(
+        Period, company__user=request.user, slug=slug)
     
+    # Redirect to the cashflow worksheet if one is required.
+    try:
+        cash_flow_worksheet = current_period.cashflowworksheet
+    except ObjectDoesNotExist:
+        cash_flow_worksheet = None
+    worksheet_required = reports_lib.period_requires_cash_flow_worksheet(current_period)
+    if worksheet_required and (not cash_flow_worksheet or not cash_flow_worksheet.in_sync):
+        return redirect("app-cash-flow-worksheet", slug=slug)
 
-    # worksheet is filled in and in sync. Build Statement of Cash Flows
+
+    breadcrumbs = get_report_page_breadcrumbs(current_period, "Cash Flow Statement")
     data = {
         'period':current_period,
+        'breadcrumbs':breadcrumbs,
     }
     return render(request, "app_report_cash_flow_statement.html", data)
 
