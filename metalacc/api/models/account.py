@@ -11,7 +11,7 @@ from api.utils import generate_slug, generate_slugs_batch
 
 DEFAULT_ACCOUNTS = (
     # type    curr  contra operating number name tag
-    ('asset', True, False, None, 1000, 'Cash', None,),
+    ('asset', True, False, None, 1000, 'Cash', 'cash',),                # CASH TAG
     ('asset', True, False, None, 1100, 'Office Supplies', None,),
     ('asset', True, False, None, 1500, 'A/R', None,),
     ('asset', True, False, None, 1700, 'Prepaid Expenses', None,),
@@ -32,7 +32,7 @@ DEFAULT_ACCOUNTS = (
     ('equity', None, False, None, 3000, 'Common Stock', None,),
     ('equity', None, False, None, 3050, 'Prefered stock', None,),
     ('equity', None, False, None, 3400, 'APIC', None,),
-    ('equity', None, False, None, 3700, 'Retained Earnings', 're',), # RE TAG
+    ('equity', None, False, None, 3700, 'Retained Earnings', 're',),    # RE TAG
     ('equity', None, True, None, 3901, 'Dividends Declared', None,),
 
     ('revenue', None, False, True, 4100, 'Sales Revenue', None,),
@@ -42,7 +42,7 @@ DEFAULT_ACCOUNTS = (
     ('revenue', None, True, True, 4400, 'Discounts', None,),
     ('revenue', None, False, False, 4450, 'Gains', None,),
 
-    ('expense', None, False, True, 5100, 'CoGS', 'cogs',), # COGS TAG
+    ('expense', None, False, True, 5100, 'CoGS', 'cogs',),              # COGS TAG
     ('expense', None, False, False, 5150, 'Depreciation Expenses', None,),
     ('expense', None, False, True, 5200, 'Wages Expenses', None,),
     ('expense', None, False, False, 5300, 'Tax Expenses', None,),
@@ -80,9 +80,11 @@ class Account(models.Model):
 
     TAG_RETAINED_EARNINGS = 're'
     TAG_COST_OF_GOODS = 'cogs'
+    TAG_CASH = 'cash'
     ACCOUNT_TAGS_CHOICES = (
         (TAG_RETAINED_EARNINGS, "Retained Earnings",),
         (TAG_COST_OF_GOODS, "Cost of Goods Sold",),
+        (TAG_CASH, "Cash",),
     )
     ACCOUNT_TAG_NAME_DICT = dict(ACCOUNT_TAGS_CHOICES)
     tag = models.CharField(
@@ -144,6 +146,8 @@ class Account(models.Model):
             return ((self.TAG_COST_OF_GOODS, "Cost of Goods Sold"),)
         elif self.type == self.TYPE_EQUITY and not self.is_contra:
             return ((self.TAG_RETAINED_EARNINGS, "Retained Earnings"),)
+        elif self.type == self.TYPE_ASSET and not self.is_contra and self.is_current:
+            return ((self.TAG_CASH, "Cash"),)
         else:
             return tuple()
 
@@ -191,6 +195,7 @@ class Account(models.Model):
         if not self.type in self.OPERATING_TYPES and not self.is_operating is None:
             raise ValidationError("is_operating must be None for this accoount type")
 
+        # Validate tag is valid
         if self.tag == self.TAG_COST_OF_GOODS:
             if not self.type in [self.TYPE_REVENUE, self.TYPE_EXPENSE]:
                 raise ValidationError(f"Accounts with tag {self.ACCOUNT_TAG_NAME_DICT[self.tag]} must be an expense account.")
@@ -204,5 +209,10 @@ class Account(models.Model):
         if self.tag == self.TAG_RETAINED_EARNINGS:
             if self.type != self.TYPE_EQUITY or self.is_contra:
                 raise ValidationError(f"Accounts with tag {self.ACCOUNT_TAG_NAME_DICT[self.tag]} must be a non-contra equity account.")
+
+        if self.tag == self.TAG_CASH:
+            if self.type != self.TYPE_ASSET or self.is_contra or not self.is_current:
+                raise ValidationError(
+                    f"Accounts with tag {self.ACCOUNT_TAG_NAME_DICT[self.tag]} must be a non-contra current asset account.")
 
         return super().save(*args, **kwargs)

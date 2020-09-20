@@ -269,7 +269,12 @@ $(document).ready(()=>{
                 foundError = true
             }
         }
-
+        if (newAccountTag=='cash') {
+            if(newAccountType != "asset" || isContra || !isCurrent) {
+                addNewAccountFormTagError("The cash tag can only be applied to a current non-contra asset account.")
+                foundError = true
+            }
+        }
         if(newAccountTag=='re') {
             if(newAccountType != "equity" || isContra) {
                 addNewAccountFormTagError("The retained earnings tag can only be applied to non-contra equity accounts.")
