@@ -23,6 +23,7 @@ urlpatterns = [
     path('app/period/<slug:slug>/income-statement/', views.income_statement, name="app-income-statement"),
     path('app/period/<slug:slug>/balance-sheet/', views.balance_sheet, name="app-balance-sheet"),
     path('app/period/<slug:slug>/statement-of-retained-earnings/', views.retained_earnings, name="app-retained-earnings"),
+    path('app/period/<slug:slug>/statement-of-cash-flows/', views.statement_of_cash_flows, name="app-cash-flow"),
 
     path('app/profile/', views.app_profile, name="app-profile"),
     path('login/', views.login_user, name="login"),

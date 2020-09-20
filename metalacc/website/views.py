@@ -4,6 +4,7 @@ import csv
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.urls import reverse
@@ -647,6 +648,33 @@ def retained_earnings(request, slug):
         'breadcrumbs':breadcrumbs,
     }
     return render(request, "app_report_retained_earnings.html", data)
+
+
+@login_required
+def statement_of_cash_flows(request, slug):
+    current_period = get_object_or_404(
+        Period, company__user=request.user, slug=slug)
+
+    # If there is no worksheet filled in, or the worksheet is out of date
+    # return the worksheet template
+    try:
+        cash_flow_worksheet = current_period.cashflowworksheet
+    except ObjectDoesNotExist:
+        cash_flow_worksheet = None
+
+    if not cash_flow_worksheet or not cash_flow_worksheet.in_sync:
+        data = {
+            'period':current_period,
+        }
+        return render(request, "app_report_cash_flow_worksheet.html", data)
+    
+
+    # worksheet is filled in and in sync. Build Statement of Cash Flows
+    data = {
+        'period':current_period,
+    }
+    return render(request, "app_report_cash_flow_statement.html", data)
+
 
 # END OF REPORT PAGES
 

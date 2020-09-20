@@ -49,7 +49,7 @@ class CashFlowWorksheet(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = generate_slug(Company)
+            self.slug = generate_slug(CashFlowWorksheet)
             if 'update_fields' in kwargs and 'slug' not in kwargs['update_fields']:
                 kwargs['update_fields'] = list(chain(kwargs['update_fields'], ['slug']))
         

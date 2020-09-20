@@ -6,6 +6,7 @@ from api.models import (
     JournalEntry,
     JournalEntryLine,
     UserProfile,
+    CashFlowWorksheet
 )
 
 admin.site.register(Company)
@@ -14,3 +15,4 @@ admin.site.register(Account)
 admin.site.register(JournalEntry)
 admin.site.register(JournalEntryLine)
 admin.site.register(UserProfile)
+admin.site.register(CashFlowWorksheet)

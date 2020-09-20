@@ -25,6 +25,10 @@ urlpatterns = [
     path('period/new/', views.period_new, name="period-new"),
     path('period/edit/<slug:slug>/', views.period_edit, name="period-edit"),
     path('period/delete/<slug:slug>/', views.period_delete, name="period-delete"),
+    path(
+        'period/<slug:slug>/reset-cashflow-worksheet',
+        views.period_reset_cashflow_worksheet,
+        name="period-reset-cashflow-worksheet"),
 
     # Account Routes
     path('account/list/', views.account_list, name="account-list"),

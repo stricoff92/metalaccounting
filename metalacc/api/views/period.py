@@ -3,6 +3,7 @@ from collections import defaultdict
 
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -156,4 +157,16 @@ def period_delete(request, slug):
     period = get_object_or_404(Period, slug=slug, company__user=request.user)
     period.delete()
     return Response({}, status.HTTP_204_NO_CONTENT)
-    
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def period_reset_cashflow_worksheet(request, slug):
+    period = get_object_or_404(Period, slug=slug, company__user=request.user)
+    try:
+        cash_flow_worksheet = period.cashflowworksheet
+    except ObjectDoesNotExist:
+        return Response({}, status.HTTP_400_BAD_REQUEST)
+
+    cash_flow_worksheet.delete()
+    return Response({}, status.HTTP_204_NO_CONTENT)

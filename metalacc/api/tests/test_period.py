@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from .base import BaseTestBase
-from api.models import Period
+from api.models import Period, CashFlowWorksheet
 
 
 class PeriodViewTests(BaseTestBase):
@@ -394,3 +394,33 @@ class PeriodViewTests(BaseTestBase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Period.objects.count(), 0)
+
+
+    def test_user_can_delete_own_cashflow_worksheet_for_a_period(self):
+        """ Test that a user can delete their own cashflow worksheet for a period
+        """
+        company = self.factory.create_company(self.user)
+        period = self.factory.create_period(company, dt.date(2020, 3, 1), dt.date(2020, 3, 31))
+        cash_flow_worksheet = self.factory.create_cashflow_worksheet(period)
+        self.assertEqual(CashFlowWorksheet.objects.count(), 1)
+    
+        url = reverse("period-reset-cashflow-worksheet", kwargs={'slug':period.slug})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(CashFlowWorksheet.objects.count(), 0)
+
+
+    def test_user_cant_delete_another_users_cashflow_worksheet_for_a_period(self):
+        """ Test that a user cant delete another users cashflow worksheet
+        """
+        self.client.force_login(self.other_user)
+
+        company = self.factory.create_company(self.user)
+        period = self.factory.create_period(company, dt.date(2020, 3, 1), dt.date(2020, 3, 31))
+        cash_flow_worksheet = self.factory.create_cashflow_worksheet(period)
+        self.assertEqual(CashFlowWorksheet.objects.count(), 1)
+    
+        url = reverse("period-reset-cashflow-worksheet", kwargs={'slug':period.slug})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(CashFlowWorksheet.objects.count(), 1)
