@@ -10,7 +10,11 @@
             You already have the maxumim number of companies. You must delete a company before you can import another.
         </div>
     {% endif %}
-    <div>
+
+    <div class="alert alert-danger mt-3 p-3" id="import-company-form-errors" style="display:none;">
+    </div>
+
+    <div class="mt-3">
         <textarea
             id="new-account-import-text-area-import"
             class="p-1 form-control"
@@ -31,23 +35,44 @@
 <script>
 $(document).ready(()=>{
     $("#import-company-btn").click(()=>{
-        const serializedData = $("#new-account-import-text-area-import").val().trim()
+        resetErrorForm()
+        disabledButton()
+        const serializedData = $("#new-account-import-text-area-import").val().replace(/\s+/g, '')
         if(!!!serializedData) {
-            return
+            enableButton()
+            return addErrorToForm("This field is required.")
         }
-        const url = importCompanyUrl
-        const data = {data:serializedData}
-        postJson(url, data,
+        if(!/^\S+\:\S{15,}$/.test(serializedData)) {
+            enableButton()
+            return addErrorToForm("Data format is incorrect.")
+        }
+
+        postJson(importCompanyUrl, {data:serializedData},
             (data, status, xhr)=>{
                 if(xhr.status == 201) {
                     window.location = `/app/company/${data.slug}/`
                 }
             },
             (data, status, xhr)=>{
-                alert("An error occured")
+                enableButton()
+                addErrorToForm("An Error Occured.")
             },
         )
     })
 })
+function resetErrorForm(){
+    $("#import-company-form-errors").text("")
+    $("#import-company-form-errors").css("display", "none")
+}
+function addErrorToForm(err) {
+    $("#import-company-form-errors").css("display", "block")
+    $("#import-company-form-errors").text(err)
+}
+function disabledButton() {
+    $("#import-company-btn").prop("disabled", true)
+}
+function enableButton() {
+    $("#import-company-btn").prop("disabled", false)
+}
 </script>
 {% endblock %}
