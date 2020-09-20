@@ -1,4 +1,5 @@
 
+import random
 import csv
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -16,14 +17,16 @@ from api.utils import (
     is_valid_slug
 )
 from api.lib import reports as reports_lib, company_export
+from api import utils
 from website.forms import LoginForm
 
 
 def anon_landing(request):
     if request.user.is_authenticated:
         return redirect("app-landing")
-    return render(request, "anon_landing.html", {})
-
+    return render(request, "anon_landing.html", {
+        'gallery_image':sorted(utils.get_photo_gallery_images(), key=lambda a: random.random())[0]
+    })
 
 @login_required
 def app_main_menu(request):
