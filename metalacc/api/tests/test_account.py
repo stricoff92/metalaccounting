@@ -80,51 +80,6 @@ class AccountViewTests(BaseTestBase):
         self.assertEqual(str(response.data), "['Expense accounts cannot be marked as a contra account to hold a Cost of Goods sold tag.']")
 
 
-    def test_user_cant_create_account_with_invalid_use_of_dividends_tag(self):
-        """ Test user cant create an account with invalid use of a CoGS tag 
-        """
-        url = reverse("account-new")
-        for acc_type in [Account.TYPE_ASSET, Account.TYPE_LIABILITY,]:
-            data = {
-                'company':self.company.slug,
-                'name':'foobar',
-                'type':acc_type,
-                'is_contra':True,
-                'is_current':False,
-                'number':1500,
-                'tag':Account.TAG_DIVIDENDS,
-            }
-            response = self.client.post(url, data, format="json")
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(str(response.data), "['Accounts with tag Dividends must be a contra equity account.']")
-
-        for acc_type in [Account.TYPE_REVENUE, Account.TYPE_EXPENSE,]:
-            data = {
-                'company':self.company.slug,
-                'name':'foobar',
-                'type':acc_type,
-                'is_contra':True,
-                'is_operating':True,
-                'number':1500,
-                'tag':Account.TAG_DIVIDENDS,
-            }
-            response = self.client.post(url, data, format="json")
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(str(response.data), "['Accounts with tag Dividends must be a contra equity account.']")
-
-        data = {
-            'company':self.company.slug,
-            'name':'foobar',
-            'type':Account.TYPE_EQUITY,
-            'is_contra':False,
-            'number':1500,
-            'tag':Account.TAG_DIVIDENDS,
-        }
-        response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(str(response.data), "['Accounts with tag Dividends must be a contra equity account.']")
-
-
     def test_user_cant_create_account_with_invalid_use_of_retained_earnings_tag(self):
         """ Test user cant create an account with invalid use of a retained earnings tag 
         """
@@ -199,23 +154,6 @@ class AccountViewTests(BaseTestBase):
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Account.objects.get(slug=response.data['slug']).tag, Account.TAG_COST_OF_GOODS)
-
-
-    def test_user_can_create_account_with_using_dividends_tag(self):
-        """ Test user cant create an account with invalid use of a CoGS tag 
-        """
-        url = reverse("account-new")
-        data = {
-            'company':self.company.slug,
-            'name':'foobar',
-            'type':Account.TYPE_EQUITY,
-            'is_contra':True,
-            'number':1500,
-            'tag':Account.TAG_DIVIDENDS,
-        }
-        response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(Account.objects.get(slug=response.data['slug']).tag, Account.TAG_DIVIDENDS)
 
 
     def test_user_can_create_account_with_using_retained_earnings_tag(self):
@@ -955,23 +893,6 @@ class AccountViewTests(BaseTestBase):
         self.assertEqual(expense_account.tag, Account.TAG_COST_OF_GOODS)
 
 
-    def test_that_a_user_can_edit_their_account_to_have_an_valid_use_of_the_div_tag(self):
-        """ Test that a user can edit their account to have tag div
-        """
-        dividends_account = self.factory.create_account(
-            self.company, 'dividends', Account.TYPE_EQUITY, 1502, is_contra=True)
-        url = reverse("account-edit", kwargs={'slug':dividends_account.slug})
-        data = {
-            "name":"illegal dividends", # criminal activities legally require tax reporting.
-            "number":190011,
-            'tag':Account.TAG_DIVIDENDS,
-        }
-        response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dividends_account.refresh_from_db()
-        self.assertEqual(dividends_account.tag, Account.TAG_DIVIDENDS)
-
-
     def test_that_a_user_can_edit_their_account_to_have_an_valid_use_of_the_retained_earnings_tag(self):
         """ Test that a user can edit their account to have tag div
         """
@@ -987,80 +908,6 @@ class AccountViewTests(BaseTestBase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dividends_account.refresh_from_db()
         self.assertEqual(dividends_account.tag, Account.TAG_RETAINED_EARNINGS)
-
-
-    def test_that_a_user_cant_edit_their_account_to_have_an_invalid_use_of_the_dividends_tag(self):
-        """ Test that a user cant edit their account to have an invalid use of the dividends tag
-        """
-        asset_account = self.factory.create_account(
-            self.company, 'foobar1', Account.TYPE_ASSET, 1500, is_contra=False, is_current=True)
-        liability_account = self.factory.create_account(
-            self.company, 'foobar2', Account.TYPE_LIABILITY, 1501, is_contra=True, is_current=True)
-        equity_account = self.factory.create_account(
-            self.company, 'foobar3', Account.TYPE_EQUITY, 1502)
-        revenue_account = self.factory.create_account(
-            self.company, 'foobar4', Account.TYPE_REVENUE, 1503, is_operating=True, is_contra=False)
-        expense_account = self.factory.create_account(
-            self.company, 'foobar5', Account.TYPE_EXPENSE, 1504, is_operating=True, is_contra=False)
-
-        url = reverse("account-edit", kwargs={'slug':asset_account.slug})
-        data = {
-            "name":"cold hard cash",
-            "number":1900,
-            "is_current":True,
-            'tag':Account.TAG_DIVIDENDS,
-        }
-        response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual("['Accounts with tag Dividends must be a contra equity account.']", str(response.data))
-
-        url = reverse("account-edit", kwargs={'slug':liability_account.slug})
-        data = {
-            "name":"cold hard cash",
-            "number":1900,
-            "is_current":True,
-            'tag':Account.TAG_DIVIDENDS,
-        }
-        response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual("['Accounts with tag Dividends must be a contra equity account.']", str(response.data))
-
-        url = reverse("account-edit", kwargs={'slug':revenue_account.slug})
-        data = {
-            "name":"cold hard cash",
-            "number":1900,
-            "is_operating":True,
-            'tag':Account.TAG_DIVIDENDS,
-        }
-        response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            "['Accounts with tag Dividends must be a contra equity account.']",
-            str(response.data))
-
-        url = reverse("account-edit", kwargs={'slug':expense_account.slug})
-        data = {
-            "name":"cold hard cash",
-            "number":1900,
-            "is_operating":False,
-            'tag':Account.TAG_DIVIDENDS,
-        }
-        response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            "['Accounts with tag Dividends must be a contra equity account.']",
-            str(response.data))
-
-        url = reverse("account-edit", kwargs={'slug':equity_account.slug})
-        data = {
-            "name":"cold hard cash",
-            "number":1900,
-            'tag':Account.TAG_DIVIDENDS,
-        }
-        response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual("['Accounts with tag Dividends must be a contra equity account.']", str(response.data))
-
 
 
     def test_that_a_user_cant_edit_their_account_to_have_an_invalid_use_of_the_retained_earnings_tag(self):

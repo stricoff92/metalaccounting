@@ -3,18 +3,52 @@
 {% block 'body' %}
 <div>
     <p class="heading-1">Statement of Retained Earnings</p>
-    <p class="heading-2">{{ current_period.company.name }}</p>
-    <p>as of <strong>{{ current_period.end|date:"M j, Y" }}</strong></p>
+    <p class="heading-2">{{ period.company.name }}</p>
+    <p>as of <strong>{{ period.end|date:"M j, Y" }}</strong></p>
 </div>
-{% if not has_dividends_account %}
+{% if not has_retained_earnings_account %}
     <div class="alert alert-warning mt-3 p-4">
         <p class="heading-2">
             <i class="fas fa-exclamation-triangle"></i>
-            None of Your Accounts Use the Dividends Tag
+            None of Your Accounts Use the Retained Earnings Tag
         </p>
         <p>
-            In order for this report to properly display you need a contra equity account with the Dividends tag applied.
+            In order for this report to properly display you need an equity account with the <em>Retained Earnings</em> tag applied.
         </p>
     </div>
 {% endif %}
+<div class="mt-3">
+    <div class="row p-2 report-row">
+        <div class="col-7 col-lg-8">
+            Retained Earnings {{ period.start|date:"M j, Y" }}
+        </div>
+        <div class="col-4 col-lg-3">
+            {{ retained_earnings_data.retained_earnings_start|intcomma }}
+        </div>
+    </div>
+    <div class="row p-2 report-row">
+        <div class="col-7 col-lg-8">
+            Net Income
+        </div>
+        <div class="col-4 col-lg-3">
+            {{ retained_earnings_data.net_income|intcomma }}
+        </div>
+    </div>
+    <div class="row p-2 report-row">
+        <div class="col-7 col-lg-8">
+            Dividends
+        </div>
+        <div class="col-4 col-lg-3">
+            {{ retained_earnings_data.dividends|intcomma }}
+        </div>
+    </div>
+    <div class="row p-2 report-row">
+        <div class="col-7 col-lg-8">
+            Retained Earnings {{ period.end|date:"M j, Y" }}
+        </div>
+        <div class="col-4 col-lg-3">
+            {{ retained_earnings_data.retained_earnings_end|intcomma }}
+        </div>
+    </div>
+</div>
 {% endblock %}

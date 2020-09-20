@@ -78,11 +78,9 @@ class Account(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, editable=False)
 
-    TAG_DIVIDENDS = 'div'
     TAG_RETAINED_EARNINGS = 're'
     TAG_COST_OF_GOODS = 'cogs'
     ACCOUNT_TAGS_CHOICES = (
-        (TAG_DIVIDENDS, "Dividends",),
         (TAG_RETAINED_EARNINGS, "Retained Earnings",),
         (TAG_COST_OF_GOODS, "Cost of Goods Sold",),
     )
@@ -144,8 +142,6 @@ class Account(models.Model):
             return ((self.TAG_COST_OF_GOODS, "Cost of Goods Sold"),)
         elif self.type == self.TYPE_REVENUE and self.is_contra:
             return ((self.TAG_COST_OF_GOODS, "Cost of Goods Sold"),)
-        elif self.type == self.TYPE_EQUITY and self.is_contra:
-            return ((self.TAG_DIVIDENDS, "Dividends"),)
         elif self.type == self.TYPE_EQUITY and not self.is_contra:
             return ((self.TAG_RETAINED_EARNINGS, "Retained Earnings"),)
         else:
@@ -194,10 +190,6 @@ class Account(models.Model):
         
         if not self.type in self.OPERATING_TYPES and not self.is_operating is None:
             raise ValidationError("is_operating must be None for this accoount type")
-
-        if self.tag == self.TAG_DIVIDENDS:
-            if self.type != self.TYPE_EQUITY or not self.is_contra:
-                raise ValidationError(f"Accounts with tag {self.ACCOUNT_TAG_NAME_DICT[self.tag]} must be a contra equity account.")
 
         if self.tag == self.TAG_COST_OF_GOODS:
             if not self.type in [self.TYPE_REVENUE, self.TYPE_EXPENSE]:

@@ -634,13 +634,16 @@ def retained_earnings(request, slug):
     current_period = get_object_or_404(
         Period, company__user=request.user, slug=slug)
     
-    has_dividends_account = Account.objects.filter(
-        company=current_period.company, tag=Account.TAG_DIVIDENDS).exists()
+    has_retained_earnings_account = Account.objects.filter(
+        company=current_period.company, tag=Account.TAG_RETAINED_EARNINGS).exists()
+    
+    retained_earnings_data = reports_lib.get_retained_earnings_data(current_period)
 
     breadcrumbs = get_report_page_breadcrumbs(current_period, "Retained Earnings")
     data = {
-        'current_period':current_period,
-        'has_dividends_account':has_dividends_account,
+        'period':current_period,
+        'has_retained_earnings_account':has_retained_earnings_account,
+        'retained_earnings_data':retained_earnings_data,
         'breadcrumbs':breadcrumbs,
     }
     return render(request, "app_report_retained_earnings.html", data)
