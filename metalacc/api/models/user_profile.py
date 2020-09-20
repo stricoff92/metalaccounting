@@ -28,6 +28,11 @@ class UserProfile(models.Model):
     def target_attr(self):
         return mark_safe('target="_blank"' if self.open_links_in_new_tabs else "")
 
+    @property
+    def at_company_object_limit(self):
+        max_companies = self.object_limit_companies
+        return self.user.company_set.count() >= max_companies
+
 
     def save(self, *args, **kwargs):
         if not self.slug:

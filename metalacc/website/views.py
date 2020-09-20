@@ -38,9 +38,8 @@ def app_main_menu(request):
 
 @login_required
 def app_landing(request):
-    # Check object limit.
-    max_companies = request.user.userprofile.object_limit_companies
-    at_object_limit = Company.objects.filter(user=request.user).count() >= max_companies
+
+    at_object_limit = request.user.userprofile.at_company_object_limit
 
     breadcrumbs = [
         {
@@ -286,8 +285,7 @@ def app_export_company(request, slug):
 @login_required
 def app_import_company(request):
     # Check object limit.
-    max_companies = request.user.userprofile.object_limit_companies
-    at_object_limit = Company.objects.filter(user=request.user).count() >= max_companies
+    at_object_limit = request.user.userprofile.at_company_object_limit
 
     breadcrumbs = [
         {

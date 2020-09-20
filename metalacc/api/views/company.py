@@ -15,8 +15,7 @@ from api.lib import company_export
 def company_import(request):
 
     # Check object limit.
-    max_companies = request.user.userprofile.object_limit_companies
-    if Company.objects.filter(user=request.user).count() >= max_companies:
+    if request.user.userprofile.at_company_object_limit:
         return Response(
             "user cannot add additional companies",
             status.HTTP_400_BAD_REQUEST)
@@ -48,9 +47,7 @@ def company_list(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def company_new(request):
-    # Check object limit.
-    max_companies = request.user.userprofile.object_limit_companies
-    if Company.objects.filter(user=request.user).count() >= max_companies:
+    if request.user.userprofile.at_company_object_limit:
         return Response(
             "user cannot add additional companies",
             status.HTTP_400_BAD_REQUEST)
