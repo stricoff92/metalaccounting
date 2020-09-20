@@ -655,10 +655,8 @@ def statement_of_cash_flows_worksheet(request, slug):
     current_period = get_object_or_404(
         Period, company__user=request.user, slug=slug)
 
-    try:
-        cash_flow_worksheet = current_period.cashflowworksheet
-    except ObjectDoesNotExist:
-        cash_flow_worksheet = None
+
+    cash_flow_worksheet = current_period.cash_flow_worksheet
     worksheet_required = reports_lib.period_requires_cash_flow_worksheet(current_period)
 
     worksheet_completed = False
@@ -666,16 +664,40 @@ def statement_of_cash_flows_worksheet(request, slug):
         worksheet_completed = True
     elif cash_flow_worksheet and cash_flow_worksheet.is_sync:
         worksheet_completed = True
-
+    if worksheet_completed:
+        return redirect("app-cash-flow-worksheet-complete", slug=slug)
 
     breadcrumbs = get_report_page_breadcrumbs(current_period, "Cash Flow Worksheet")
     data = {
-        'worksheet_completed':worksheet_completed,
         'period':current_period,
         'breadcrumbs':breadcrumbs,
     }
     return render(request, "app_report_cash_flow_worksheet.html", data)
 
+
+@login_required
+def statement_of_cash_flows_worksheet_complete(request, slug):
+    current_period = get_object_or_404(
+        Period, company__user=request.user, slug=slug)
+
+    cash_flow_worksheet = current_period.cash_flow_worksheet
+    worksheet_required = reports_lib.period_requires_cash_flow_worksheet(current_period)
+
+    worksheet_completed = False
+    if not worksheet_required:
+        worksheet_completed = True
+    elif cash_flow_worksheet and cash_flow_worksheet.is_sync:
+        worksheet_completed = True
+    if not worksheet_completed:
+        return redirect("app-cash-flow-worksheet", slug=slug)
+
+
+    breadcrumbs = get_report_page_breadcrumbs(current_period, "Cash Flow Worksheet")
+    data = {
+        'period':current_period,
+        'breadcrumbs':breadcrumbs,
+    }
+    return render(request, "app_report_cash_flow_worksheet_complete.html", data)
 
 
 @login_required
@@ -684,10 +706,7 @@ def statement_of_cash_flows(request, slug):
         Period, company__user=request.user, slug=slug)
     
     # Redirect to the cashflow worksheet if one is required.
-    try:
-        cash_flow_worksheet = current_period.cashflowworksheet
-    except ObjectDoesNotExist:
-        cash_flow_worksheet = None
+    cash_flow_worksheet = current_period.cash_flow_worksheet
     worksheet_required = reports_lib.period_requires_cash_flow_worksheet(current_period)
     if worksheet_required and (not cash_flow_worksheet or not cash_flow_worksheet.in_sync):
         return redirect("app-cash-flow-worksheet", slug=slug)

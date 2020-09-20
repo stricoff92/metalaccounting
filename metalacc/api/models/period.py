@@ -42,7 +42,15 @@ class Period(models.Model):
     def period_after(self):
         return self.company.period_set.exclude(id=self.id).filter(start__gt=self.start).order_by('start').first()
 
+    @property
+    def cash_flow_worksheet(self):
+        try:
+            cash_flow_worksheet = self.cashflowworksheet
+        except ObjectDoesNotExist:
+            cash_flow_worksheet = None
+        return cash_flow_worksheet
     
+
     def cycle_version_hash(self):
         self.version_hash = get_version_hash()
         self.save(update_fields=['version_hash'])
