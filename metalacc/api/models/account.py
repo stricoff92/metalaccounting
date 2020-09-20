@@ -33,7 +33,7 @@ DEFAULT_ACCOUNTS = (
     ('equity', None, False, None, 3050, 'Prefered stock', None,),
     ('equity', None, False, None, 3400, 'APIC', None,),
     ('equity', None, False, None, 3700, 'Retained Earnings', 're',), # RE TAG
-    ('equity', None, True, None, 3901, 'Dividends', 'div',),         # DIV TAG
+    ('equity', None, True, None, 3901, 'Dividends Declared', None,),
 
     ('revenue', None, False, True, 4100, 'Sales Revenue', None,),
     ('revenue', None, True, True, 4159, 'Sales Returns and Allowances', None,),
