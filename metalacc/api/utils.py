@@ -105,3 +105,16 @@ def get_dr_cr_balance(dr_total:int, cr_total:int):
 
 def force_negative(val):
     return abs(val) * -1
+
+
+def get_photo_gallery_images():
+    return [
+        'Apple2.jpg',
+        'Excel.png',
+        'Lotus123.jpg',
+        'Pacioli.jpg', # w
+        'Visicalc.jpg',
+        'Abacus.jpg',
+        "Ledger.jpg",
+        'Calculator.png',
+    ]

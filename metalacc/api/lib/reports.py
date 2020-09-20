@@ -460,3 +460,52 @@ def get_balance_sheet_data(current_period):
         })
     
     return data
+
+
+def get_retained_earnings_data(current_period):
+
+    data = {
+        'retained_earnings_start':0,
+        'retained_earnings_end':0,
+        'dividends':0,
+        'net_income':0,
+    }
+
+    # get Retained Earnings balance through current period start
+    curr_re_jels_start = (JournalEntryLine.objects
+        .filter(
+            journal_entry__period__in=get_company_periods_up_to_and_excluding(current_period),
+            account__tag=Account.TAG_RETAINED_EARNINGS)
+        .values("type", "amount"))
+
+    for jel in curr_re_jels_start:
+        if jel['type'] == JournalEntryLine.TYPE_CREDIT:    # equity account has CR balance
+            data['retained_earnings_start'] += jel['amount']
+        elif jel['type'] == JournalEntryLine.TYPE_DEBIT:
+            data['retained_earnings_start'] -= jel['amount']
+
+
+    # get Retained Earnings balance through current period end
+    curr_re_jels_end = (JournalEntryLine.objects
+        .filter(
+            journal_entry__period__in=get_company_periods_up_to(current_period),
+            account__tag=Account.TAG_RETAINED_EARNINGS)
+        .values("type", "amount"))
+
+    for jel in curr_re_jels_end:
+        if jel['type'] == JournalEntryLine.TYPE_CREDIT:     # equity account has CR balance
+            data['retained_earnings_end'] += jel['amount']
+        elif jel['type'] == JournalEntryLine.TYPE_DEBIT:
+            data['retained_earnings_end'] -= jel['amount']
+
+    # Given net income, retained earnings start/end, calculate dividends
+    income_data = _invoice_statement_date_for_period(current_period)
+    total_revenue = income_data[KEY_OPERATING_REVENUE]['total'] + income_data[KEY_NON_OPERATING_REVENUE]['total']
+    total_expenses = income_data[KEY_OPERATING_EXPENSE]['total'] + income_data[KEY_NON_OPERATING_EXPENSE]['total']
+    net_income = total_revenue - total_expenses
+    data['net_income'] = net_income
+
+    dividends = (data['retained_earnings_start'] + net_income) - data['retained_earnings_end']
+    data['dividends'] = dividends
+
+    return data

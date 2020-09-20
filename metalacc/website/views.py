@@ -1,4 +1,5 @@
 
+import random
 import csv
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -16,14 +17,16 @@ from api.utils import (
     is_valid_slug
 )
 from api.lib import reports as reports_lib, company_export
+from api import utils
 from website.forms import LoginForm
 
 
 def anon_landing(request):
     if request.user.is_authenticated:
         return redirect("app-landing")
-    return render(request, "anon_landing.html", {})
-
+    return render(request, "anon_landing.html", {
+        'gallery_image':sorted(utils.get_photo_gallery_images(), key=lambda a: random.random())[0]
+    })
 
 @login_required
 def app_main_menu(request):
@@ -35,9 +38,8 @@ def app_main_menu(request):
 
 @login_required
 def app_landing(request):
-    # Check object limit.
-    max_companies = request.user.userprofile.object_limit_companies
-    at_object_limit = Company.objects.filter(user=request.user).count() >= max_companies
+
+    at_object_limit = request.user.userprofile.at_company_object_limit
 
     breadcrumbs = [
         {
@@ -283,13 +285,15 @@ def app_export_company(request, slug):
 @login_required
 def app_import_company(request):
     # Check object limit.
-    max_companies = request.user.userprofile.object_limit_companies
-    at_object_limit = Company.objects.filter(user=request.user).count() >= max_companies
+    at_object_limit = request.user.userprofile.at_company_object_limit
 
     breadcrumbs = [
         {
             'value':'menu',
             'href':reverse("app-main-menu")
+        }, {
+            'value':'companies',
+            'href':reverse("app-landing"),
         }, {
             'value':'Import a Company',
         },
@@ -614,8 +618,6 @@ def balance_sheet(request, slug):
     
     balance_sheet_data = reports_lib.get_balance_sheet_data(current_period)
 
-    print(balance_sheet_data)
-
     breadcrumbs = get_report_page_breadcrumbs(current_period, "Balance Sheet")
     is_balanced = balance_sheet_data.get("total_assets") == balance_sheet_data.get("total_liabilities_and_equity")
     data = {
@@ -626,6 +628,25 @@ def balance_sheet(request, slug):
     }
     return render(request, "app_report_balance_sheet.html", data)
 
+
+@login_required
+def retained_earnings(request, slug):
+    current_period = get_object_or_404(
+        Period, company__user=request.user, slug=slug)
+    
+    has_retained_earnings_account = Account.objects.filter(
+        company=current_period.company, tag=Account.TAG_RETAINED_EARNINGS).exists()
+    
+    retained_earnings_data = reports_lib.get_retained_earnings_data(current_period)
+
+    breadcrumbs = get_report_page_breadcrumbs(current_period, "Retained Earnings")
+    data = {
+        'period':current_period,
+        'has_retained_earnings_account':has_retained_earnings_account,
+        'retained_earnings_data':retained_earnings_data,
+        'breadcrumbs':breadcrumbs,
+    }
+    return render(request, "app_report_retained_earnings.html", data)
 
 # END OF REPORT PAGES
 

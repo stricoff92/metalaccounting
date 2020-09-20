@@ -80,7 +80,7 @@
                 style="display:none;"
             >
             </div>
-            <select id="account-tag-input">
+            <select id="account-tag-input" class="form-control text-input-max-400">
                 <option value="">
                     --
                 </option>
@@ -266,6 +266,13 @@ $(document).ready(()=>{
                 foundError = true
             } else if (newAccountType == "expense" && isContra) {
                 addNewAccountFormTagError("The cost of goods sold tag can only be applied to expense or contra revenue accounts.")
+                foundError = true
+            }
+        }
+
+        if(newAccountTag=='re') {
+            if(newAccountType != "equity" || isContra) {
+                addNewAccountFormTagError("The retained earnings tag can only be applied to non-contra equity accounts.")
                 foundError = true
             }
         }

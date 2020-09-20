@@ -15,10 +15,10 @@ class UserProfile(models.Model):
     use_nightmode = models.BooleanField(default=False)
     open_links_in_new_tabs = models.BooleanField(default=False)
 
-    object_limit_accounts = models.PositiveIntegerField(default=300)
-    object_limit_companies = models.PositiveIntegerField(default=15)
-    object_limit_periods_per_company = models.PositiveIntegerField(default=20)
-    object_limit_entries_per_period = models.PositiveIntegerField(default=200)
+    object_limit_accounts = models.PositiveIntegerField(default=200)
+    object_limit_companies = models.PositiveIntegerField(default=10)
+    object_limit_periods_per_company = models.PositiveIntegerField(default=10)
+    object_limit_entries_per_period = models.PositiveIntegerField(default=150)
 
 
     def __str__(self):
@@ -27,6 +27,11 @@ class UserProfile(models.Model):
     @property
     def target_attr(self):
         return mark_safe('target="_blank"' if self.open_links_in_new_tabs else "")
+
+    @property
+    def at_company_object_limit(self):
+        max_companies = self.object_limit_companies
+        return self.user.company_set.count() >= max_companies
 
 
     def save(self, *args, **kwargs):

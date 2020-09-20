@@ -29,7 +29,7 @@ class ImportCompanyForm(forms.Form):
         except (BadSignature, jwt.InvalidSignatureError):
             raise forms.ValidationError("Invalid Data")
         
-        version = cleaned_data['decoded_data']['version']
+        version = cleaned_data['decoded_data']['meta']['version']
         if version not in settings.OBJECT_SERIALIZATION_SUPPORTED_VERSIONS:
             raise forms.ValidationError("Unsupported Version")
 

@@ -40,6 +40,18 @@
             {% if account.is_contra %} Yes {% else %} No {% endif %}
         </div>
     </div>
+    {% if account.tag %}
+        <div class="row mt-2">
+            <div class="col-5 col-lg-2">
+                Tag
+            </div>
+            <div class="col-5 col-lg-2">
+                <span class="badge badge-pill badge-warning">
+                    {{ account.human_readable_tag_name }}
+                </span>
+            </div>
+        </div>
+    {% endif %}
     <div class="row mt-4">
         <div class="col-5 col-lg-2">
             Balance Type

@@ -5,3 +5,5 @@ applocals.py
 *.sqlite3
 env/
 *.ipynb
+htmlcov/
+.coverage

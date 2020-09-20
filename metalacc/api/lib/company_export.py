@@ -7,6 +7,7 @@ from django.core.signing import Signer
 from django.db.models.functions import Cast
 from django.db.models import CharField
 from django.db import transaction
+from django.utils import timezone
 
 from api.utils import generate_slug, generate_slugs_batch
 
@@ -17,7 +18,11 @@ signer = Signer(key=settings.OBJECT_SIGNING_KEY)
 
 def export_company_to_jwt(company):
     data = {
-        'version':settings.OBJECT_SERIALIZATION_VERSION,
+        "meta":{
+            'version':settings.OBJECT_SERIALIZATION_VERSION,
+            'issued_at':timezone.now().strftime("%s"),
+            'author':company.user.id,
+        }
     }
 
     # Serialize company.
@@ -72,10 +77,17 @@ def import_company_data(data:dict, user) -> Company:
 
     # Create a new company
     company_name = data['company']['name']
+    new_company_name = None
     if Company.objects.filter(user=user, name=company_name).exists():
-        company_name = company_name[:80] + generate_slug(None)
+        while True:
+            slug_suffix = generate_slug(None)
+            new_company_name = company_name[:Account.name.field.max_length - (len(slug_suffix) + 1)] + slug_suffix
+            if not Company.objects.filter(user=user, name=new_company_name).exists():
+                break
+    else:
+        new_company_name = company_name
 
-    new_company = Company.objects.create(user=user, name=company_name)
+    new_company = Company.objects.create(user=user, name=new_company_name)
     data['company']['new_id'] = new_company.id
 
     # create new accounts
