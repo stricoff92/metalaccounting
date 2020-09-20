@@ -71,6 +71,35 @@ class JournalEntryViewTests(BaseTestBase):
         self.assertEqual(dr_line.account, Account.objects.get(name='Cash'))
 
 
+    def test_creating_a_new_journal_entry_updates_the_periods_version_hash(self):
+        """ Test that creating a new journal entry resets the periods version hash
+        """
+        hash_before = self.period.version_hash
+        Account.objects.create_default_accounts(self.company)
+        url = reverse('je-new')
+        data = {
+            'date':"2020-01-15",
+            'memo':'investing in biz with common stock',
+            'period':self.period.slug,
+            'journal_entry_lines':[
+                {
+                    "type":JournalEntryLine.TYPE_DEBIT,
+                    "amount":50000,
+                    "account":Account.objects.get(name='Cash').slug,
+                }, {
+                    "type":JournalEntryLine.TYPE_CREDIT,
+                    "amount":50000,
+                    "account":Account.objects.get(name='Common Stock').slug,
+                }
+            ],
+        }
+        response = self.client.post(url, json.dumps(data), content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.period.refresh_from_db()
+        self.assertNotEqual(self.period.version_hash, hash_before)
+
+
     def test_journal_entry_display_ids_increment_by_1(self):
         """ Test that a new journal entry increments it's display ID by 1 VS the previous entry
         """
@@ -534,6 +563,27 @@ class JournalEntryViewTests(BaseTestBase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(JournalEntry.objects.count(), 0)
         self.assertEqual(JournalEntryLine.objects.count(), 0)
+
+
+    def test_that_deleting_a_journal_entry_resets_the_periods_version_hash(self):
+        """ Test that deleting a journal entry resets the periods version hash
+        """
+        hash_before = self.period.version_hash
+
+        Account.objects.create_default_accounts(self.company)
+        je = self.factory.create_journal_entry(self.period, dt.date(2020, 1, 15))
+        self.factory.create_journal_entry_line(
+            je, Account.objects.get(name='Cash'), 'd', 5000)
+        self.factory.create_journal_entry_line(
+            je, Account.objects.get(name='Common Stock'), JournalEntryLine.TYPE_CREDIT, 5000)
+        
+        url = reverse("je-delete", kwargs={'slug':je.slug})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+    
+        self.period.refresh_from_db()
+        self.assertNotEqual(self.period.version_hash, hash_before)
+
 
 
     def test_user_cant_delete_another_users_journal_entry(self):

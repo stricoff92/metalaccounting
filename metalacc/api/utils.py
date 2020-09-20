@@ -6,6 +6,11 @@ from django.conf import settings
 from django.db.models import Q, Max
 from django.urls import reverse
 
+
+def get_version_hash() -> str:
+    return str(uuid.uuid4()).replace("-", "")
+
+
 def generate_slug(model) -> str:
     if not model:
         return uuid.uuid4().hex[:settings.SLUG_LENGTH]

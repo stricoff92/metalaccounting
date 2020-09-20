@@ -203,6 +203,7 @@ def journal_entry_new(request):
             jel = jel_form.save(commit=False)
             jel.journal_entry = journal_entry
             jel.save()
+        period.cycle_version_hash()
 
     data = JournalEntrySerializer(journal_entry).data
     return Response(data, status.HTTP_201_CREATED)
@@ -214,5 +215,10 @@ def journal_entry_delete(request, slug):
     je = get_object_or_404(
         JournalEntry,
         period__company__user=request.user, slug=slug)
-    je.delete()
+    period = je.period
+
+    with transaction.atomic():
+        je.delete()
+        period.cycle_version_hash()
+
     return Response({}, status.HTTP_204_NO_CONTENT)

@@ -45,6 +45,9 @@ class PeriodViewTests(BaseTestBase):
         self.assertEqual(period.company, company)
         self.assertEqual(period.user, self.user)
 
+        self.assertIsNotNone(period.version_hash)
+        self.assertTrue(len(period.version_hash) > 30)
+
 
     def test_start_must_be_before_end_when_creating_a_new_period(self):
         """ Test that the start date must come before the end date when creating a new period
