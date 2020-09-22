@@ -1,14 +1,5 @@
 
 """ This model holds data required to build the statement of cash flows for a given period.
-    This is needed because adjustments to cash accounts that impact other current assets
-    could either be listed as an Operating activity or an investing activity.
-
-    Revenue/Expenses   -> Operations Activity
-    Non-Current Assets -> Investing Activity
-    Liabilities/Equity -> Financing Activities
-
-    Current Assets     ->  can be Operations Activity OR Investing Activity
-
 """
 
 
