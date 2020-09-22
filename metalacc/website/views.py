@@ -654,6 +654,7 @@ def retained_earnings(request, slug):
 def statement_of_cash_flows_worksheet(request, slug):
     current_period = get_object_or_404(
         Period, company__user=request.user, slug=slug)
+    company = current_period.company
 
 
     cash_flow_worksheet = current_period.cash_flow_worksheet
@@ -666,6 +667,7 @@ def statement_of_cash_flows_worksheet(request, slug):
         'period':current_period,
         'breadcrumbs':breadcrumbs,
         'worksheet':worksheet,
+        'has_cash_account':company.account_set.filter(tag=Account.TAG_CASH).exists(),
     }
     return render(request, "app_report_cash_flow_worksheet.html", data)
 

@@ -9,9 +9,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from api.models import Company, Period, JournalEntry
+from api.models import Company, Period, JournalEntry, Account
 from api.forms.company import CompanySelectionForm
-from api.forms.period import PeriodForm
+from api.forms.period import PeriodForm, CashFlowWorkSheetRowForm
 from api.utils import is_valid_slug, get_date_conflict_Q
 
 
@@ -170,3 +170,47 @@ def period_reset_cashflow_worksheet(request, slug):
 
     cash_flow_worksheet.delete()
     return Response({}, status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_cashflow_worksheet(request, slug):
+    period = get_object_or_404(Period, slug=slug, company__user=request.user)
+    company = period.company
+    try:
+        cash_flow_worksheet = period.cashflowworksheet
+    except ObjectDoesNotExist:
+        pass
+    else:
+        return Response({}, status.HTTP_409_CONFLICT)
+    
+    if not company.account_set.filter(tag=Account.TAG_CASH).exists():
+        return Response("Account with Cash tag is required.", status.HTTP_400_BAD_REQUEST)
+    
+    if not isinstance(request.data, list):
+        return Response({}, status.HTTP_400_BAD_REQUEST)
+
+    # Parse request body
+    encountered_slugs = set()
+    form_data = []
+    for row in request.data:
+        row_form = CashFlowWorkSheetRowForm(request.data)
+        if not row_form.is_valid():
+            return Response(row_form.errors, status.HTTP_400_BAD_REQUEST)
+        
+        if row_form.cleaned_data['journal_entry_slug'] in encountered_slugs:
+            return Response({}, status.HTTP_400_BAD_REQUEST)
+        else:
+            encountered_slugs.add(row_form.cleaned_data['journal_entry_slug'])
+        
+        journal_entry = get_object_or_404(
+            JournalEntry, 
+            slug=row_form.cleaned_data['journal_entry_slug'],
+            period=period)
+
+        form_data.append({
+            'journal_entry':journal_entry,
+            'operations':row_form.cleaned_data['operations'],
+            'investments':row_form.cleaned_data['investments'],
+            'finances':row_form.cleaned_data['finances'],
+        })
