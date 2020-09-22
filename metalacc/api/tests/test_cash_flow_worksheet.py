@@ -643,3 +643,62 @@ class CashFlowWorksheetTests(BaseTestBase):
             url, json.dumps(data), content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(CashFlowWorksheet.objects.count(), 1)
+
+
+    def test_user_cant_create_a_cashflow_worksheet_with_netagive_numbers(self):
+        """ Test that a user can create a worksheet by submitting valid worksheet data.
+        """
+
+        url = reverse("period-create-cashflow-worksheet", kwargs={"slug":self.period.slug})
+        data = [
+            {
+                # Cash for Common Stock.
+                'journal_entry_slug':self.jounral_entry_1.slug,
+                'operations':0,
+                'investments':0,
+                'finances':50000,
+            },{
+                # Inventory for Cash and credit.
+                'journal_entry_slug':self.jounral_entry_2.slug,
+                'operations':5000,
+                'investments':0,
+                'finances':0,
+            },{
+                # Bought a Truck.
+                'journal_entry_slug':self.jounral_entry_3.slug,
+                'operations':0,
+                'investments':5000,
+                'finances':0,
+            },{
+                # Sold some inventory for a profit
+                'journal_entry_slug':self.jounral_entry_4.slug,
+                'operations':6500,
+                'investments':0,
+                'finances':0,
+            },{
+                # Pay off some part of the truck
+                'journal_entry_slug':self.jounral_entry_5.slug,
+                'operations':-200, # NEGATIVE NUMBER
+                'investments':0,
+                'finances':2000,
+            },
+            # NON CASH TRANSACTIONS
+            # {
+            #     'journal_entry_slug':self.jounral_entry_6.slug,
+            #     'operations':0,
+            #     'investments':0,
+            #     'finances':0,
+            # },
+            # {
+            #     'journal_entry_slug':self.jounral_entry_7.slug,
+            #     'operations':0,
+            #     'investments':0,
+            #     'finances':0,
+            # },
+        ]
+
+        self.assertEqual(CashFlowWorksheet.objects.count(), 0)
+        response = self.client.post(
+            url, json.dumps(data), content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue("operations must be greater than 0" in str(response.data))
