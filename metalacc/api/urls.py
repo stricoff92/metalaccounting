@@ -28,11 +28,11 @@ urlpatterns = [
 
     # Cashflow worksheet routes
     path(
-        'period/<slug:slug>/reset-cashflow-worksheet',
+        'period/<slug:slug>/reset-cashflow-worksheet/',
         views.period_reset_cashflow_worksheet,
         name="period-reset-cashflow-worksheet"),
     path(
-        'period/<slug:slug>/create-cashflow-worksheet',
+        'period/<slug:slug>/create-cashflow-worksheet/',
         views.create_cashflow_worksheet,
         name="period-create-cashflow-worksheet"),
 

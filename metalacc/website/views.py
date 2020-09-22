@@ -658,12 +658,12 @@ def statement_of_cash_flows_worksheet(request, slug):
 
 
     cash_flow_worksheet = current_period.cash_flow_worksheet
-    if cash_flow_worksheet and cash_flow_worksheet.is_sync:
-        return redirect("app-cash-flow-worksheet-complete", slug=slug)
-    
+    is_complete = cash_flow_worksheet and cash_flow_worksheet.in_sync
+
     worksheet = reports_lib.get_period_cash_flow_worksheet(current_period)
     breadcrumbs = get_report_page_breadcrumbs(current_period, "Cash Flow Worksheet")
     data = {
+        'is_complete':is_complete,
         'period':current_period,
         'breadcrumbs':breadcrumbs,
         'worksheet':worksheet,
@@ -678,24 +678,22 @@ def statement_of_cash_flows(request, slug):
         Period, company__user=request.user, slug=slug)
     cash_flow_worksheet = current_period.cash_flow_worksheet
     
-    # Redirect to the cashflow worksheet if one does not exist
+    # Redirect to the cashflow worksheet if one does not exist, or it's not in sync
     if not cash_flow_worksheet:
         return redirect("app-cash-flow-worksheet", slug=slug)
-
-    autocomplete_analysis, cash_flow_worksheet = (
-        reports_lib.get_period_cash_flow_worksheet(current_period))
-
-    if  not cash_flow_worksheet.in_sync:
+    if not cash_flow_worksheet.in_sync:
         cash_flow_worksheet.delete()
         return redirect("app-cash-flow-worksheet", slug=slug)
 
+    cash_flow_worksheet = reports_lib.get_period_cash_flow_worksheet(current_period)
 
-    # breadcrumbs = get_report_page_breadcrumbs(current_period, "Cash Flow Statement")
-    # data = {
-    #     'period':current_period,
-    #     'breadcrumbs':breadcrumbs,
-    # }
-    # return render(request, "app_report_cash_flow_statement.html", data)
+
+    breadcrumbs = get_report_page_breadcrumbs(current_period, "Cash Flow Statement")
+    data = {
+        'period':current_period,
+        'breadcrumbs':breadcrumbs,
+    }
+    return render(request, "app_report_cash_flow_statement.html", data)
 
 
 # END OF REPORT PAGES

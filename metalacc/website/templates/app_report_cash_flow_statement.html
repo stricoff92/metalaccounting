@@ -11,4 +11,28 @@
         <strong>{{ period.end|date:"M j, Y" }}</strong>
     </p>
 </div>
+
+<div class="mt-5" style="display:flex;">
+    <button class="btn btn-primary" id="reset-worksheet-btn">
+        <strong>Reset Worksheet</strong>
+    </button>
+    <a href="/app/period/{{ period.slug }}/statement-of-cash-flows/worksheet/" {{ user.userprofile.target_attr }} class="ml-4">
+        Cash Flow Worksheet
+    </a>
+</div>
+<script>
+    $(document).ready(()=>{
+        $("#reset-worksheet-btn").click(()=>{
+            postJson(resetCashFlowWorksheetUrl("{{ period.slug }}"), {},
+            (data, status, xhr)=>{
+                if(xhr.status == 204) {
+                    window.location = "/app/period/{{ period.slug }}/statement-of-cash-flows/worksheet/"
+                }
+            },
+            (data, status, xhr)=>{
+                alert("an error occured")
+            })
+        })
+    })
+</script>
 {% endblock %}

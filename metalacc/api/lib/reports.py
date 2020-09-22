@@ -1,9 +1,10 @@
 
 from collections import defaultdict, Counter
+import json
 
 from django.db.models import Q, Sum
 
-from api.models import JournalEntry, JournalEntryLine, Account
+from api.models import JournalEntry, JournalEntryLine, Account, CashFlowWorksheet
 from api.utils import (
     get_company_periods_up_to_and_excluding,
     get_company_periods_up_to,
@@ -528,6 +529,14 @@ def get_period_cash_flow_worksheet(period) -> tuple:
     entries_analyzed = Counter()
     company = period.company
 
+    # If a completed worksheet exists, we'll autofill
+    completed_worksheet = period.cash_flow_worksheet
+    if completed_worksheet and not completed_worksheet.in_sync:
+        completed_worksheet = None
+    if completed_worksheet:
+        completed_worksheet = {r['journal_entry']:r for r in completed_worksheet.worksheet_data}
+
+
     # Fetch Account IDs by catagory
     cash_accounts = (Account.objects
         .filter(
@@ -565,7 +574,7 @@ def get_period_cash_flow_worksheet(period) -> tuple:
 
     # Fetch journal entry ids that involve a cash account
     cash_journal_entries = (JournalEntryLine.objects
-        .filter(account_id__in=cash_accounts)
+        .filter(account_id__in=cash_accounts, journal_entry__period=period)
         .values_list("journal_entry_id", flat=True))
     
     jounral_entries = JournalEntry.objects.filter(id__in=cash_journal_entries).values("id", "date", "memo", "display_id", "slug")
@@ -600,6 +609,8 @@ def get_period_cash_flow_worksheet(period) -> tuple:
         cash_to_allocate = get_dr_cr_balance(cash_dr_total, cash_cr_total)
 
         worksheet_row = {
+            'journal_entry_id':je_id,
+            'journal_entry_slug':jounral_entries[je_id]['slug'],
             'debit_entries':[jel for jel in accounts['journal_entry_lines'] if jel['type'] == JournalEntryLine.TYPE_DEBIT],
             'credit_entries':[jel for jel in accounts['journal_entry_lines'] if jel['type'] == JournalEntryLine.TYPE_CREDIT],
             'memo':jounral_entries[je_id]['memo'],
@@ -608,9 +619,9 @@ def get_period_cash_flow_worksheet(period) -> tuple:
             'slug':jounral_entries[je_id]['slug'],
             'cash_to_allocate':cash_to_allocate,
             'auto_complete':{
-                'investments':0,
-                'operations':0,
-                'finances':0,
+                'investments': completed_worksheet[jounral_entries[je_id]['slug']]['investments'] if completed_worksheet else 0,
+                'operations': completed_worksheet[jounral_entries[je_id]['slug']]['operations'] if completed_worksheet else 0,
+                'finances': completed_worksheet[jounral_entries[je_id]['slug']]['finances'] if completed_worksheet else 0,
             },
         }
 
@@ -692,7 +703,8 @@ def get_period_cash_flow_worksheet(period) -> tuple:
 
 
 
-
-
-def get_worksheet_page_data(period) -> dict:
-    pass
+def create_cash_flow_worksheet(period, data) -> dict:
+    return CashFlowWorksheet.objects.create(
+        period=period,
+        version_hash=period.version_hash,
+        data=json.dumps(data))

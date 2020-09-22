@@ -9,10 +9,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from api.models import Company, Period, JournalEntry, Account
+from api.models import Company, Period, JournalEntry, Account, CashFlowWorksheet
 from api.forms.company import CompanySelectionForm
 from api.forms.period import PeriodForm, CashFlowWorkSheetRowForm
 from api.utils import is_valid_slug, get_date_conflict_Q
+from api.lib import reports as reports_lib
 
 
 
@@ -182,19 +183,26 @@ def create_cashflow_worksheet(request, slug):
     except ObjectDoesNotExist:
         pass
     else:
-        return Response({}, status.HTTP_409_CONFLICT)
+        if cash_flow_worksheet.in_sync:
+            return Response({}, status.HTTP_409_CONFLICT)
+        else:
+            cash_flow_worksheet.delete()
     
     if not company.account_set.filter(tag=Account.TAG_CASH).exists():
         return Response("Account with Cash tag is required.", status.HTTP_400_BAD_REQUEST)
     
     if not isinstance(request.data, list):
         return Response({}, status.HTTP_400_BAD_REQUEST)
+    
+    worksheet = reports_lib.get_period_cash_flow_worksheet(period)
+    expected_slugs = set(row['journal_entry_slug'] for row in worksheet)
+    worksheet = {row['journal_entry_id']:row for row in worksheet}
 
-    # Parse request body
+    # Parse and validate request body
     encountered_slugs = set()
     form_data = []
     for row in request.data:
-        row_form = CashFlowWorkSheetRowForm(request.data)
+        row_form = CashFlowWorkSheetRowForm(row)
         if not row_form.is_valid():
             return Response(row_form.errors, status.HTTP_400_BAD_REQUEST)
         
@@ -207,10 +215,37 @@ def create_cashflow_worksheet(request, slug):
             JournalEntry, 
             slug=row_form.cleaned_data['journal_entry_slug'],
             period=period)
+        
+        # Verify no extra jounral entries are included.
+        try:
+            worksheet_data = worksheet[journal_entry.id]
+        except KeyError:
+            return Response(
+                f"journal entry slug missing:{journal_entry.slug}", status.HTTP_400_BAD_REQUEST)
+        
+        total_allocated_cash = (
+            row_form.cleaned_data['operations']
+            + row_form.cleaned_data['investments']
+            + row_form.cleaned_data['finances'])
+        
+        if total_allocated_cash != worksheet_data['cash_to_allocate']:
+            return Response(
+                f"journal entry {journal_entry.slug} has been allocated cash incorrectly.", status.HTTP_400_BAD_REQUEST)
 
         form_data.append({
-            'journal_entry':journal_entry,
+            'journal_entry':journal_entry.slug,
             'operations':row_form.cleaned_data['operations'],
             'investments':row_form.cleaned_data['investments'],
             'finances':row_form.cleaned_data['finances'],
         })
+    
+    # Verify all journal entries that touch a cash account are included here.
+    missing_slugs = expected_slugs.difference(encountered_slugs)
+    if len(missing_slugs):
+        return Response(
+            f"Journal Entries missing: {', '.join(missing_slugs)}", status.HTTP_400_BAD_REQUEST)
+    
+
+    # Create the worksheet.
+    reports_lib.create_cash_flow_worksheet(period, form_data)
+    return Response({}, status.HTTP_201_CREATED)
