@@ -49,7 +49,7 @@ class JounralEntryManager(models.Manager):
         """
         periods = get_company_periods_up_to(period)
         return self.filter(period__in=periods)
-
+    
 
 
 class JournalEntry(models.Model):

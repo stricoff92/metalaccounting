@@ -4,7 +4,7 @@ from itertools import chain
 from django.db import models
 from django.db.models import Q
 from django.conf import settings
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from api.utils import generate_slug, get_date_conflict_Q, get_version_hash
 

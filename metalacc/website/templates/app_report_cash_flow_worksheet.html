@@ -13,15 +13,195 @@
 </div>
 <div class="alert alert-primary p-4">
     <p class="heading-2">
-        <i class="fas fa-bullhorn mr-3"></i>
-        This Worksheet must be Completed
+        <strong>
+            <i class="fas fa-bullhorn mr-3"></i>
+            This Worksheet must be Completed First
+        </strong>
     </p>
     <p>
-        Before the statement of cash flows can be assembled 1 or more transactions requires further classification.
-    </p>
-    <p>
-        Cash transactions that impact non-cash current assets can be associated with more than 1 type of activity.
+        Before the statement of cash flows can be assembled journal entries must be organized by:<br>
+        Cash sources/uses associated with
+        <ul>
+            <li>
+                Operations
+            </li>
+            <li>
+                Investments
+            </li>
+            <li>
+                Financing
+            </li>
+        </ul>
     </p>
 </div>
+
+<div class="mt-5">
+    <button class="btn btn-success save-worksheet-btn">
+        <strong><i class="fas fa-save"></i> Save Worksheet</strong>
+    </button>
+</div>
+
+<div class="mt-4">
+    {% for row in worksheet %}
+    <script>
+        $("body").data("cash-to-allocate-{{ row.slug }}", "{{ row.cash_to_allocate }}")
+    </script>
+    <div class="row border-bottom mt-4">
+        <div class="col-12 col-lg-9">
+            <div class="p-2 mt-2">
+                {% for dr_row in row.debit_entries %}
+                <div class='row report-row'>
+                    <div class="col-7">
+                        ({{ dr_row.account__number }}) {{ dr_row.account__name }}
+                    </div>
+                    <div class='col-2 {% if dr_row.account__tag == "cash" %}report-row-highlight{% endif %}'
+                        style="display:flex;">
+                        {% if dr_row.account__tag == "cash" %}
+                        <span class="numbers-match-badge-{{ row.slug }} badge badge-pill badge-success"
+                            style="display:none;vertical-align: bottom;">
+                            <i class="fas fa-check-double"></i>
+                        </span>
+                        {% endif %}
+                        <span>
+                            {{ dr_row.amount|intcomma }}
+                        </span>
+                    </div>
+                    <div class="col-2">
+
+                    </div>
+                </div>
+                {% endfor %}
+                {% for cr_row in row.credit_entries %}
+                <div class="row report-row">
+                    <div class="col-7 pl-5">
+                        ({{ cr_row.account__number }}) {{ cr_row.account__name }}
+                    </div>
+                    <div class="col-2">
+
+                    </div>
+                    <div class='col-2 {% if cr_row.account__tag == "cash" %}report-row-highlight{% endif %}'
+                        style="display:flex;">
+                        {% if cr_row.account__tag == "cash" %}
+                        <span class="numbers-match-badge-{{ row.slug }} badge badge-pill badge-success"
+                            style="display:none;vertical-align:bottom;">
+                            <i class="fas fa-check-double"></i>
+                        </span>
+                        {% endif %}
+                        <span>
+                            {{ cr_row.amount|intcomma }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="row mt-2">
+                    <div class="col-10 border-top">
+                        <div class="pt-1 pb-1 pl-2" style="display:flex;">
+                            <div>
+                                {{ row.display_id }})
+                            </div>
+                            <div class="ml-2">
+                                <strong>{{ row.date|date:"M j, Y" }}</strong>
+                            </div>
+                            <div class="ml-2">
+                                {% if row.memo %}
+                                {{ row.memo }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-8 col-lg-3 mb-3">
+            <div>
+                <p class="mt-2">
+                    <strong>Classification</strong>
+                </p>
+                <table>
+                    <tr>
+                        <td>Operations</td>
+                        <td class="pl-3">
+                            <input id="allocated-cash-operations-input-{{ row.slug }}" jeslug="{{ row.slug }}"
+                                type="number" class="form-control allocation-input allocation-input-{{ row.slug }}"
+                                value="{{ row.auto_complete.operations }}">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Investments</td>
+                        <td class="pl-3">
+                            <input id="allocated-cash-investments-input-{{ row.slug }}" jeslug="{{ row.slug }}"
+                                type="number" class="form-control allocation-input allocation-input-{{ row.slug }}"
+                                value="{{ row.auto_complete.investments }}">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Financing</td>
+                        <td class="pl-3">
+                            <input id="allocated-cash-finances-input-{{ row.slug }}" jeslug="{{ row.slug }}"
+                                type="number" class="form-control allocation-input allocation-input-{{ row.slug }}"
+                                value="{{ row.auto_complete.finances }}">
+                        </td>
+                    </tr>
+                    <tr class="border-top">
+                        <td><strong>Allocated</strong></td>
+                        <td class="pl-3 text-left">
+                            <div style="display:flex;">
+                                <span
+                                    id="total-allocated-dcm-{{ row.slug }}"
+                                    class="numbers-match-badge-{{ row.slug }}"
+                                    style="display:none;"
+                                >
+                                    <i class="fas fa-check-double"></i>
+                                </span>
+                                <span id="allocated-cash-total-{{ row.slug }}" class="p-2">
+                                    {{ row.auto_complete.finances|add:row.auto_complete.investments|add:row.auto_complete.operations }}
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<script>
+    $(".allocation-input").keydown((e) => {
+        setTimeout(() => {
+            const targInputElem = e.target
+            const newVal = ($(targInputElem).val() - 0) || 0
+            const jeSlug = $(targInputElem).attr("jeslug")
+            const otherInputs = $(".allocation-input-" + jeSlug)
+            const otherInputsLength = otherInputs.length
+            let totalAllocated = 0
+            for (let i = 0; i < otherInputsLength; i++) {
+                totalAllocated = totalAllocated + (($(otherInputs[i]).val() - 0) || 0)
+            }
+            $("#allocated-cash-total-" + jeSlug).text(numberWithCommas(totalAllocated))
+
+            const totalToAllocate = $("body").data("cash-to-allocate-" + jeSlug) - 0
+            console.log(".numbers-match-badge-" + jeSlug)
+            if (parseInt(totalToAllocate) === parseInt(totalAllocated)) {
+                console.log($(".numbers-match-badge-" + jeSlug))
+                $(".numbers-match-badge-" + jeSlug).css("display", "block")
+            } else {
+                $(".numbers-match-badge-" + jeSlug).css("display", "none")
+            }
+
+        })
+    })
+</script>
+
+<div class="mt-4 mb-4">
+    <button class="btn btn-success save-worksheet-btn">
+        <strong><i class="fas fa-save"></i>Save Worksheet</strong>
+    </button>
+</div>
+<script>
+    $(document).ready(() => {
+        $(".save-worksheet-btn").click(() => {
+        })
+    })
+</script>
 
 {% endblock %}

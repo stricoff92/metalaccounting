@@ -7,6 +7,10 @@ from django.db.models import Q, Max
 from django.urls import reverse
 
 
+def some(args):
+    return any(args) and not all(args)
+
+
 def get_version_hash() -> str:
     return str(uuid.uuid4()).replace("-", "")
 

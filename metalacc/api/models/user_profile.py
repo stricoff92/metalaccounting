@@ -18,7 +18,7 @@ class UserProfile(models.Model):
     object_limit_accounts = models.PositiveIntegerField(default=200)
     object_limit_companies = models.PositiveIntegerField(default=10)
     object_limit_periods_per_company = models.PositiveIntegerField(default=10)
-    object_limit_entries_per_period = models.PositiveIntegerField(default=150)
+    object_limit_entries_per_period = models.PositiveIntegerField(default=100)
 
 
     def __str__(self):
