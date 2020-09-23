@@ -23,6 +23,75 @@ class AccountViewTests(BaseTestBase):
         super().tearDown()
 
 
+    def test_user_cant_create_account_with_invalid_use_of_cash_tag(self):
+        """ Test user cant create an account with invalid use of a Cash tag.
+        """
+        url = reverse("account-new")
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_ASSET,
+            'is_contra':True,  # must be non contra, current asset
+            'is_current':False,
+            'number':1500,
+            'tag':Account.TAG_CASH,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(str(response.data), "['Accounts with tag Cash must be a non-contra current asset account.']")
+
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_LIABILITY,
+            'is_contra':False,
+            'is_current':True,
+            'number':1500,
+            'tag':Account.TAG_CASH,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(str(response.data), "['Accounts with tag Cash must be a non-contra current asset account.']")
+
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_EQUITY,
+            'is_contra':False,
+            'number':1500,
+            'tag':Account.TAG_CASH,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(str(response.data), "['Accounts with tag Cash must be a non-contra current asset account.']")
+
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_REVENUE,
+            'is_contra':False,
+            'is_operating':True,
+            'number':1500,
+            'tag':Account.TAG_CASH,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(str(response.data), "['Accounts with tag Cash must be a non-contra current asset account.']")
+
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_EXPENSE,
+            'is_contra':False,
+            'is_operating':True,
+            'number':1500,
+            'tag':Account.TAG_CASH,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(str(response.data), "['Accounts with tag Cash must be a non-contra current asset account.']")
+
+
     def test_user_cant_create_account_with_invalid_use_of_cogs_tag(self):
         """ Test user cant create an account with invalid use of a CoGS tag 
         """
@@ -171,6 +240,25 @@ class AccountViewTests(BaseTestBase):
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Account.objects.get(slug=response.data['slug']).tag, Account.TAG_RETAINED_EARNINGS)
+
+
+    def test_user_can_create_account_with_using_cash_tag(self):
+        """ Test user can create an account with valid use of the cash tag. (must be a current asset account)
+        """
+        url = reverse("account-new")
+        data = {
+            'company':self.company.slug,
+            'name':'foobar',
+            'type':Account.TYPE_ASSET,
+            'is_contra':False,
+            'is_current':True,
+            'number':1500,
+            'tag':Account.TAG_CASH,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Account.objects.get(slug=response.data['slug']).tag, Account.TAG_CASH)
+
 
 
     def test_user_can_create_an_account(self):
@@ -894,11 +982,11 @@ class AccountViewTests(BaseTestBase):
 
 
     def test_that_a_user_can_edit_their_account_to_have_an_valid_use_of_the_retained_earnings_tag(self):
-        """ Test that a user can edit their account to have tag div
+        """ Test that a user can edit their account to have tag retained earnings
         """
-        dividends_account = self.factory.create_account(
+        retained_earnings_account = self.factory.create_account(
             self.company, 'dividends', Account.TYPE_EQUITY, 1502, is_contra=False)
-        url = reverse("account-edit", kwargs={'slug':dividends_account.slug})
+        url = reverse("account-edit", kwargs={'slug':retained_earnings_account.slug})
         data = {
             "name":"illegal dividends", # criminal activities legally require tax reporting.
             "number":190011,
@@ -906,8 +994,26 @@ class AccountViewTests(BaseTestBase):
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dividends_account.refresh_from_db()
-        self.assertEqual(dividends_account.tag, Account.TAG_RETAINED_EARNINGS)
+        retained_earnings_account.refresh_from_db()
+        self.assertEqual(retained_earnings_account.tag, Account.TAG_RETAINED_EARNINGS)
+
+
+    def test_that_a_user_can_edit_their_account_to_have_an_valid_use_of_the_cash_tag(self):
+        """ Test that a user can edit their account to have cash tag
+        """
+        cash_account = self.factory.create_account(
+            self.company, 'Cash', Account.TYPE_ASSET, 1001, is_contra=False, is_current=True)
+        url = reverse("account-edit", kwargs={'slug':cash_account.slug})
+        data = {
+            "name":"Cash", # criminal activities legally require tax reporting.
+            "number":1001,
+            "is_current":True,
+            'tag':Account.TAG_CASH,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        cash_account.refresh_from_db()
+        self.assertEqual(cash_account.tag, Account.TAG_CASH)
 
 
     def test_that_a_user_cant_edit_their_account_to_have_an_invalid_use_of_the_retained_earnings_tag(self):
@@ -928,7 +1034,6 @@ class AccountViewTests(BaseTestBase):
         data = {
             "name":"cold hard cash",
             "number":1900,
-            "is_contra":False,
             "is_current":True,
             'tag':Account.TAG_RETAINED_EARNINGS,
         }
@@ -940,7 +1045,6 @@ class AccountViewTests(BaseTestBase):
         data = {
             "name":"cold hard cash",
             "number":1900,
-            "is_contra":False,
             "is_current":True,
             'tag':Account.TAG_RETAINED_EARNINGS,
         }
@@ -952,7 +1056,6 @@ class AccountViewTests(BaseTestBase):
         data = {
             "name":"cold hard cash",
             "number":1900,
-            "is_contra":False,
             "is_operating":True,
             'tag':Account.TAG_RETAINED_EARNINGS,
         }
@@ -985,6 +1088,81 @@ class AccountViewTests(BaseTestBase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual("['Accounts with tag Retained Earnings must be a non-contra equity account.']", str(response.data))
 
+
+    def test_that_a_user_cant_edit_their_account_to_have_an_invalid_use_of_the_cash_tag(self):
+        """ Test that a user cant edit their account such that it has an invalid use of the cash tag
+        """
+        asset_account = self.factory.create_account(
+            self.company, 'foobar1', Account.TYPE_ASSET, 1500, is_contra=True, is_current=False)
+        liability_account = self.factory.create_account(
+            self.company, 'foobar2', Account.TYPE_LIABILITY, 1501, is_contra=True, is_current=True)
+        equity_account = self.factory.create_account(
+            self.company, 'foobar3', Account.TYPE_EQUITY, 1502, is_contra=True)
+        revenue_account = self.factory.create_account(
+            self.company, 'foobar4', Account.TYPE_REVENUE, 1503, is_operating=True, is_contra=False)
+        expense_account = self.factory.create_account(
+            self.company, 'foobar5', Account.TYPE_EXPENSE, 1504, is_operating=True, is_contra=False)
+
+        url = reverse("account-edit", kwargs={'slug':asset_account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1900,
+            "is_contra":False,
+            "is_current":True,
+            'tag':Account.TAG_CASH,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual("['Accounts with tag Cash must be a non-contra current asset account.']", str(response.data))
+
+        url = reverse("account-edit", kwargs={'slug':liability_account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1900,
+            "is_contra":False,
+            "is_current":True,
+            'tag':Account.TAG_CASH,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual("['Accounts with tag Cash must be a non-contra current asset account.']", str(response.data))
+
+        url = reverse("account-edit", kwargs={'slug':revenue_account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1900,
+            "is_contra":False,
+            "is_operating":True,
+            'tag':Account.TAG_CASH,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            "['Accounts with tag Cash must be a non-contra current asset account.']",
+            str(response.data))
+
+        url = reverse("account-edit", kwargs={'slug':expense_account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1900,
+            "is_operating":False,
+            'tag':Account.TAG_CASH,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            "['Accounts with tag Cash must be a non-contra current asset account.']",
+            str(response.data))
+
+        url = reverse("account-edit", kwargs={'slug':equity_account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1900,
+            'tag':Account.TAG_CASH,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual("['Accounts with tag Cash must be a non-contra current asset account.']", str(response.data))
 
 
     def test_that_a_user_can_delete_their_own_account(self):

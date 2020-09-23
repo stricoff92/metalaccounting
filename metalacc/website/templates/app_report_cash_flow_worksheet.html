@@ -1,0 +1,328 @@
+{% extends 'base_app.html' %}
+{% load humanize %}
+{% block 'body' %}
+<div>
+    <p class="heading-1">{% if is_complete %}Completed {% endif %}Cash Flow Worksheet</p>
+    <p class="heading-2">{{ period.company.name }}</p>
+    <p>
+        For Period
+        <strong>{{ period.start|date:"M j, Y" }}</strong>
+        <i class="fas fa-arrow-right"></i>
+        <strong>{{ period.end|date:"M j, Y" }}</strong>
+    </p>
+</div>
+{% if not is_complete %}
+    <div class="alert alert-primary p-4">
+        <p class="heading-2">
+            <strong>
+                <i class="fas fa-bullhorn mr-3"></i>
+                This Worksheet must be Completed First
+            </strong>
+        </p>
+        <p>
+            Before the statement of cash flows can be assembled journal entries must be organized by:<br>
+            Cash sources/uses associated with
+            <ul>
+                <li>
+                    Operations
+                </li>
+                <li>
+                    Investments
+                </li>
+                <li>
+                    Financing
+                </li>
+            </ul>
+        </p>
+    </div>
+{% endif %}
+
+{% if not is_complete %}
+    <div class="mt-5">
+        <div class="invalid-cash-amount-error-msg alert alert-danger mb-3" style="display:none;">
+            Cash is not properly allocated for one or more journal entries.
+        </div>
+        <button class="btn btn-success save-worksheet-btn">
+            <strong><i class="fas fa-save"></i> Save Worksheet</strong>
+        </button>
+    </div>
+{% else %}
+    <div class="mt-5" style="display:flex;">
+        <button class="btn btn-primary" id="reset-worksheet-btn">
+            <strong>Reset Worksheet</strong>
+        </button>
+        <a href="/app/period/{{ period.slug }}/statement-of-cash-flows/" {{ user.userprofile.target_attr }} class="ml-4">Cash Flow Statement</a>
+    </div>
+    <script>
+        $(document).ready(()=>{
+            $('#reset-worksheet-btn').click(()=>{
+                postJson(resetCashFlowWorksheetUrl("{{ period.slug }}"), {},
+                    (data, status, xhr)=>{
+                        if(xhr.status == 204) {
+                            location.reload()
+                        }
+                    },
+                    (data, status, xhr)=>{
+                        alert("an error occured")
+                    })
+            })
+        })
+    </script>
+    <hr>
+{% endif %}
+
+<div class="mt-4">
+    {% for row in worksheet %}
+    <script>
+        $("body").data("cash-to-allocate-{{ row.slug }}", "{{ row.cash_to_allocate }}")
+    </script>
+    <div class="row border-bottom mt-4">
+        <div class="col-12 col-lg-9">
+            <div class="p-2 mt-2">
+                {% for dr_row in row.debit_entries %}
+                <div class='row report-row'>
+                    <div class="col-7">
+                        ({{ dr_row.account__number }}) {{ dr_row.account__name }}
+                    </div>
+                    <div class='col-2 {% if dr_row.account__tag == "cash" %}report-row-highlight{% endif %}'
+                        style="display:flex;">
+                        {% if dr_row.account__tag == "cash" %}
+                        <span class="numbers-match-badge-{{ row.slug }} badge badge-pill badge-success"
+                            style="display:none;vertical-align: bottom;">
+                            <i class="fas fa-check-double"></i>
+                        </span>
+                        {% endif %}
+                        <span>
+                            {{ dr_row.amount|intcomma }}
+                        </span>
+                    </div>
+                    <div class="col-2">
+
+                    </div>
+                </div>
+                {% endfor %}
+                {% for cr_row in row.credit_entries %}
+                <div class="row report-row">
+                    <div class="col-7 pl-5">
+                        ({{ cr_row.account__number }}) {{ cr_row.account__name }}
+                    </div>
+                    <div class="col-2">
+
+                    </div>
+                    <div class='col-2 {% if cr_row.account__tag == "cash" %}report-row-highlight{% endif %}'
+                        style="display:flex;">
+                        {% if cr_row.account__tag == "cash" %}
+                        <span class="numbers-match-badge-{{ row.slug }} badge badge-pill badge-success"
+                            style="display:none;vertical-align:bottom;">
+                            <i class="fas fa-check-double"></i>
+                        </span>
+                        {% endif %}
+                        <span>
+                            {{ cr_row.amount|intcomma }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="row mt-2">
+                    <div class="col-10 border-top">
+                        <div class="pt-1 pb-1 pl-2" style="display:flex;">
+                            <div>
+                                {{ row.display_id }})
+                            </div>
+                            <div class="ml-2">
+                                <strong>{{ row.date|date:"M j, Y" }}</strong>
+                            </div>
+                            <div class="ml-2">
+                                {% if row.memo %}
+                                {{ row.memo }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-8 col-lg-3 mb-3 classifcation-input-group" id="classifcation-input-group-{{ row.slug }}">
+            <div>
+                <p class="mt-2">
+                    <strong>Classification</strong>
+                </p>
+                <table>
+                    <tr>
+                        <td>Operations</td>
+                        <td class="pl-3">
+                            <input id="allocated-cash-operations-input-{{ row.slug }}" jeslug="{{ row.slug }}"
+                                type="number" class="form-control allocation-input allocation-input-{{ row.slug }} operations-input"
+                                value="{{ row.auto_complete.operations }}"
+                                {% if is_complete %}readonly disabled{% endif %}>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Investments</td>
+                        <td class="pl-3">
+                            <input id="allocated-cash-investments-input-{{ row.slug }}" jeslug="{{ row.slug }}"
+                                type="number" class="form-control allocation-input allocation-input-{{ row.slug }} investments-input"
+                                value="{{ row.auto_complete.investments }}"
+                                {% if is_complete %}readonly disabled{% endif %}>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Financing</td>
+                        <td class="pl-3">
+                            <input id="allocated-cash-finances-input-{{ row.slug }}" jeslug="{{ row.slug }}"
+                                type="number" class="form-control allocation-input allocation-input-{{ row.slug }} finances-input"
+                                value="{{ row.auto_complete.finances }}"
+                                {% if is_complete %}readonly disabled{% endif %}>
+                        </td>
+                    </tr>
+                    <tr class="border-top">
+                        <td><strong>Allocated</strong></td>
+                        <td class="pl-3 text-left">
+                            <div style="display:flex;">
+                                <span
+                                    id="total-allocated-dcm-{{ row.slug }}"
+                                    class="numbers-match-badge-{{ row.slug }}"
+                                    style="display:none;"
+                                >
+                                    <i class="fas fa-check-double"></i>
+                                </span>
+                                <span id="allocated-cash-total-{{ row.slug }}" class="p-2">
+                                    {{ row.auto_complete.finances|add:row.auto_complete.investments|add:row.auto_complete.operations|intcomma }}
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<script>
+    $(".allocation-input").keydown((e) => {
+        setTimeout(() => {
+            const targInputElem = e.target
+            const newVal = ($(targInputElem).val() - 0) || 0
+            const jeSlug = $(targInputElem).attr("jeslug")
+            const otherInputs = $(".allocation-input-" + jeSlug)
+            const otherInputsLength = otherInputs.length
+            let totalAllocated = 0
+            for (let i = 0; i < otherInputsLength; i++) {
+                totalAllocated = totalAllocated + (($(otherInputs[i]).val() - 0) || 0)
+            }
+            $("#allocated-cash-total-" + jeSlug).text(numberWithCommas(totalAllocated))
+
+            const totalToAllocate = $("body").data("cash-to-allocate-" + jeSlug) - 0
+            if (parseInt(totalToAllocate) === parseInt(totalAllocated)) {
+                $(".numbers-match-badge-" + jeSlug).css("display", "block")
+            } else {
+                $(".numbers-match-badge-" + jeSlug).css("display", "none")
+            }
+
+        })
+    })
+</script>
+
+{% if not is_complete %}
+    <div class="mt-4 mb-4">
+        <div class="invalid-cash-amount-error-msg alert alert-danger mb-3" style="display:none;">
+            Cash is not properly allocated for one or more journal entries.
+        </div>
+        <button class="btn btn-success save-worksheet-btn">
+            <strong><i class="fas fa-save"></i>Save Worksheet</strong>
+        </button>
+    </div>
+{% endif %}
+
+<script>
+    function drawInvalidCashAmountWorkSheetErrors(jeSlugs) {
+        $(".invalid-cash-amount-error-msg").css("display", "block")
+        jeSlugs.forEach((slug)=>{
+            $("#classifcation-input-group-" + slug).addClass("border border-danger")
+        })
+    }
+    function resetInvalidCashAmountWorkSheetErrors(){
+        $(".invalid-cash-amount-error-msg").css("display", "none")
+        $(".classifcation-input-group").removeClass("border border-danger")
+    }
+    $(document).ready(() => {
+        $(".save-worksheet-btn").click(() => {
+            resetInvalidCashAmountWorkSheetErrors()
+
+            const inputElems = $(".allocation-input")
+            const inputElemsLength = inputElems.length
+            if (!inputElemsLength) {
+                return
+            }
+
+            let dataByJournalEntry = {}
+            for(let i=0; i<inputElemsLength; i++) {
+                let inputElem = inputElems[i]
+                let jeSlug = $(inputElem).attr("jeslug")
+                let allocatedCash = ($(inputElem).val() || 0) - 0
+                if(!dataByJournalEntry[jeSlug]) {
+                    dataByJournalEntry[jeSlug] = {
+                        operations:0,
+                        investments:0,
+                        finances:0,
+                    }
+                }
+                if($(inputElem).hasClass("operations-input")) {
+                    dataByJournalEntry[jeSlug].operations = dataByJournalEntry[jeSlug].operations + allocatedCash
+                } else if ($(inputElem).hasClass("investments-input")) {
+                    dataByJournalEntry[jeSlug].investments = dataByJournalEntry[jeSlug].investments + allocatedCash
+                } else if ($(inputElem).hasClass("finances-input")) {
+                    dataByJournalEntry[jeSlug].finances = dataByJournalEntry[jeSlug].finances + allocatedCash
+                } else {
+                    throw new Error('classification class not found...')
+                }
+            }
+            
+            const journalEntriesWithInvalidCashAmount = []
+            const journalEntrySlugs = Object.keys(dataByJournalEntry)
+            const journalEntrySlugsLength = journalEntrySlugs.length
+            const data = []
+            for (let i=0; i<journalEntrySlugsLength; i++) {
+                let journalEntrySlug = journalEntrySlugs[i]
+                let totalAllocatedCash = (
+                    dataByJournalEntry[journalEntrySlug].operations
+                    + dataByJournalEntry[journalEntrySlug].investments
+                    + dataByJournalEntry[journalEntrySlug].finances)
+                
+                let journalEntryCashAmount = ($("body").data("cash-to-allocate-" + journalEntrySlug) || 0) - 0
+                if(journalEntryCashAmount != totalAllocatedCash) {
+                    journalEntriesWithInvalidCashAmount.push(journalEntrySlug)
+                } else {
+                    data.push({
+                        journal_entry_slug: journalEntrySlug,
+                        operations: dataByJournalEntry[journalEntrySlug].operations,
+                        investments: dataByJournalEntry[journalEntrySlug].investments,
+                        finances: dataByJournalEntry[journalEntrySlug].finances,
+                    })
+                }
+
+            }
+
+            if(journalEntriesWithInvalidCashAmount.length) {
+                return drawInvalidCashAmountWorkSheetErrors(journalEntriesWithInvalidCashAmount)
+            }
+            console.log("SUBMITTING!!!!!")
+            console.log(data)
+
+            postJson(createCashFlowWorksheetUrl("{{ period.slug }}"), data,
+            (data, status, xhr)=>{
+                if(xhr.status == 201) {
+                    window.location = "/app/period/{{ period.slug }}/statement-of-cash-flows/"
+                }
+            },
+            (data, status, xhr)=>{
+                alert("an error occured")
+            })
+
+
+
+        })
+    })
+</script>
+
+{% endblock %}

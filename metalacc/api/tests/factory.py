@@ -1,10 +1,13 @@
 
+import json
+
 from api.models import (
     Account,
     Company,
     Period,
     JournalEntry,
     JournalEntryLine,
+    CashFlowWorksheet,
 )
 
 class TestObjectFactory:
@@ -33,3 +36,8 @@ class TestObjectFactory:
         return Account.objects.create(
             company=company, user=company.user, name=name, type=acctype, number=number,
             is_current=is_current, is_contra=is_contra, is_operating=is_operating, tag=tag)
+
+    def create_cashflow_worksheet(self, period, data={}):
+        return CashFlowWorksheet.objects.create(
+            period=period, version_hash=period.version_hash,
+            data=json.dumps(data))

@@ -4,6 +4,7 @@ import csv
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.urls import reverse
@@ -647,6 +648,52 @@ def retained_earnings(request, slug):
         'breadcrumbs':breadcrumbs,
     }
     return render(request, "app_report_retained_earnings.html", data)
+
+
+@login_required
+def statement_of_cash_flows_worksheet(request, slug):
+    current_period = get_object_or_404(
+        Period, company__user=request.user, slug=slug)
+    company = current_period.company
+
+
+    cash_flow_worksheet = current_period.cash_flow_worksheet
+    is_complete = cash_flow_worksheet and cash_flow_worksheet.in_sync
+
+    worksheet = reports_lib.get_period_cash_flow_worksheet(current_period)
+    breadcrumbs = get_report_page_breadcrumbs(current_period, "Cash Flow Worksheet")
+    data = {
+        'is_complete':is_complete,
+        'period':current_period,
+        'breadcrumbs':breadcrumbs,
+        'worksheet':worksheet,
+        'has_cash_account':company.account_set.filter(tag=Account.TAG_CASH).exists(),
+    }
+    return render(request, "app_report_cash_flow_worksheet.html", data)
+
+
+@login_required
+def statement_of_cash_flows(request, slug):
+    current_period = get_object_or_404(
+        Period, company__user=request.user, slug=slug)
+    cash_flow_worksheet = current_period.cash_flow_worksheet
+    
+    # Redirect to the cashflow worksheet if one does not exist, or it's not in sync
+    if not cash_flow_worksheet:
+        return redirect("app-cash-flow-worksheet", slug=slug)
+    if not cash_flow_worksheet.in_sync:
+        cash_flow_worksheet.delete()
+        return redirect("app-cash-flow-worksheet", slug=slug)
+
+    cashflow_data = reports_lib.get_statement_of_cash_flows_data(current_period)
+    breadcrumbs = get_report_page_breadcrumbs(current_period, "Cash Flow Statement")
+    data = {
+        'period':current_period,
+        'breadcrumbs':breadcrumbs,
+        'cashflow_data':cashflow_data,
+    }
+    return render(request, "app_report_cash_flow_statement.html", data)
+
 
 # END OF REPORT PAGES
 

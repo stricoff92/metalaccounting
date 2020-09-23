@@ -1,14 +1,16 @@
 
-from collections import defaultdict
+from collections import defaultdict, Counter
+import json
 
-from django.db.models import Sum
+from django.db.models import Q, Sum
 
-from api.models import JournalEntry, JournalEntryLine, Account
+from api.models import JournalEntry, JournalEntryLine, Account, CashFlowWorksheet
 from api.utils import (
     get_company_periods_up_to_and_excluding,
     get_company_periods_up_to,
     get_dr_cr_balance,
     force_negative,
+    some,
 )
 
 def get_trial_balance_data(current_period):
@@ -507,5 +509,288 @@ def get_retained_earnings_data(current_period):
 
     dividends = (data['retained_earnings_start'] + net_income) - data['retained_earnings_end']
     data['dividends'] = dividends
+
+    return data
+
+KEY_CASHFLOW_OPERATIONS = 'operations'
+KEY_CASHFLOW_INVESTMENTS = 'investments'
+KEY_CASHFLOW_FINANCING = 'finances'
+def get_period_cash_flow_worksheet(period) -> tuple:
+    """ Determine whether or not a period requires a cashflow worksheet to be
+        completed before a statement of cash flows can be assembled.
+
+        A worksheet is required if the period has a 1 or more journal entries that
+        touches both CASH as well as a Non-Cash Current asset. A worksheet is needed in this
+        case because transactions that touch CASH as well as a Non-Cash Current asset
+        could be classified as activity from operations, OR activity from Investing.
+        We can't know for sure so we need user input via a cashflow worksheet if any
+        of these transactions exist for the period.
+    """
+    entries_analyzed = Counter()
+    company = period.company
+
+    # If a completed worksheet exists, we'll autofill
+    completed_worksheet = period.cash_flow_worksheet
+    if completed_worksheet and not completed_worksheet.in_sync:
+        completed_worksheet = None
+    if completed_worksheet:
+        completed_worksheet = {r['journal_entry']:r for r in completed_worksheet.worksheet_data}
+
+
+    # Fetch Account IDs by catagory
+    cash_accounts = (Account.objects
+        .filter(
+            company=company, tag=Account.TAG_CASH, type=Account.TYPE_ASSET,
+            is_current=True, is_contra=False)
+        .values_list("id", flat=True))
+
+    non_cash_current_asset_accounts = (Account.objects
+        .filter(
+            company=company, type=Account.TYPE_ASSET, is_current=True)
+        .filter(~Q(tag=Account.TAG_CASH))
+        .values_list("id", flat=True))
+
+    non_current_asset_accounts = (Account.objects
+        .filter(
+            company=company, type=Account.TYPE_ASSET, is_current=False)
+        .filter(~Q(tag=Account.TAG_CASH))
+        .values_list("id", flat=True))
+    
+    
+    liability_accounts = (Account.objects
+        .filter(
+            company=company, type=Account.TYPE_EXPENSE)
+        .values_list("id", flat=True))
+
+    equity_accounts = (Account.objects
+        .filter(
+            company=company, type=Account.TYPE_EXPENSE)
+        .values_list("id", flat=True))
+
+    income_statement_accounts = (Account.objects
+        .filter(
+            company=company, type__in=Account.OPERATING_TYPES)
+        .values_list("id", flat=True))
+
+    # Fetch journal entry ids that involve a cash account
+    cash_journal_entries = (JournalEntryLine.objects
+        .filter(account_id__in=cash_accounts, journal_entry__period=period)
+        .values_list("journal_entry_id", flat=True))
+    
+    jounral_entries = JournalEntry.objects.filter(id__in=cash_journal_entries).values("id", "date", "memo", "display_id", "slug")
+    jounral_entries = {je['id']:je for je in jounral_entries}
+
+    # Fetch all jounral entry lines associated with
+    journal_entry_lines = (JournalEntryLine.objects
+        .filter(journal_entry_id__in=cash_journal_entries)
+        .values("account_id", "account__name", "account__number", "account__tag", "journal_entry_id", "type", "amount"))
+    
+    # group up accounts by the jounral entries they fall into
+    jounral_entries_data = {}
+    for jel in journal_entry_lines:
+        je_id = jel['journal_entry_id']
+        if je_id not in jounral_entries_data:
+            jounral_entries_data[je_id] = {
+                JournalEntryLine.TYPE_DEBIT:[],
+                JournalEntryLine.TYPE_CREDIT:[],
+                "all_accounts":[],
+                'journal_entry_lines':[]
+            }
+        jounral_entries_data[je_id][jel['type']].append(jel['account_id'])
+        jounral_entries_data[je_id]['all_accounts'].append(jel['account_id'])
+        jounral_entries_data[je_id]['journal_entry_lines'].append(jel)
+    
+    # analyze 
+    worksheet = []
+    for je_id, accounts in jounral_entries_data.items():
+
+        cash_dr_total = sum(jel['amount'] for jel in accounts['journal_entry_lines'] if jel['type'] == JournalEntryLine.TYPE_DEBIT and jel['account_id'] in cash_accounts)
+        cash_cr_total = sum(jel['amount'] for jel in accounts['journal_entry_lines'] if jel['type'] == JournalEntryLine.TYPE_CREDIT and jel['account_id'] in cash_accounts)
+        cash_to_allocate = get_dr_cr_balance(cash_dr_total, cash_cr_total)
+
+        worksheet_row = {
+            'journal_entry_id':je_id,
+            'journal_entry_slug':jounral_entries[je_id]['slug'],
+            'debit_entries':[jel for jel in accounts['journal_entry_lines'] if jel['type'] == JournalEntryLine.TYPE_DEBIT],
+            'credit_entries':[jel for jel in accounts['journal_entry_lines'] if jel['type'] == JournalEntryLine.TYPE_CREDIT],
+            'memo':jounral_entries[je_id]['memo'],
+            'date':jounral_entries[je_id]['date'],
+            'display_id':jounral_entries[je_id]['display_id'],
+            'slug':jounral_entries[je_id]['slug'],
+            'cash_to_allocate':cash_to_allocate,
+            'auto_complete':{
+                'investments': completed_worksheet[jounral_entries[je_id]['slug']]['investments'] if completed_worksheet else 0,
+                'operations': completed_worksheet[jounral_entries[je_id]['slug']]['operations'] if completed_worksheet else 0,
+                'finances': completed_worksheet[jounral_entries[je_id]['slug']]['finances'] if completed_worksheet else 0,
+            },
+        }
+
+        worksheet.append(worksheet_row)
+    
+    return worksheet
+
+
+        # # Attempt to automatically classify an entry as a use/source of cash related to either
+        # # ops, investments, or financing.
+        
+        # # check which side of the JE has the cash account
+        # cash_on_dr = any(acc_id in cash_accounts for acc_id in accounts[JournalEntryLine.TYPE_DEBIT])
+        # cash_on_cr = any(acc_id in cash_accounts for acc_id in accounts[JournalEntryLine.TYPE_CREDIT])
+        # cash_on_one_side = some([cash_on_dr, cash_on_cr])
+
+        # # check if all DRs or all CRs are asset accounts
+        # all_dr_assets = all(
+        #         (acc_id in cash_accounts 
+        #         or acc_id in non_cash_current_asset_accounts
+        #         or acc_id in non_current_asset_accounts)
+        #     for acc_id in accounts[JournalEntryLine.TYPE_DEBIT])
+        # all_cr_assets = all(
+        #         (acc_id in cash_accounts 
+        #         or acc_id in non_cash_current_asset_accounts
+        #         or acc_id in non_current_asset_accounts)
+        #     for acc_id in accounts[JournalEntryLine.TYPE_CREDIT])
+        
+        # # check if all DRs or all CRs are liability/equity accounts
+        # all_dr_liability_equity = all(
+        #         (acc_id in liability_accounts 
+        #         or acc_id in equity_accounts)
+        #     for acc_id in accounts[JournalEntryLine.TYPE_DEBIT])
+        # all_cr_liability_equity = all(
+        #         (acc_id in liability_accounts 
+        #         or acc_id in equity_accounts)
+        #     for acc_id in accounts[JournalEntryLine.TYPE_CREDIT])
+
+        # # check if all DRs or all CRs are operating accounts
+        # all_dr_operating = all(acc_id in income_statement_accounts for acc_id in accounts[JournalEntryLine.TYPE_DEBIT])
+        # all_cr_operating = all(acc_id in income_statement_accounts for acc_id in accounts[JournalEntryLine.TYPE_CREDIT])
+
+        # # check if all DRs or all CRs are PPE
+        # all_dr_ppe = all(acc_id in non_current_asset_accounts for acc_id in accounts[JournalEntryLine.TYPE_DEBIT])
+        # all_cr_ppe = all(acc_id in non_current_asset_accounts for acc_id in accounts[JournalEntryLine.TYPE_CREDIT])
+
+        
+        # if cash_on_one_side and cash_on_dr and all_cr_liability_equity:
+        #     entries_analyzed['auto_complete_ok'] += 1
+        #     worksheet_row['auto_complete'] = "finances"
+        #     worksheet.append(worksheet_row)
+        # elif cash_on_one_side and cash_on_cr and all_dr_liability_equity:
+        #     entries_analyzed['auto_complete_ok'] += 1
+        #     worksheet_row['auto_complete'] = "finances"
+        #     worksheet.append(worksheet_row)
+        
+        # elif cash_on_one_side and cash_on_dr and all_cr_operating:
+        #     entries_analyzed['auto_complete_ok'] += 1
+        #     worksheet_row['auto_complete'] = "operations"
+        #     worksheet.append(worksheet_row)
+        # elif cash_on_one_side and cash_on_cr and all_dr_operating:
+        #     entries_analyzed['auto_complete_ok'] += 1
+        #     worksheet_row['auto_complete'] = "operations"
+        #     worksheet.append(worksheet_row)
+
+        # elif cash_on_one_side and cash_on_dr and all_cr_ppe:
+        #     entries_analyzed['auto_complete_ok'] += 1
+        #     worksheet_row['auto_complete'] = "investments"
+        #     worksheet.append(worksheet_row)
+        # elif cash_on_one_side and cash_on_cr and all_dr_ppe:
+        #     entries_analyzed['auto_complete_ok'] += 1
+        #     worksheet_row['auto_complete'] = "investments"
+        #     worksheet.append(worksheet_row)        
+
+        # else:
+        #     # Failed to identify the classification
+        #     entries_analyzed['auto_complete_failed'] += 1
+        #     worksheet.append(worksheet_row)
+
+
+
+def create_cash_flow_worksheet(period, data) -> dict:
+    return CashFlowWorksheet.objects.create(
+        period=period,
+        version_hash=period.version_hash,
+        data=json.dumps(data))
+
+
+def get_statement_of_cash_flows_data(period):
+    if not period.cash_flow_worksheet:
+        raise ValueError("Expected worksheet")
+    if not period.cash_flow_worksheet.in_sync:
+        raise ValueError("Period worksheet is not valid")
+    
+
+
+    # get cash balance at beginning of period
+    previous_periods = get_company_periods_up_to_and_excluding(period)
+    previous_cash_balance = 0
+    entries = (JournalEntryLine.objects
+        .filter(
+            journal_entry__period__in=previous_periods, account__tag=Account.TAG_CASH)
+        .values("type", "amount"))
+    for entry in entries:
+        if entry['type'] == JournalEntryLine.TYPE_DEBIT:
+            previous_cash_balance += entry['amount']
+        elif entry['type'] == JournalEntryLine.TYPE_CREDIT:
+            previous_cash_balance -= entry['amount']
+        else:
+            raise NotImplementedError()
+    
+    # get cash balance at end of period
+    current_periods = get_company_periods_up_to(period)
+    current_cash_balance = 0
+    entries = (JournalEntryLine.objects
+        .filter(
+            journal_entry__period__in=current_periods, account__tag=Account.TAG_CASH)
+        .values("type", "amount"))
+    for entry in entries:
+        if entry['type'] == JournalEntryLine.TYPE_DEBIT:
+            current_cash_balance += entry['amount']
+        elif entry['type'] == JournalEntryLine.TYPE_CREDIT:
+            current_cash_balance -= entry['amount']
+        else:
+            raise NotImplementedError()
+
+    worksheet_data = get_period_cash_flow_worksheet(period)
+    income_data = _invoice_statement_date_for_period(period)
+
+    income_data['net_income'] = ((
+        income_data['operating_revenue']['total']
+        + income_data['non_operating_revenue']['total'])
+        - (
+            income_data['operating_expense']['total']
+            + income_data['non_operating_expense']['total']))
+
+    data = {
+        'income_data':income_data,
+        'previous_cash_balance':previous_cash_balance,
+        'current_cash_balance':current_cash_balance,
+        'cash_from_operations':0,
+        'cash_for_operations':0,
+        'net_cash_from_operations':0,
+        'cash_from_investments':0,
+        'cash_for_investments':0,
+        'net_cash_from_investments':0,
+        'cash_from_financing':0,
+        'cash_for_financing':0,
+        'net_cash_from_financing':0,
+        'net_cash':0
+    }
+
+    for ws_row in worksheet_data:
+        cash_dr_amount = sum(r['amount'] for r in ws_row['debit_entries'] if r['account__tag'] == Account.TAG_CASH)
+        cash_cr_amount = sum(r['amount'] for r in ws_row['credit_entries'] if r['account__tag'] == Account.TAG_CASH)
+        is_source = cash_dr_amount > cash_cr_amount
+        if is_source:
+            data['cash_from_operations'] += ws_row['auto_complete']['operations']
+            data['cash_from_investments'] += ws_row['auto_complete']['investments']
+            data['cash_from_financing'] += ws_row['auto_complete']['finances']
+        else:
+            data['cash_for_operations'] += ws_row['auto_complete']['operations']
+            data['cash_for_investments'] += ws_row['auto_complete']['investments']
+            data['cash_for_financing'] += ws_row['auto_complete']['finances']
+    
+    # Calculate net cash.
+    data['net_cash_from_operations'] = data['cash_from_operations'] - data['cash_for_operations']
+    data['net_cash_from_investments'] = data['cash_from_investments'] - data['cash_for_investments']
+    data['net_cash_from_financing'] = data['cash_from_financing'] - data['cash_for_financing']
+    data['net_cash'] = data['net_cash_from_operations'] + data['net_cash_from_investments'] + data['net_cash_from_financing']
 
     return data

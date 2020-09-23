@@ -22,8 +22,8 @@
         </div>
     </div>
     <div class="card-body" id="report-container">
-        <div class="row">
-            <div class="col-4 col-lg-2">
+        <div class="row mt-3 p-1">
+            <div class="col-4 col-lg-4">
                 <p>
                     <a
                         href="/app/period/{{ period.slug }}/trial-balance/"
@@ -34,15 +34,15 @@
                     </a>
                 </p>
             </div>
-            <div class="col-8 col-lg-10">
+            <div class="col-8 col-lg-8">
                 <p>
                     See a list of all account balances through this period before
                     and after adjusting entries have been made. Closing entries for the current period are excluded.
                 </p>
             </div>
         </div>
-        <div class="row">
-            <div class="col-4 col-lg-2">
+        <div class="row mt-3 p-1">
+            <div class="col-4 col-lg-4">
                 <p>
                     <a
                         href="/app/period/{{ period.slug }}/income-statement/"
@@ -53,14 +53,14 @@
                     </a>
                 </p>
             </div>
-            <div class="col-8 col-lg-10">
+            <div class="col-8 col-lg-8">
                 <p>
-                    Measure profitability of the company through this period. Performance is compared to the company's previous period.
+                    Measure profitability of the company during this period. Performance is compared to the company's previous period.
                 </p>
             </div>
         </div>
-        <div class="row">
-            <div class="col-4 col-lg-2">
+        <div class="row mt-3 p-1">
+            <div class="col-4 col-lg-4">
                 <p>
                     <a
                         href="/app/period/{{ period.slug }}/balance-sheet/"
@@ -71,14 +71,14 @@
                     </a>
                 </p>
             </div>
-            <div class="col-8 col-lg-10">
+            <div class="col-8 col-lg-8">
                 <p>
-                   See a spanshot of assets, liabilities, and equity associated with this company through this period.
+                   See a snapshot of assets, liabilities, and equity associated with this company through this period.
                 </p>
             </div>
         </div>
-        <div class="row">
-            <div class="col-4 col-lg-2">
+        <div class="row mt-3 p-1">
+            <div class="col-4 col-lg-4">
                 <p>
                     <a
                         href="/app/period/{{ period.slug }}/statement-of-retained-earnings/"
@@ -89,9 +89,27 @@
                     </a>
                 </p>
             </div>
-            <div class="col-8 col-lg-10">
+            <div class="col-8 col-lg-8">
                 <p>
-                    See a spanshot of assets, liabilities, and equity associated with this company through this period.
+                    See the impact this period had on Retained Earnings.
+                </p>
+            </div>
+        </div>
+        <div class="row mt-3 p-1">
+            <div class="col-4 col-lg-4">
+                <p>
+                    <a
+                        href="/app/period/{{ period.slug }}/statement-of-cash-flows/"
+                        {{ user.userprofile.target_attr }}
+                    >
+                        <i class="fas fa-comment-dollar"></i>
+                        Cash Flow Statement
+                    </a>
+                </p>
+            </div>
+            <div class="col-8 col-lg-8">
+                <p>
+                   Analyze sources and uses of cash equivalents during this period. 
                 </p>
             </div>
         </div>

@@ -26,6 +26,16 @@ urlpatterns = [
     path('period/edit/<slug:slug>/', views.period_edit, name="period-edit"),
     path('period/delete/<slug:slug>/', views.period_delete, name="period-delete"),
 
+    # Cashflow worksheet routes
+    path(
+        'period/<slug:slug>/reset-cashflow-worksheet/',
+        views.period_reset_cashflow_worksheet,
+        name="period-reset-cashflow-worksheet"),
+    path(
+        'period/<slug:slug>/create-cashflow-worksheet/',
+        views.create_cashflow_worksheet,
+        name="period-create-cashflow-worksheet"),
+
     # Account Routes
     path('account/list/', views.account_list, name="account-list"),
     path('account/new/', views.account_new, name="account-new"),

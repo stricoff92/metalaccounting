@@ -1,0 +1,4 @@
+
+#!/bin/bash
+
+env DJANGO_ALLOW_ASYNC_UNSAFE=true ./manage.py shell_plus --notebook
