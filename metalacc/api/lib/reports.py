@@ -13,6 +13,77 @@ from api.utils import (
     some,
 )
 
+def get_journal_entry_impact_on_accounting_equation(journal_entry):
+    increases_to_assets = 0
+    decreases_to_assets = 0
+    increases_to_liabilities = 0
+    decreases_to_liabilities = 0
+    increases_to_equity = 0
+    decreases_to_equity = 0
+    rows = []
+
+    for jel in journal_entry.lines.all():
+        if jel.account.type == Account.TYPE_ASSET:
+            if jel.type == JournalEntryLine.TYPE_DEBIT:
+                increases_to_assets += jel.amount
+                rows.append({Account.TYPE_ASSET:jel.amount, Account.TYPE_LIABILITY:0, Account.TYPE_EQUITY:0})
+            elif jel.type == JournalEntryLine.TYPE_CREDIT:
+                decreases_to_assets += jel.amount
+                rows.append({Account.TYPE_ASSET:jel.amount*-1, Account.TYPE_LIABILITY:0, Account.TYPE_EQUITY:0})
+            else:
+                raise NotImplementedError()
+
+        elif jel.account.type == Account.TYPE_LIABILITY:
+            if jel.type == JournalEntryLine.TYPE_CREDIT:
+                increases_to_liabilities += jel.amount
+                rows.append({Account.TYPE_ASSET:0, Account.TYPE_LIABILITY:jel.amount, Account.TYPE_EQUITY:0})
+            elif jel.type == JournalEntryLine.TYPE_DEBIT:
+                decreases_to_liabilities += jel.amount
+                rows.append({Account.TYPE_ASSET:0, Account.TYPE_LIABILITY:jel.amount*-1, Account.TYPE_EQUITY:0})
+            else:
+                raise NotImplementedError()
+
+        elif jel.account.type == Account.TYPE_EQUITY:
+            if jel.type == JournalEntryLine.TYPE_CREDIT:
+                increases_to_equity += jel.amount
+                rows.append({Account.TYPE_ASSET:0, Account.TYPE_LIABILITY:0, Account.TYPE_EQUITY:jel.amount})
+            elif jel.type == JournalEntryLine.TYPE_DEBIT:
+                decreases_to_equity += jel.amount
+                rows.append({Account.TYPE_ASSET:0, Account.TYPE_LIABILITY:0, Account.TYPE_EQUITY:jel.amount*-1})
+            else:
+                raise NotImplementedError()
+
+        elif jel.account.type == Account.TYPE_REVENUE:
+            if jel.type == JournalEntryLine.TYPE_CREDIT:
+                increases_to_equity += jel.amount
+                rows.append({Account.TYPE_ASSET:0, Account.TYPE_LIABILITY:0, Account.TYPE_EQUITY:jel.amount})
+            elif jel.type == JournalEntryLine.TYPE_DEBIT:
+                decreases_to_equity += jel.amount
+                rows.append({Account.TYPE_ASSET:0, Account.TYPE_LIABILITY:0, Account.TYPE_EQUITY:jel.amount*-1})
+            else:
+                raise NotImplementedError()
+
+        elif jel.account.type == Account.TYPE_EXPENSE:
+            if jel.type == JournalEntryLine.TYPE_CREDIT:
+                increases_to_equity += jel.amount
+                rows.append({Account.TYPE_ASSET:0, Account.TYPE_LIABILITY:0, Account.TYPE_EQUITY:jel.amount})
+            elif jel.type == JournalEntryLine.TYPE_DEBIT:
+                decreases_to_equity += jel.amount
+                rows.append({Account.TYPE_ASSET:0, Account.TYPE_LIABILITY:0, Account.TYPE_EQUITY:jel.amount*-1})
+            else:
+                raise NotImplementedError()
+
+        else:
+            raise NotImplementedError()
+    
+    return {
+        'delta_assets':increases_to_assets - decreases_to_assets,
+        'delta_liabilities': increases_to_liabilities - decreases_to_liabilities,
+        'delta_equity':increases_to_equity - decreases_to_equity,
+        'rows':rows,
+    }
+
+
 def get_trial_balance_data(current_period):
     company = current_period.company
 

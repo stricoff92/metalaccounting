@@ -151,6 +151,11 @@
             function numberWithCommas(x) {
                 return (x-0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             }
+            function numberWithCommasAndPlus(x) {
+                const isPositive = (x-0) > 0
+                const prefix = isPositive ? "+" : ""
+                return prefix + (x-0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
             function postJson(url, data, successCb, errorCb) {
                 $.ajax({
                     url,

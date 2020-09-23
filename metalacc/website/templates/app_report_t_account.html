@@ -166,7 +166,7 @@
                 
             </div>
         </div>
-        <div id="row-details-div-{{ row.journal_entry__slug }}" style="display:none;">
+        <div id="row-details-div-{{ row.journal_entry__slug }}" style="display:none;" class="mt-2">
             <div class="card pt-1 pb-1 pl-2 pr-2 mt-1 mb-3">
                 <div id="journal-entry-container-{{ row.journal_entry__slug }}">
 
@@ -176,7 +176,11 @@
     {% endfor %}
 </div>
 <script>
-    function drawJournalEntry(journalEntry) {
+    function drawJournalEntry(journalEntryData) {
+        const journalEntry = journalEntryData.journal_entry
+        const journalEntryAnalysis = journalEntryData.analysis
+        console.log(journalEntryAnalysis)
+
         const entryContainerDiv = document.createElement("div")
         $(entryContainerDiv).addClass("p-2 mt-2 journal-entry-container")
 
@@ -247,13 +251,28 @@
             $(gotoAnchor).attr("target", "_blank")
         }
 
-        const bottomRowDiv = document.createElement("div") // bottom row
-        $(bottomRowDiv).addClass("mt-3")
-        $(bottomRowDiv).css({display:'flex'})
-        $(bottomRowDiv).append(gotoAnchor)
-        $(bottomRowDiv).append(jeMemoDiv)
+        const memoDateRowDiv = document.createElement("div") // memo & entry row
+        $(memoDateRowDiv).addClass("mt-3")
+        $(memoDateRowDiv).css({display:'flex'})
+        $(memoDateRowDiv).append(gotoAnchor)
+        $(memoDateRowDiv).append(jeMemoDiv)
+        entryContainerDiv.append(memoDateRowDiv)
 
-        entryContainerDiv.append(bottomRowDiv)
+        const accountingEqRow = document.createElement("div") // Accounting Equation analysis
+        $(accountingEqRow).addClass("mt-3")
+        $(accountingEqRow).html(`
+            <hr>
+            <table>
+                <tr><th></th><th>Assets = </th><th>Liabilities +</th><th>Equity</th><tr>
+                <tr>
+                    <td style="padding:6px;">Net Adjustments:</td>
+                    <td style="padding:6px;">${numberWithCommasAndPlus(journalEntryAnalysis.delta_assets)}</td>
+                    <td style="padding:6px;">${numberWithCommasAndPlus(journalEntryAnalysis.delta_liabilities)}</td>
+                    <td style="padding:6px;">${numberWithCommasAndPlus(journalEntryAnalysis.delta_equity)}</td></tr>
+            </table>
+        `)
+
+        entryContainerDiv.append(accountingEqRow)
 
         $('#journal-entry-container-' + journalEntry.slug).append(entryContainerDiv)
 
@@ -263,9 +282,9 @@
             $(e.target).prop("disabled", true)
             const jeslug = $(e.target).attr("jeslug")
             
-            $.get(journalEntryDetailsUrl(jeslug), (journalEntry, status, xhr)=>{
+            $.get(journalEntryDetailsUrl(jeslug), (journalEntryData, status, xhr)=>{
                 if(xhr.status == 200) {
-                    drawJournalEntry(journalEntry)
+                    drawJournalEntry(journalEntryData)
                     $("#row-details-div-" + jeslug).slideDown(150, ()=>{
                         
                     })

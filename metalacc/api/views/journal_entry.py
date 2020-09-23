@@ -11,6 +11,7 @@ from rest_framework import status, serializers
 
 from api.models import JournalEntry, JournalEntryLine, Period
 from api.forms.journal_entry import NewJournalEntryForm, NewJournalEntryLineForm
+from api.lib.reports import get_journal_entry_impact_on_accounting_equation
 
 
 # Serializers for these views
@@ -119,7 +120,11 @@ def journal_entry_list(request, slug):
 def journal_entry_details(request, slug):
     journal_entry = get_object_or_404(
         JournalEntry, slug=slug, period__company__user=request.user)
-    data = JournalEntrySerializer(journal_entry).data
+    
+    data = {
+        'journal_entry':JournalEntrySerializer(journal_entry).data,
+        'analysis':get_journal_entry_impact_on_accounting_equation(journal_entry),
+    }
     return Response(data, status.HTTP_200_OK)
 
 
