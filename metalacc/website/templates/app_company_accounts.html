@@ -10,6 +10,17 @@
         <i class="fas fa-plus-square"></i>
         New Account
     </button>
+
+    <div class="alert alert-secondary ml-3 p-2" style="display:inline-block">
+        <a
+            href="/app/company/{{ company.slug }}/account/csv/"
+            target="_blank"
+        >
+            <i class="fas fa-file-csv"></i>
+            Download as CSV
+        </a>
+    </div>
+
     <div id="new-company-form" style="display:none" class="card mt-4 mb-3 p-3">
         <p class="heading-2">Create a New Account</p>
         <div

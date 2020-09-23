@@ -173,6 +173,25 @@ def app_company_accounts(request, slug):
 
 
 @login_required
+def app_company_accounts_csv(request, slug):
+    company = get_object_or_404(
+        Company, user=request.user, slug=slug)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="company-accounts{slug}.csv"'
+    writer = csv.writer(response)
+    writer.writerow(["name", "number", "type", "is_contra", "is_current", "is_operating", "tag"])
+
+    for row in company.account_set.values_list(
+        "name", "number", "type", "is_contra", "is_current", "is_operating", "tag"):
+
+        writer.writerow(row)
+
+    return response
+
+
+
+@login_required
 def app_account_details(request, slug):
     account = get_object_or_404(
         Account, company__user=request.user, slug=slug)
