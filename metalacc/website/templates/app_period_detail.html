@@ -263,8 +263,8 @@ function resetNewJournalEntryForm (){
     $('#cr-section').empty()
     $("#dr-total-span").text("0")
     $("#cr-total-span").text("0")
-    addAccountRowLine(true)
-    addAccountRowLine(false)
+    addAccountRowLine(true, true)
+    addAccountRowLine(false, true)
     $("#new-journal-entry-memo-input").val("")
 }
 function resetNewJournalEntryFormErrors() {
@@ -366,13 +366,16 @@ function updateDrCrTotals() {
     $("#dr-total-span").text(numberWithCommas(drTotal))
     $("#cr-total-span").text(numberWithCommas(crTotal))  
 }
-function addAccountRowLine(isDebit) {
+function addAccountRowLine(isDebit, disableDeleteBtn) {
     const rowUID  = getNewUID()
     $(`#${isDebit ? 'dr-section' : 'cr-section'}`).append(`
-        <div class="mt-1 row account-input-row ${isDebit ? 'dr' : 'cr'}-row" rowuid="${rowUID}">
+        <div class="mt-1 row account-input-row ${isDebit ? 'dr' : 'cr'}-row" rowuid="${rowUID}" id="account-input-row-${rowUID}">
             <div class="col-8" style="display:flex;">
+                <button class="btn btn-danger mr-1 ${!isDebit ? 'ml-5' : ''}" id="drop-row-btn-${rowUID}" ${disableDeleteBtn ? 'disabled' : ''}>
+                    X
+                </button>
                 <select
-                    class="form-control ${!isDebit ? 'ml-5' : ''}"
+                    class="form-control"
                     id="account-select-${rowUID}"
                 >
                     <option value="">--</option>
@@ -386,6 +389,9 @@ function addAccountRowLine(isDebit) {
             </div>
         </div>
     `)
+    $("#drop-row-btn-" + rowUID).click(()=>{
+        $("#account-input-row-" + rowUID).remove()
+    })
     $('#amount-input-' + rowUID).keydown(()=>{
         setTimeout(updateDrCrTotals)
     })
@@ -451,8 +457,8 @@ $(document).ready(()=>{
         (accounts, status, xhr)=>{
             if(xhr.status == 200) {
                 $("body").data('accounts', accounts)
-                addAccountRowLine(true)
-                addAccountRowLine(false)
+                addAccountRowLine(true, true)
+                addAccountRowLine(false, true)
                 return
             }
             alert("An error occured: " + status)
@@ -460,11 +466,11 @@ $(document).ready(()=>{
     )
     $("#add-dr-row-btn").click(()=>{
         const isDr = true
-        addAccountRowLine(isDr)
+        addAccountRowLine(isDr, false)
     })
     $("#add-cr-row-btn").click(()=>{
         const isDr = false
-        addAccountRowLine(isDr)
+        addAccountRowLine(isDr, false)
     })
     const fetchPage = (page) => {
         const url = listJournalEntriesUrl('{{ period.slug }}') + "?page=" + page
