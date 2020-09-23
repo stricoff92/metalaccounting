@@ -35,4 +35,136 @@
         })
     })
 </script>
+<div class="mt-5 pt-3">
+    <div class="row report-row p-2">
+        <div class="col-8">
+            <strong>Cash Balance as of {{ period.start|date:"M j, Y" }}</strong>
+        </div>
+        <div class="col-3">
+            {{ cashflow_data.previous_cash_balance|intcomma }}
+        </div>
+    </div>
+    <div class="row report-row p-2 border-bottom">
+        <div class="col-8">
+            Net Income
+        </div>
+        <div class="col-3">
+            {{ cashflow_data.income_data.net_income|intcomma }}
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-8">
+            <p class="heading-3 mb-1">Cash Flow From Operations</p>
+        </div>
+        <div class="col-3">
+        </div>
+    </div>
+    <div class="row report-row p-2">
+        <div class="col-8">
+            Sources of Cash
+        </div>
+        <div class="col-3">
+            {{ cashflow_data.cash_from_operations|intcomma }}
+        </div>
+    </div>
+    <div class="row report-row p-2">
+        <div class="col-8">
+            Uses of Cash
+        </div>
+        <div class="col-3">
+            {{ cashflow_data.cash_for_operations|intcomma }}
+        </div>
+    </div>
+    <div class="row report-row p-2">
+        <div class="col-8">
+            Net Cash from Operations
+        </div>
+        <div class="col-3">
+            {{ cashflow_data.net_cash_from_operations|intcomma }}
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-8">
+            <p class="heading-3 mb-1">Cash Flow From Investment Activity</p>
+        </div>
+        <div class="col-3">
+        </div>
+    </div>
+    <div class="row report-row p-2">
+        <div class="col-8">
+            Sources of Cash
+        </div>
+        <div class="col-3">
+            {{ cashflow_data.cash_from_investments|intcomma }}
+        </div>
+    </div>
+    <div class="row report-row p-2">
+        <div class="col-8">
+            Uses of Cash
+        </div>
+        <div class="col-3">
+            {{ cashflow_data.cash_for_investments|intcomma }}
+        </div>
+    </div>
+    <div class="row report-row p-2">
+        <div class="col-8">
+            Net Cash from Investment Activities
+        </div>
+        <div class="col-3">
+            {{ cashflow_data.net_cash_from_investments|intcomma }}
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-8">
+            <p class="heading-3 mb-1">Cash Flow From Financing Activities</p>
+        </div>
+        <div class="col-3">
+        </div>
+    </div>
+    <div class="row report-row p-2">
+        <div class="col-8">
+            Sources of Cash
+        </div>
+        <div class="col-3">
+            {{ cashflow_data.cash_from_financing|intcomma }}
+        </div>
+    </div>
+    <div class="row report-row p-2">
+        <div class="col-8">
+            Uses of Cash
+        </div>
+        <div class="col-3">
+            {{ cashflow_data.cash_for_financing|intcomma }}
+        </div>
+    </div>
+    <div class="row report-row p-2">
+        <div class="col-8">
+            Net Cash from Investment Activities
+        </div>
+        <div class="col-3">
+            {{ cashflow_data.net_cash_from_financing|intcomma }}
+        </div>
+    </div>
+
+    <div class="row report-row p-2 mt-4 border-top">
+        <div class="col-8">
+            Net Cash
+        </div>
+        <div class="col-3">
+            {{ cashflow_data.net_cash|intcomma }}
+        </div>
+    </div>
+    <div class="row report-row p-2">
+        <div class="col-8">
+            <strong>Cash Balance as of {{ period.end|date:"M j, Y" }}</strong>
+        </div>
+        <div class="col-3">
+            {{ cashflow_data.current_cash_balance|intcomma }}
+        </div>
+    </div>
+
+</div>
 {% endblock %}

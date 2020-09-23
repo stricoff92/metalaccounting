@@ -685,13 +685,12 @@ def statement_of_cash_flows(request, slug):
         cash_flow_worksheet.delete()
         return redirect("app-cash-flow-worksheet", slug=slug)
 
-    cash_flow_worksheet = reports_lib.get_period_cash_flow_worksheet(current_period)
-
-
+    cashflow_data = reports_lib.get_statement_of_cash_flows_data(current_period)
     breadcrumbs = get_report_page_breadcrumbs(current_period, "Cash Flow Statement")
     data = {
         'period':current_period,
         'breadcrumbs':breadcrumbs,
+        'cashflow_data':cashflow_data,
     }
     return render(request, "app_report_cash_flow_statement.html", data)
 

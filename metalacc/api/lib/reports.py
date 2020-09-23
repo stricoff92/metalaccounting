@@ -708,3 +708,89 @@ def create_cash_flow_worksheet(period, data) -> dict:
         period=period,
         version_hash=period.version_hash,
         data=json.dumps(data))
+
+
+def get_statement_of_cash_flows_data(period):
+    if not period.cash_flow_worksheet:
+        raise ValueError("Expected worksheet")
+    if not period.cash_flow_worksheet.in_sync:
+        raise ValueError("Period worksheet is not valid")
+    
+
+
+    # get cash balance at beginning of period
+    previous_periods = get_company_periods_up_to_and_excluding(period)
+    previous_cash_balance = 0
+    entries = (JournalEntryLine.objects
+        .filter(
+            journal_entry__period__in=previous_periods, account__tag=Account.TAG_CASH)
+        .values("type", "amount"))
+    for entry in entries:
+        if entry['type'] == JournalEntryLine.TYPE_DEBIT:
+            previous_cash_balance += entry['amount']
+        elif entry['type'] == JournalEntryLine.TYPE_CREDIT:
+            previous_cash_balance -= entry['amount']
+        else:
+            raise NotImplementedError()
+    
+    # get cash balance at end of period
+    current_periods = get_company_periods_up_to(period)
+    current_cash_balance = 0
+    entries = (JournalEntryLine.objects
+        .filter(
+            journal_entry__period__in=current_periods, account__tag=Account.TAG_CASH)
+        .values("type", "amount"))
+    for entry in entries:
+        if entry['type'] == JournalEntryLine.TYPE_DEBIT:
+            current_cash_balance += entry['amount']
+        elif entry['type'] == JournalEntryLine.TYPE_CREDIT:
+            current_cash_balance -= entry['amount']
+        else:
+            raise NotImplementedError()
+
+    worksheet_data = get_period_cash_flow_worksheet(period)
+    income_data = _invoice_statement_date_for_period(period)
+
+    income_data['net_income'] = ((
+        income_data['operating_revenue']['total']
+        + income_data['non_operating_revenue']['total'])
+        - (
+            income_data['operating_expense']['total']
+            + income_data['non_operating_expense']['total']))
+
+    data = {
+        'income_data':income_data,
+        'previous_cash_balance':previous_cash_balance,
+        'current_cash_balance':current_cash_balance,
+        'cash_from_operations':0,
+        'cash_for_operations':0,
+        'net_cash_from_operations':0,
+        'cash_from_investments':0,
+        'cash_for_investments':0,
+        'net_cash_from_investments':0,
+        'cash_from_financing':0,
+        'cash_for_financing':0,
+        'net_cash_from_financing':0,
+        'net_cash':0
+    }
+
+    for ws_row in worksheet_data:
+        cash_dr_amount = sum(r['amount'] for r in ws_row['debit_entries'] if r['account__tag'] == Account.TAG_CASH)
+        cash_cr_amount = sum(r['amount'] for r in ws_row['credit_entries'] if r['account__tag'] == Account.TAG_CASH)
+        is_source = cash_dr_amount > cash_cr_amount
+        if is_source:
+            data['cash_from_operations'] += ws_row['auto_complete']['operations']
+            data['cash_from_investments'] += ws_row['auto_complete']['investments']
+            data['cash_from_financing'] += ws_row['auto_complete']['finances']
+        else:
+            data['cash_for_operations'] += ws_row['auto_complete']['operations']
+            data['cash_for_investments'] += ws_row['auto_complete']['investments']
+            data['cash_for_financing'] += ws_row['auto_complete']['finances']
+    
+    # Calculate net cash.
+    data['net_cash_from_operations'] = data['cash_from_operations'] - data['cash_for_operations']
+    data['net_cash_from_investments'] = data['cash_from_investments'] - data['cash_for_investments']
+    data['net_cash_from_financing'] = data['cash_from_financing'] - data['cash_for_financing']
+    data['net_cash'] = data['net_cash_from_operations'] + data['net_cash_from_investments'] + data['net_cash_from_financing']
+
+    return data
