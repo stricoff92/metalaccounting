@@ -146,6 +146,21 @@ def app_period_detail(request, slug):
 
 
 @login_required
+def app_jounral_entry_detail(request, slug):
+    journal_entry = get_object_or_404(
+        JournalEntry, slug=slug, period__company__user=request.user)
+    period = journal_entry.period
+    company = period.company
+
+    data = {
+        'journal_entry':journal_entry,
+        'period':period,
+        'company':company,
+    }
+    return render(request, "journal_entry_details.html", data)
+
+
+@login_required
 def app_company_accounts(request, slug):
     company = get_object_or_404(
         Company, user=request.user, slug=slug)

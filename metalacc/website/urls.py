@@ -17,6 +17,8 @@ urlpatterns = [
     path('app/account/<slug:slug>/', views.app_account_details, name="app-account-details"),
     path('app/period/<slug:slug>/', views.app_period_detail, name="app-period-details"),
 
+    path('app/journal_entry/<slug:slug>/', views.app_jounral_entry_detail, name="app-journal-entry-details"),
+
     path('app/period/<slug:period_slug>/taccount/<slug:account_slug>/', views.t_account, name="app-t-account"),
 
     path('app/period/<slug:slug>/trial-balance/', views.trial_balance, name="app-trial-balance"),
