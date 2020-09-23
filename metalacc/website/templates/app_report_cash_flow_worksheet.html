@@ -292,6 +292,11 @@
                 let journalEntryCashAmount = ($("body").data("cash-to-allocate-" + journalEntrySlug) || 0) - 0
                 if(journalEntryCashAmount != totalAllocatedCash) {
                     journalEntriesWithInvalidCashAmount.push(journalEntrySlug)
+                } else if (dataByJournalEntry[journalEntrySlug].operations < 0
+                            || dataByJournalEntry[journalEntrySlug].investments < 0
+                            || dataByJournalEntry[journalEntrySlug].finances < 0){
+
+                    journalEntriesWithInvalidCashAmount.push(journalEntrySlug)
                 } else {
                     data.push({
                         journal_entry_slug: journalEntrySlug,

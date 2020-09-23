@@ -179,6 +179,7 @@
     function drawJournalEntry(journalEntryData) {
         const journalEntry = journalEntryData.journal_entry
         const journalEntryAnalysis = journalEntryData.analysis
+        console.log(journalEntryAnalysis)
 
         const entryContainerDiv = document.createElement("div")
         $(entryContainerDiv).addClass("p-2 mt-2 journal-entry-container")
@@ -259,17 +260,35 @@
 
         const accountingEqRow = document.createElement("div") // Accounting Equation analysis
         $(accountingEqRow).addClass("mt-3")
-        $(accountingEqRow).html(`
-            <hr>
-            <table>
-                <tr><th></th><th>Assets = </th><th>Liabilities +</th><th>Equity</th><tr>
-                <tr>
-                    <td style="padding:6px;">Net Adjustments:</td>
-                    <td style="padding:6px;">${numberWithCommasAndPlus(journalEntryAnalysis.delta_assets)}</td>
-                    <td style="padding:6px;">${numberWithCommasAndPlus(journalEntryAnalysis.delta_liabilities)}</td>
-                    <td style="padding:6px;">${numberWithCommasAndPlus(journalEntryAnalysis.delta_equity)}</td></tr>
-            </table>
-        `)
+        $(accountingEqRow).css("font-size", "1.25rem")
+        let tableHTML = `<hr><table><tr><th style="padding:5px;">Assets = </th><th style="padding:5px;">Liabilities +</th><th style="padding:5px;">Equity</th><tr>
+            <tr class="border-bottom report-row-highlight">
+                <td>${numberWithCommasAndPlus(journalEntryAnalysis.delta_assets)}</td>
+                <td>${numberWithCommasAndPlus(journalEntryAnalysis.delta_liabilities)}</td>
+                <td>${numberWithCommasAndPlus(journalEntryAnalysis.delta_equity)}</td>
+            </tr>`
+        let ix = 0
+        let asset_value
+        let liability_value
+        let equity_value
+        while (true) {
+            asset_value = journalEntryAnalysis.asset_rows[ix]
+            liability_value = journalEntryAnalysis.liability_rows[ix]
+            equity_value = journalEntryAnalysis.equity_rows[ix]
+            if (!asset_value && !liability_value && !equity_value) {
+                break
+            }
+            asset_value = asset_value ? asset_value : null
+            liability_value = liability_value ? liability_value : null
+            equity_value = equity_value ? equity_value : null
+            tableHTML = tableHTML + `
+                <tr><td>${asset_value ? numberWithCommasAndPlus(asset_value) : ''}</td>
+                <td>${liability_value ? numberWithCommasAndPlus(liability_value) : ''}</td>
+                <td>${equity_value ? numberWithCommasAndPlus(equity_value) : ''}</td></tr>`
+            ix++
+        }
+        tableHTML = tableHTML + "</table>"
+        $(accountingEqRow).html(tableHTML)
 
         entryContainerDiv.append(accountingEqRow)
 
