@@ -12,6 +12,7 @@ urlpatterns = [
     path('app/company/<slug:slug>/export/', views.app_export_company, name="app-company-export"),
     path('app/company/<slug:slug>/period/', views.app_periods, name="app-period"),
     path('app/company/<slug:slug>/account/', views.app_company_accounts, name="app-accounts"),
+    path('app/company/<slug:slug>/account/csv/', views.app_company_accounts_csv, name="app-accounts-csv"),
     path('app/company/<slug:slug>/default-account/', views.app_company_add_default_accounts, name="app-default-accounts"),
     path('app/account/<slug:slug>/', views.app_account_details, name="app-account-details"),
     path('app/period/<slug:slug>/', views.app_period_detail, name="app-period-details"),
