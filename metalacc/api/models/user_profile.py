@@ -12,8 +12,6 @@ class UserProfile(models.Model):
     slug = models.SlugField(unique=True, editable=False)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
-    user_hash = models.CharField(max_length=50)
-
     use_nightmode = models.BooleanField(default=False)
     open_links_in_new_tabs = models.BooleanField(default=False)
 
@@ -41,8 +39,5 @@ class UserProfile(models.Model):
             self.slug = generate_slug(UserProfile)
             if 'update_fields' in kwargs and 'slug' not in kwargs['update_fields']:
                 kwargs['update_fields'] = list(chain(kwargs['update_fields'], ['slug']))
-        
-        if not self.user_hash:
-            self.user_hash
         
         return super().save(*args, **kwargs)
