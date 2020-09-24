@@ -254,7 +254,7 @@ $(document).ready(()=>{
                     addJournalEntry(data)
                 }
             }, (data, status, xhr)=>{
-        
+                alert("an error occured")
             })
     })
 })
@@ -263,8 +263,8 @@ function resetNewJournalEntryForm (){
     $('#cr-section').empty()
     $("#dr-total-span").text("0")
     $("#cr-total-span").text("0")
-    addAccountRowLine(true)
-    addAccountRowLine(false)
+    addAccountRowLine(true, true)
+    addAccountRowLine(false, true)
     $("#new-journal-entry-memo-input").val("")
 }
 function resetNewJournalEntryFormErrors() {
@@ -366,13 +366,16 @@ function updateDrCrTotals() {
     $("#dr-total-span").text(numberWithCommas(drTotal))
     $("#cr-total-span").text(numberWithCommas(crTotal))  
 }
-function addAccountRowLine(isDebit) {
+function addAccountRowLine(isDebit, disableDeleteBtn) {
     const rowUID  = getNewUID()
     $(`#${isDebit ? 'dr-section' : 'cr-section'}`).append(`
-        <div class="mt-1 row account-input-row ${isDebit ? 'dr' : 'cr'}-row" rowuid="${rowUID}">
+        <div class="mt-1 row account-input-row ${isDebit ? 'dr' : 'cr'}-row" rowuid="${rowUID}" id="account-input-row-${rowUID}">
             <div class="col-8" style="display:flex;">
+                <button class="btn btn-danger mr-1 ${!isDebit ? 'ml-5' : ''}" id="drop-row-btn-${rowUID}" ${disableDeleteBtn ? 'disabled' : ''}>
+                    X
+                </button>
                 <select
-                    class="form-control ${!isDebit ? 'ml-5' : ''}"
+                    class="form-control"
                     id="account-select-${rowUID}"
                 >
                     <option value="">--</option>
@@ -386,6 +389,9 @@ function addAccountRowLine(isDebit) {
             </div>
         </div>
     `)
+    $("#drop-row-btn-" + rowUID).click(()=>{
+        $("#account-input-row-" + rowUID).remove()
+    })
     $('#amount-input-' + rowUID).keydown(()=>{
         setTimeout(updateDrCrTotals)
     })
@@ -451,8 +457,8 @@ $(document).ready(()=>{
         (accounts, status, xhr)=>{
             if(xhr.status == 200) {
                 $("body").data('accounts', accounts)
-                addAccountRowLine(true)
-                addAccountRowLine(false)
+                addAccountRowLine(true, true)
+                addAccountRowLine(false, true)
                 return
             }
             alert("An error occured: " + status)
@@ -460,11 +466,11 @@ $(document).ready(()=>{
     )
     $("#add-dr-row-btn").click(()=>{
         const isDr = true
-        addAccountRowLine(isDr)
+        addAccountRowLine(isDr, false)
     })
     $("#add-cr-row-btn").click(()=>{
         const isDr = false
-        addAccountRowLine(isDr)
+        addAccountRowLine(isDr, false)
     })
     const fetchPage = (page) => {
         const url = listJournalEntriesUrl('{{ period.slug }}') + "?page=" + page
@@ -540,11 +546,11 @@ function addJournalEntry(journalEntry) {
     entryContainerDiv.append(drEntriesDiv)
     entryContainerDiv.append(crEntriesDiv)
 
-    const deleteBtn = document.createElement("button") // delete button
-    const deleteBtnId = "delete-je-btn-" + journalEntry.slug
-    $(deleteBtn).addClass("btn btn-danger pl-1 pr-1")
-    $(deleteBtn).attr("id", deleteBtnId)
-    $(deleteBtn).html('<i class="fas fa-trash-alt"></i> Delete')
+    const detailsBtn = document.createElement("button") // journal entry details button
+    const detailsBtnId = "details-je-btn-" + journalEntry.slug
+    $(detailsBtn).addClass("btn btn-primary pl-1 pr-1")
+    $(detailsBtn).attr("id", detailsBtnId)
+    $(detailsBtn).html('<i class="fas fa-hand-point-right"></i> Open')
     
     const jeMemoDiv = document.createElement("div") // memo & date
 
@@ -561,7 +567,7 @@ function addJournalEntry(journalEntry) {
     const bottomRowDiv = document.createElement("div") // bottom row
     $(bottomRowDiv).addClass("mt-3")
     $(bottomRowDiv).css({display:'flex'})
-    $(bottomRowDiv).append(deleteBtn)
+    $(bottomRowDiv).append(detailsBtn)
     $(bottomRowDiv).append(jeMemoDiv)
 
     entryContainerDiv.append(bottomRowDiv)
@@ -589,20 +595,8 @@ function addJournalEntry(journalEntry) {
         }        
     }
 
-    $("#" + deleteBtnId).click(()=>{
-        if(!confirm("Are you sure you want to delete Journal Entry " + journalEntry.display_id)) {
-            return
-        }
-        postJson(deleteJournalEntryUrl(journalEntry.slug), {},
-            (data, status, xhr)=>{
-                if(xhr.status == 204) {
-                    $(entryContainerDiv).remove()
-                }
-            },
-            (data, status, xhr)=>{
-                alert("An Error Occured")
-            }
-        )
+    $("#" + detailsBtnId).click(()=>{
+        window.location = "/app/journal_entry/" + journalEntry.slug + "/"
     })
 
 }

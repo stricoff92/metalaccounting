@@ -20,57 +20,72 @@ def get_journal_entry_impact_on_accounting_equation(journal_entry):
     decreases_to_liabilities = 0
     increases_to_equity = 0
     decreases_to_equity = 0
-    rows = []
+    asset_rows = []
+    liability_rows = []
+    equity_rows = []
 
     for jel in journal_entry.lines.all():
         if jel.account.type == Account.TYPE_ASSET:
             if jel.type == JournalEntryLine.TYPE_DEBIT:
                 increases_to_assets += jel.amount
+                asset_rows.append(jel.amount)
             elif jel.type == JournalEntryLine.TYPE_CREDIT:
                 decreases_to_assets += jel.amount
+                asset_rows.append(jel.amount * -1)
             else:
                 raise NotImplementedError()
 
         elif jel.account.type == Account.TYPE_LIABILITY:
             if jel.type == JournalEntryLine.TYPE_CREDIT:
                 increases_to_liabilities += jel.amount
+                liability_rows.append(jel.amount)
             elif jel.type == JournalEntryLine.TYPE_DEBIT:
                 decreases_to_liabilities += jel.amount
+                liability_rows.append(jel.amount * -1)
             else:
                 raise NotImplementedError()
 
         elif jel.account.type == Account.TYPE_EQUITY:
             if jel.type == JournalEntryLine.TYPE_CREDIT:
                 increases_to_equity += jel.amount
+                equity_rows.append(jel.amount)
             elif jel.type == JournalEntryLine.TYPE_DEBIT:
                 decreases_to_equity += jel.amount
+                equity_rows.append(jel.amount * -1)
             else:
                 raise NotImplementedError()
 
         elif jel.account.type == Account.TYPE_REVENUE:
             if jel.type == JournalEntryLine.TYPE_CREDIT:
                 increases_to_equity += jel.amount
+                equity_rows.append(jel.amount)
             elif jel.type == JournalEntryLine.TYPE_DEBIT:
                 decreases_to_equity += jel.amount
+                equity_rows.append(jel.amount * -1)
             else:
                 raise NotImplementedError()
 
         elif jel.account.type == Account.TYPE_EXPENSE:
             if jel.type == JournalEntryLine.TYPE_CREDIT:
                 increases_to_equity += jel.amount
+                equity_rows.append(jel.amount)
             elif jel.type == JournalEntryLine.TYPE_DEBIT:
                 decreases_to_equity += jel.amount
+                equity_rows.append(jel.amount * -1)
             else:
                 raise NotImplementedError()
 
         else:
             raise NotImplementedError()
+        
     
     return {
         'delta_assets':increases_to_assets - decreases_to_assets,
         'delta_liabilities': increases_to_liabilities - decreases_to_liabilities,
         'delta_equity':increases_to_equity - decreases_to_equity,
-        'rows':rows,
+        'asset_rows':asset_rows,
+        'liability_rows':liability_rows,
+        'equity_rows':equity_rows,
     }
 
 

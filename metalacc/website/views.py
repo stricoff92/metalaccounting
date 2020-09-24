@@ -146,6 +146,77 @@ def app_period_detail(request, slug):
 
 
 @login_required
+def app_jounral_entry_detail(request, slug):
+    journal_entry = get_object_or_404(
+        JournalEntry, slug=slug, period__company__user=request.user)
+    period = journal_entry.period
+    company = period.company
+    date_format = "%b %-d, %Y"
+    breadcrumbs = [
+        {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
+            'value':'companies',
+            'href':reverse("app-landing"),
+        }, {
+            'value':company.name,
+            'href':reverse("app-company", kwargs={'slug':company.slug}),
+        }, {
+            'value':'periods',
+            'href':reverse("app-period", kwargs={'slug':company.slug})
+        }, {
+            'value':f'{period.start.strftime(date_format)} -> {period.end.strftime(date_format)}',
+            'href':reverse("app-period-details", kwargs={'slug':period.slug})
+        }, {
+            'value':f'Jounral Entry {journal_entry.display_id}',
+        }
+    ]
+
+    # TODO: do formatting in the browser.
+    def _get_with_ix(array:list, ix:int):
+        try:
+            return array[ix]
+        except IndexError:
+            return None
+    
+    def _format_int(x:int):
+        if not x:
+            return x
+        prefix = "+" if x > 0 else ""
+        return prefix + "{:,}".format(x)
+        
+    # TODO: prepare this data in a separate function.
+    analysis = reports_lib.get_journal_entry_impact_on_accounting_equation(journal_entry)
+    analysis_rows = []
+    ix = 0
+    while True:
+        if (not _get_with_ix(analysis['asset_rows'], ix)
+            and not _get_with_ix(analysis['liability_rows'], ix)
+            and not _get_with_ix(analysis['equity_rows'], ix)):
+            break
+
+        analysis_rows.append({
+            'asset':_format_int(_get_with_ix(analysis['asset_rows'], ix)),
+            'liability':_format_int(_get_with_ix(analysis['liability_rows'], ix)),
+            'equity':_format_int(_get_with_ix(analysis['equity_rows'], ix)),
+        })
+        ix += 1
+    
+    data = {
+        'journal_entry':journal_entry,
+        'period':period,
+        'company':company,
+        'breadcrumbs':breadcrumbs,
+        'journal_entry_analysis_rows':analysis_rows,
+        'delta_assets':_format_int(analysis['delta_assets']),
+        'delta_liabilities':_format_int(analysis['delta_liabilities']),
+        'delta_equity':_format_int(analysis['delta_equity']),
+    }
+    return render(request, "journal_entry_details.html", data)
+
+
+@login_required
 def app_company_accounts(request, slug):
     company = get_object_or_404(
         Company, user=request.user, slug=slug)

@@ -1,0 +1,149 @@
+{% extends 'base_app.html' %}
+{% load humanize %}
+{% block 'body' %}
+<div>
+    <p class="heading-1">
+        Journal Entry {{ journal_entry.display_id }}
+    </p>
+    <p class="heading-2">
+        {{ company.name }}
+    </p>
+    <p class="heading-2">
+        {{ journal_entry.date|date:"M j, Y" }}
+    </p>
+</div>
+<button class="btn btn-danger mt-4" id="delete-journal-entry-btn">
+    Delete This Entry
+</button>
+<script>
+    $(document).ready(()=>{
+        $("#delete-journal-entry-btn").click(()=>{
+            if(!confirm("Are you sure you want to delete this journal entry?")) {
+                return
+            }
+            postJson(deleteJournalEntryUrl("{{ journal_entry.slug }}"), {},
+                (data, status, xhr)=>{
+                    if(xhr.status == 204) {
+                        window.location = "/app/period/{{ period.slug }}/"
+                    }
+                },
+                (data, status, xhr)=>{
+                    alert("An Error Occured")
+                }
+            )
+        })
+    })
+</script>
+<div class="card mt-5 p-3">
+    <div class="row">
+        <div class="col-4 col-lg-2">
+            <strong>Closing Entry</strong>
+        </div>
+        <div class="col-4">
+            {% if journal_entry.is_closing_entry %}
+                Yes
+            {% else %}
+                No
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-4 col-lg-2">
+            <strong>Adjusting Entry</strong>
+        </div>
+        <div class="col-4">
+            {% if journal_entry.is_adjusting_entry %}
+                Yes
+            {% else %}
+                No
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="card p-3 mt-4">
+    {% for jel in journal_entry.lines.all %}
+        {% if jel.type == "d" %}
+            <div class="row p-1 report-row border-bottom">
+                <div class="col-6 col-lg-8">
+                    (<a 
+                        href="/app/period/{{ period.slug }}/taccount/{{ jel.account.slug }}/"
+                        {{ user.userprofile.target_attr }}
+                    >{{ jel.account.number }}</a>) {{ jel.account.name }}
+                </div>
+                <div class="col-3 col-lg-2">
+                    {{ jel.amount|intcomma }}
+                </div>
+                <div class="col-3 col-lg-2 border-left">
+                    
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+    {% for jel in journal_entry.lines.all %}
+        {% if jel.type == "c" %}
+            <div class="row p-1 report-row border-bottom">
+                <div class="col-6 col-lg-8 pl-5">
+                    (<a 
+                        href="/app/period/{{ period.slug }}/taccount/{{ jel.account.slug }}/"
+                        {{ user.userprofile.target_attr }}
+                    >{{ jel.account.number }}</a>) {{ jel.account.name }}
+                </div>
+                <div class="col-3 col-lg-2">
+                </div>
+                <div class="col-3 col-lg-2 border-left">
+                        {{ jel.amount|intcomma }}
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>
+
+<div class="card p-3 mt-4">
+    <div style="display:flex;">
+        <div>
+            <strong>Memo:</strong>
+        </div>
+        <div class="ml-3">
+            <em>{{ journal_entry.memo }}</em>
+        </div>
+    </div>
+</div>
+
+<style>
+    .analysis-cell {
+        padding-left:10px;
+    }
+</style>
+<div class="card mt-4">
+    <div class="card-header">
+        Impact on Reporting
+    </div>
+    <div class="card-body" style="font-size:1.3rem">
+        <table>
+            <tr>
+                <th style="padding-left:10px;">Assets = </th>
+                <th style="padding-left:10px;">Liabilities + </th>
+                <th style="padding-left:10px;">Equity</th>
+            </tr>
+            <tr class="report-row-highlight border-top border-bottom">
+                <td style="padding-left:10px;">{{ delta_assets }}</td>
+                <td style="padding-left:10px;">{{ delta_liabilities }}</td>
+                <td style="padding-left:10px;">{{ delta_equity }}</td>
+            </tr>
+            {% for row in journal_entry_analysis_rows %}
+                <tr style="padding-top:7px;">
+                    <td style="padding-left:10px;">
+                        {% if row.asset %}{{ row.asset }}{% endif %}
+                    </td>
+                    <td style="padding-left:10px;">
+                        {% if row.liability %}{{ row.liability }}{% endif %}
+                    </td>
+                    <td style="padding-left:10px;">
+                        {% if row.equity %}{{ row.equity }}{% endif %}
+                    </td>  
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock %}
