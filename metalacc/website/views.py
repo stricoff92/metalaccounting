@@ -173,6 +173,7 @@ def app_jounral_entry_detail(request, slug):
         }
     ]
 
+    # TODO: do formatting in the browser.
     def _get_with_ix(array:list, ix:int):
         try:
             return array[ix]
@@ -185,7 +186,7 @@ def app_jounral_entry_detail(request, slug):
         prefix = "+" if x > 0 else ""
         return prefix + "{:,}".format(x)
         
-
+    # TODO: prepare this data in a separate function.
     analysis = reports_lib.get_journal_entry_impact_on_accounting_equation(journal_entry)
     analysis_rows = []
     ix = 0
@@ -202,9 +203,6 @@ def app_jounral_entry_detail(request, slug):
         })
         ix += 1
     
-    print(analysis_rows)
-        
-
     data = {
         'journal_entry':journal_entry,
         'period':period,
