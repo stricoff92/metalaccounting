@@ -254,7 +254,7 @@ $(document).ready(()=>{
                     addJournalEntry(data)
                 }
             }, (data, status, xhr)=>{
-        
+                alert("an error occured")
             })
     })
 })
@@ -546,11 +546,11 @@ function addJournalEntry(journalEntry) {
     entryContainerDiv.append(drEntriesDiv)
     entryContainerDiv.append(crEntriesDiv)
 
-    const deleteBtn = document.createElement("button") // delete button
-    const deleteBtnId = "delete-je-btn-" + journalEntry.slug
-    $(deleteBtn).addClass("btn btn-danger pl-1 pr-1")
-    $(deleteBtn).attr("id", deleteBtnId)
-    $(deleteBtn).html('<i class="fas fa-trash-alt"></i> Delete')
+    const detailsBtn = document.createElement("button") // journal entry details button
+    const detailsBtnId = "details-je-btn-" + journalEntry.slug
+    $(detailsBtn).addClass("btn btn-primary pl-1 pr-1")
+    $(detailsBtn).attr("id", detailsBtnId)
+    $(detailsBtn).html('<i class="fas fa-hand-point-right"></i> Open')
     
     const jeMemoDiv = document.createElement("div") // memo & date
 
@@ -567,7 +567,7 @@ function addJournalEntry(journalEntry) {
     const bottomRowDiv = document.createElement("div") // bottom row
     $(bottomRowDiv).addClass("mt-3")
     $(bottomRowDiv).css({display:'flex'})
-    $(bottomRowDiv).append(deleteBtn)
+    $(bottomRowDiv).append(detailsBtn)
     $(bottomRowDiv).append(jeMemoDiv)
 
     entryContainerDiv.append(bottomRowDiv)
@@ -595,20 +595,8 @@ function addJournalEntry(journalEntry) {
         }        
     }
 
-    $("#" + deleteBtnId).click(()=>{
-        if(!confirm("Are you sure you want to delete Journal Entry " + journalEntry.display_id)) {
-            return
-        }
-        postJson(deleteJournalEntryUrl(journalEntry.slug), {},
-            (data, status, xhr)=>{
-                if(xhr.status == 204) {
-                    $(entryContainerDiv).remove()
-                }
-            },
-            (data, status, xhr)=>{
-                alert("An Error Occured")
-            }
-        )
+    $("#" + detailsBtnId).click(()=>{
+        window.location = "/app/journal_entry/" + journalEntry.slug + "/"
     })
 
 }
