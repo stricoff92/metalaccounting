@@ -54,7 +54,7 @@
     <div id="output-area">
     </div>
 
-    <div class="alert alert-danger" id="view-export-history-errors" style="display:none;">
+    <div class="alert alert-danger mt-3" id="view-export-history-errors" style="display:none;">
     </div>
 
     <textarea 
@@ -83,13 +83,13 @@ function drawResults(results) {
     $("#output-area").append(`
         <p class="pb-1"><strong>Results:</strong></p>
         <div class="row border-bottom mb-2">
-            <div class="col-3">
+            <div class="col-6 col-lg-3">
                 <strong>Timestamp</strong>
             </div>
-            <div class="col-3">
+            <div class="col-3 col-lg-2">
                 <strong>User ID</strong>
             </div>
-            <div class="col-3">
+            <div class="col-3 col-lg-2">
                 <strong>Event</strong>
             </div>
         </div>
@@ -97,13 +97,13 @@ function drawResults(results) {
     for (let i=0; i<results.length; i++) {
         $("#output-area").append(`
             <div class="row mt-1 report-row">
-                <div class="col-3">
+                <div class="col-6 col-lg-3">
                     ${moment((results[i].timestamp - 0) * 1000).format('lll')}
                 </div>
-                <div class="col-3">
+                <div class="col-3 col-lg-2">
                     ${results[i].user_hash}
                 </div>
-                <div class="col-3">
+                <div class="col-3 col-lg-2">
                     ${results[i].event}
                 </div>
             </div>

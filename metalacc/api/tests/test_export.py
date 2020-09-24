@@ -1,10 +1,11 @@
 
 from django.urls import reverse
+from django.contrib.auth.models import User
 from rest_framework import status
 from freezegun import freeze_time
 
 from .base import BaseTestBase
-from api.models import Company, Account, JournalEntryLine, JournalEntry, Period
+from api.models import Company, Account, JournalEntryLine, JournalEntry, Period, UserProfile
 from api.models.account import DEFAULT_ACCOUNTS
 
 
@@ -12,6 +13,13 @@ class ObjectExportViewTests(BaseTestBase):
 
     def setUp(self):
         super().setUp()
+
+        self.third_user = User.objects.create_user(
+            username="foobarrrrr",
+            email=f'fooooorbbbbbaaaahhhhr@mail.com',
+            password=self.PASSWORD_FACTORY)
+        self.third_user_user_profile = UserProfile.objects.create(user=self.third_user)
+
         self.client.force_login(self.user)
 
         self.company = self.factory.create_company(self.user)
@@ -190,4 +198,76 @@ class ObjectExportViewTests(BaseTestBase):
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue("user cannot add additional companies" in str(response.data))
-    
+
+
+    def test_a_companys_previous_export_history_is_included_when_an_imported_company_is_exported(self):
+        """ Test that if a user exports a company they had originally imported the original export and import are included
+            in the history
+        """
+        # 1st user exports company info to serialized data
+        url = reverse("app-company-export", kwargs={"slug":self.company.slug})
+        with freeze_time("2012-01-14 03:21:34"):
+            response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        signed_jwt = response.content.decode()
+        self.assertTrue(len(signed_jwt) > 0)
+
+        # 2nd user imports the company
+        self.client.force_login(self.other_user)
+        url = reverse("company-import")
+        data = {
+            'data':signed_jwt,
+        }
+        with freeze_time("2012-01-14 03:25:34"):
+            response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        second_company = Company.objects.get(slug=response.data['slug'])
+
+        # second user exports the company
+        url = reverse("app-company-export", kwargs={"slug":second_company.slug})
+        with freeze_time("2012-01-14 03:28:34"):
+            response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        signed_jwt = response.content.decode()
+        self.assertTrue(len(signed_jwt) > 0)
+
+
+        # 3nd user imports the company
+        self.client.force_login(self.third_user)
+        url = reverse("company-import")
+        data = {
+            'data':signed_jwt,
+        }
+        with freeze_time("2012-01-14 03:32:34"):
+            response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        third_company = Company.objects.get(slug=response.data['slug'])
+
+        self.assertEqual(len(third_company.user_finterprints), 4)
+        self.assertEqual(len(set(r['user_hash'] for r in third_company.user_finterprints)), 3)
+
+        # 3rd user exports the company
+        url = reverse("app-company-export", kwargs={"slug":third_company.slug})
+        with freeze_time("2012-01-14 03:46:34"):
+            response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        signed_jwt = response.content.decode()
+        self.assertTrue(len(signed_jwt) > 0)
+
+
+        # View company history
+        data = {
+            'data':signed_jwt,
+        }
+        url = reverse("company-export-history")
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data,
+            [
+                {'user_hash': self.user.userprofile.slug, 'timestamp': '1326511294', 'event': 'export'},
+                {'user_hash': self.other_user.userprofile.slug, 'timestamp': '1326511534', 'event': 'import'},
+                {'user_hash': self.other_user.userprofile.slug, 'timestamp': '1326511714', 'event': 'export'},
+                {'user_hash': self.third_user.userprofile.slug, 'timestamp': '1326511954', 'event': 'import'},
+                {'user_hash': self.third_user.userprofile.slug, 'timestamp': '1326512794', 'event': 'export'}
+            ])
