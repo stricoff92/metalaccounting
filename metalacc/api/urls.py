@@ -20,6 +20,8 @@ urlpatterns = [
     path('company/delete/<slug:slug>/', views.company_delete, name="company-delete"),
     path('company/import/', views.company_import, name="company-import"),
 
+    path('company/export-history/', views.account_data_export_history, name="company-export-history"),
+
     # Period Routes
     path('period/list/', views.period_list, name="period-list"),
     path('period/new/', views.period_new, name="period-new"),

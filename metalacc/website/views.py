@@ -374,6 +374,24 @@ def app_export_company(request, slug):
 
 
 @login_required
+def app_export_tools_menu(request):
+    breadcrumbs = [
+        {
+            'value':'menu',
+            'href':reverse("app-main-menu")
+        }, {
+            'value':'export tools',
+        },
+    ]
+    data = {
+        'breadcrumbs':breadcrumbs,
+    }
+    return render(request, "export_tools_menu.html", data)
+
+
+
+
+@login_required
 def app_import_company(request):
     # Check object limit.
     at_object_limit = request.user.userprofile.at_company_object_limit
