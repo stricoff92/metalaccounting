@@ -1,6 +1,7 @@
 
 from django.urls import reverse
 from rest_framework import status
+from freezegun import freeze_time
 
 from .base import BaseTestBase
 from api.models import Company, Account, JournalEntryLine, JournalEntry, Period
@@ -32,7 +33,7 @@ class ObjectExportViewTests(BaseTestBase):
     def tearDown(self):
         super().tearDown()
     
-
+    @freeze_time("2012-01-14 03:21:34")
     def test_a_company_and_its_objects_can_be_exported_and_imported_by_another_user(self):
         """ Test that a company can be exported by the owner, and reimported by any user
         """
@@ -66,11 +67,17 @@ class ObjectExportViewTests(BaseTestBase):
         self.assertEqual(JournalEntry.objects.count(), 2)
         self.assertEqual(JournalEntryLine.objects.count(), 4)
 
-        # other_user now has a copy of the company
+        # other_user now has a copy of the company, with user history
         new_company = Company.objects.get(slug=response.data['slug'])
         self.assertEqual(new_company.user, self.other_user)
         self.assertNotEqual(new_company.id, self.company.id)
         self.assertEqual(new_company.name, self.company.name)
+        self.assertEqual(
+            new_company.user_finterprints,
+            [
+                {'user_hash':self.user.userprofile.slug,'event':'export', 'timestamp': '1326511294'},
+                {'user_hash':self.other_user.userprofile.slug, 'event':'import', 'timestamp': '1326511294'}
+            ])
 
         # other user has copy of accounts
         self.assertEqual(Account.objects.filter(user=self.other_user, company=new_company).count(), len(DEFAULT_ACCOUNTS))

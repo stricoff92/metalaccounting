@@ -34,6 +34,20 @@ def company_import(request):
     return Response(data, status.HTTP_201_CREATED)
 
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def account_data_export_history(request):
+    form = ImportCompanyForm(request.data)
+    if not form.is_valid():
+        return Response("Invalid data.", status.HTTP_400_BAD_REQUEST)
+        
+    user_history = form.cleaned_data['decoded_data']['meta']['user_history']
+    user_history.sort(key=lambda r: int(r['timestamp']))
+    return Response(user_history, status.HTTP_200_OK)
+
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def company_list(request):

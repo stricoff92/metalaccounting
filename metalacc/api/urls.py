@@ -43,6 +43,8 @@ urlpatterns = [
     path('account/edit/<slug:slug>/', views.account_edit, name="account-edit"),
     path('account/delete/<slug:slug>/', views.account_delete, name="account-delete"),
 
+    path('account/export-history/', views.account_data_export_history, name="account-export-data"),
+
     # Journal Entry Routes
     path('je/new/', views.journal_entry_new, name="je-new"),
     path('je/<slug:slug>/', views.journal_entry_details, name="je-details"),

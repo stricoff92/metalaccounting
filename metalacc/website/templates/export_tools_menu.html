@@ -1,0 +1,138 @@
+{% extends 'base_app.html' %}
+{% load humanize %}
+{% block 'body' %}
+<div>
+    <p class="heading-1">Exported Company Tools</p>
+</div>
+<div class="card p-4">
+    <p class="heading-2">
+        Compare Company Data
+    </p>
+    <div>
+        <button style="display:inline;" class="btn btn-secondary">
+            <i class="fas fa-sync"></i>
+            Flip Colors
+        </button>
+    </div>
+    <div class="row">
+        <div class="col-12 col-lg-6 mt-4">
+            <div class="mb-3">
+                Highlight with:
+                    <div 
+                        style="display:inline-block;width:35px;height:15px;background-color:#d37878;border-radius:4px; "
+                        id="color-left-indicator"
+                    ></div>
+            </div>
+            <textarea style="width:100%; min-height:200px"></textarea>
+        </div>
+        <div class="col-12 col-lg-6 mt-4">
+            <div class="mb-3">
+                Highlight with:
+                <div
+                    id="color-right-indicator"
+                    style="display:inline-block;width:35px;height:15px;background-color:#00ff00;border-radius:4px;"
+                ></div>
+            </div>
+            <textarea style="width:100%;  min-height:200px"></textarea>
+        </div>
+
+    </div>
+    <button class="btn btn-success mt-3">
+        <strong>Compare</strong>
+    </button>
+</div>
+<script>
+    $(document).ready(()=>{
+
+    })
+</script>
+<div class="card p-4 mt-4">
+    <p class="heading-2">
+        View Export User History
+    </p>
+
+    <div id="output-area">
+    </div>
+
+    <div class="alert alert-danger" id="view-export-history-errors" style="display:none;">
+    </div>
+
+    <textarea 
+        class="mt-3"
+        style="width:100%; 
+        min-height:200px"
+        id="see-history-text-input"
+        placeholder="Paste Company Data Here"
+    ></textarea>
+
+    <button class="btn btn-success mt-3" id="see-company-export-history-btn">
+        <strong>View</strong>
+    </button>
+</div>
+<script>
+function resetExportHistoryErrorArea() {
+    $("#view-export-history-errors").text("")
+    $("#view-export-history-errors").css("display", "none")
+}
+function drawExportHistoryErrors(errors) {
+    $("#view-export-history-errors").css("display", "block")
+    $("#view-export-history-errors").text(errors)
+}
+function drawResults(results) {
+    $("#output-area").html("")
+    $("#output-area").append(`
+        <p class="pb-1"><strong>Results:</strong></p>
+        <div class="row border-bottom mb-2">
+            <div class="col-3">
+                <strong>Timestamp</strong>
+            </div>
+            <div class="col-3">
+                <strong>User ID</strong>
+            </div>
+            <div class="col-3">
+                <strong>Event</strong>
+            </div>
+        </div>
+    `)
+    for (let i=0; i<results.length; i++) {
+        $("#output-area").append(`
+            <div class="row mt-1 report-row">
+                <div class="col-3">
+                    ${moment((results[i].timestamp - 0) * 1000).format('lll')}
+                </div>
+                <div class="col-3">
+                    ${results[i].user_hash}
+                </div>
+                <div class="col-3">
+                    ${results[i].event}
+                </div>
+            </div>
+        `)
+    }
+}
+$(document).ready(()=>{
+    $("#see-company-export-history-btn").click(()=>{
+        resetExportHistoryErrorArea()
+
+        const serializedData = $("#see-history-text-input").val().replace(/\s+/g, '')
+        if(!!!serializedData) {
+            return drawExportHistoryErrors("This Field is Required")
+        }
+        if(!/^\S+\:\S{15,}$/.test(serializedData)) {
+            return drawExportHistoryErrors("Invalid Format")
+        }
+        postJson(companyExportHistoryUrl, {data:serializedData},
+            (data, status, xhr)=>{
+                if(xhr.status == 200) {
+                    drawResults(data)
+                    $("#see-history-text-input").val("")
+                }
+            },
+            (data, status, xhr)=>{
+                return drawExportHistoryErrors("An Error Occured")
+            }
+        )
+    })
+})
+</script>
+{% endblock %}
