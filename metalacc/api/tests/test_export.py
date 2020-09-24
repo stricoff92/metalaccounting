@@ -81,7 +81,7 @@ class ObjectExportViewTests(BaseTestBase):
         self.assertNotEqual(new_company.id, self.company.id)
         self.assertEqual(new_company.name, self.company.name)
         self.assertEqual(
-            new_company.user_finterprints,
+            new_company.user_fingerprints,
             [
                 {'user_hash':self.user.userprofile.slug,'event':'export', 'timestamp': '1326511294'},
                 {'user_hash':self.other_user.userprofile.slug, 'event':'import', 'timestamp': '1326511294'}
@@ -243,8 +243,8 @@ class ObjectExportViewTests(BaseTestBase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         third_company = Company.objects.get(slug=response.data['slug'])
 
-        self.assertEqual(len(third_company.user_finterprints), 4)
-        self.assertEqual(len(set(r['user_hash'] for r in third_company.user_finterprints)), 3)
+        self.assertEqual(len(third_company.user_fingerprints), 4)
+        self.assertEqual(len(set(r['user_hash'] for r in third_company.user_fingerprints)), 3)
 
         # 3rd user exports the company
         url = reverse("app-company-export", kwargs={"slug":third_company.slug})

@@ -30,7 +30,7 @@ def export_company_to_jwt(company):
                     'timestamp':timezone.now().strftime("%s"),
                     'event':'export'
                 }
-            ] + company.user_finterprints
+            ] + company.user_fingerprints
         }
     }
 

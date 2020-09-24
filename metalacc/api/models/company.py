@@ -19,7 +19,7 @@ class Company(models.Model):
         return f"<Company {self.pk} {self.name} ({self.user})>"
     
     @property
-    def user_finterprints(self):
+    def user_fingerprints(self):
         if self.user_finger_print_str:
             return json.loads(self.user_finger_print_str)
         else:
