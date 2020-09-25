@@ -3,6 +3,7 @@ import json
 
 from django.urls import reverse
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 from freezegun import freeze_time
 
@@ -159,6 +160,33 @@ class ObjectExportViewTests(BaseTestBase):
         self.assertEqual(new_company.user, self.user)
         self.assertNotEqual(new_company.id, self.company.id)
         self.assertNotEqual(new_company.name, self.company.name)
+
+
+    def test_a_user_can_import_a_company_by_uploading_it_as_text_file(self):
+        """ Test that a user can import a company by uploading it's data as a text file
+        """
+        self.assertEqual(self.user.company_set.count(), 1)
+
+        # user exports company info to serialized data
+        url = reverse("app-company-export", kwargs={"slug":self.company.slug})
+        with freeze_time("2012-01-14 03:21:34"):
+            response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        signed_jwt = response.content.decode()
+        self.assertTrue(len(signed_jwt) > 0)
+
+        url = reverse("company-import")
+        data = {
+            'company_text_file':SimpleUploadedFile("derp.txt", signed_jwt.encode(), content_type="text/plain"),
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.user.company_set.count(), 2)
+        
+        new_company = Company.objects.get(slug=response.data['slug'])
+        self.assertNotEqual(new_company.id, self.company.id)
+        self.assertEqual(new_company.period_set.count(), 1)
+        self.assertNotEqual(new_company.period_set.first().id, self.period.id)
 
 
     def test_that_in_sync_cash_flow_worksheets_are_properly_exported_and_imported(self):
@@ -377,7 +405,7 @@ class ObjectExportViewTests(BaseTestBase):
         self.assertTrue(len(signed_jwt) > 0)
 
 
-        # View company history
+        # View company history by uploading as json
         data = {
             'company_text_data':signed_jwt,
         }
@@ -393,3 +421,20 @@ class ObjectExportViewTests(BaseTestBase):
                 {'user_hash': self.third_user.userprofile.slug, 'timestamp': '1326511954', 'event': 'import'},
                 {'user_hash': self.third_user.userprofile.slug, 'timestamp': '1326512794', 'event': 'export'}
             ])
+        
+        # view company history by uploaded as .txt file
+        data = {
+            'company_text_file':SimpleUploadedFile("derp.txt", signed_jwt.encode(), content_type="text/plain"),
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data,
+            [
+                {'user_hash': self.user.userprofile.slug, 'timestamp': '1326511294', 'event': 'export'},
+                {'user_hash': self.other_user.userprofile.slug, 'timestamp': '1326511534', 'event': 'import'},
+                {'user_hash': self.other_user.userprofile.slug, 'timestamp': '1326511714', 'event': 'export'},
+                {'user_hash': self.third_user.userprofile.slug, 'timestamp': '1326511954', 'event': 'import'},
+                {'user_hash': self.third_user.userprofile.slug, 'timestamp': '1326512794', 'event': 'export'}
+            ])
+
