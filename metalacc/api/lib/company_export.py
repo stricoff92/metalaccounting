@@ -1,7 +1,8 @@
 
 import json
 
-from api.models import Company, Account, Period, JournalEntry, JournalEntryLine
+from api.models import Company, Account, Period, JournalEntry, JournalEntryLine, CashFlowWorksheet
+from api.lib import reports as reports_lib
 
 import jwt
 from django.conf import settings
@@ -34,16 +35,28 @@ def export_company_to_jwt(company):
         }
     }
 
+    periods = company.period_set.all()
+
     # Serialize company.
     data['company'] = {"name":company.name}
 
     # Serialize periods
-    data['periods'] = list(company.period_set
+    data['periods'] = list(periods
         .values("id")
         .annotate(
             start_str=Cast('start', CharField()),
             end_str=Cast('end', CharField())
         ))
+    
+    # serialize cash flow worksheet
+    data['cash_flow_worksheets'] = []
+    for period in periods:
+        cfws = period.cash_flow_worksheet
+        if cfws and cfws.in_sync:
+            data['cash_flow_worksheets'].append({
+                'period_id':cfws.period_id,
+                'data':cfws.data,
+            })
 
     # Serialize accounts
     data['accounts'] = list(company.account_set.values(
@@ -52,7 +65,7 @@ def export_company_to_jwt(company):
     # serialize journal entries
     data['journal_entries'] = list(JournalEntry.objects
         .filter(period__company=company).values(
-            "id", "period_id", "memo", "is_adjusting_entry", "is_closing_entry", "display_id")
+            "id", "slug", "period_id", "memo", "is_adjusting_entry", "is_closing_entry", "display_id")
         .annotate(date_str=Cast("date", CharField())))
     
     # Serialize journal entry lines
@@ -135,7 +148,8 @@ def import_company_data(data:dict, user) -> Company:
     
 
     # Create new Journal Entries
-    journal_entry_map = {}
+    journal_entry_id_map = {}
+    journal_entry_slug_map = {}
     for ix, journal_entry_data in enumerate(data['journal_entries']):
         new_journal_entry = JournalEntry.objects.create(
             period=period_map[journal_entry_data['period_id']],
@@ -144,7 +158,8 @@ def import_company_data(data:dict, user) -> Company:
             is_adjusting_entry=journal_entry_data['is_adjusting_entry'],
             is_closing_entry=journal_entry_data['is_closing_entry'],
         )
-        journal_entry_map[journal_entry_data['id']] = new_journal_entry
+        journal_entry_id_map[journal_entry_data['id']] = new_journal_entry
+        journal_entry_slug_map[journal_entry_data['slug']] = new_journal_entry
 
     # Create journal entry lines
     new_journal_entry_lines = []
@@ -153,11 +168,28 @@ def import_company_data(data:dict, user) -> Company:
     for ix, jel_data in enumerate(data['journal_entry_lines']):
         new_journal_entry_lines.append(JournalEntryLine(
             slug=jel_slugs[ix],
-            journal_entry=journal_entry_map[jel_data['journal_entry_id']],
+            journal_entry=journal_entry_id_map[jel_data['journal_entry_id']],
             account=account_map[jel_data['account_id']],
             type=jel_data['type'],
             amount=jel_data['amount'],
         ))
     JournalEntryLine.objects.bulk_create(new_journal_entry_lines)
+
+    # Create cash flow worksheets
+    for cfws in data['cash_flow_worksheets']:
+        cfws_je_data = json.loads(cfws['data'])
+        new_cfws_data = []
+        for cfws_je in cfws_je_data:
+            new_je = journal_entry_slug_map[cfws_je['journal_entry']]
+            new_cfws_data.append({
+                'journal_entry':new_je.slug,
+                'operations':cfws_je['operations'],
+                'investments':cfws_je['investments'],
+                'finances':cfws_je['finances'],
+            })
+
+        new_period = period_map[cfws['period_id']]
+        reports_lib.create_cash_flow_worksheet(new_period, new_cfws_data)
+
 
     return new_company
