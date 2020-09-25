@@ -259,6 +259,7 @@ def get_t_account_data_for_account(account, current_period) -> tuple:
 
 
 KEY_OPERATING_REVENUE = 'operating_revenue'
+KEY_COST_OF_GOODS_SOLD = 'cost_of_goods_sold'
 KEY_NON_OPERATING_REVENUE = 'non_operating_revenue'
 KEY_OPERATING_EXPENSE = 'operating_expense'
 KEY_NON_OPERATING_EXPENSE = 'non_operating_expense'
@@ -300,6 +301,10 @@ def _invoice_statement_date_for_period(period) -> dict:
     operating_account_slugs = (period.company.account_set
         .filter(type__in=Account.OPERATING_TYPES, is_operating=True)
         .values_list('slug', flat=True))
+    
+    cost_of_goods_sold_account_slugs = (period.company.account_set
+        .filter(type__in=Account.OPERATING_TYPES, is_operating=True, tag=Account.TAG_COST_OF_GOODS)
+        .values_list('slug', flat=True))
 
     data = {
         KEY_OPERATING_REVENUE:{
@@ -312,6 +317,11 @@ def _invoice_statement_date_for_period(period) -> dict:
             'rows_by_account':{},
             'total':0,
         },
+        KEY_COST_OF_GOODS_SOLD :{
+            'rows':[],
+            'rows_by_account':{},
+            'total':0,
+        }
         KEY_OPERATING_EXPENSE:{
             'rows':[],
             'rows_by_account':{},
