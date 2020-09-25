@@ -1,0 +1,29 @@
+{% extends 'base_app.html' %}
+{% load humanize %}
+{% block 'body' %}
+<div>
+    <p class="heading-1">Cash Flow Worksheet</p>
+    <p class="heading-2">{{ period.company.name }}</p>
+    <p>
+        For Period
+        <strong>{{ period.start|date:"M j, Y" }}</strong>
+        <i class="fas fa-arrow-right"></i>
+        <strong>{{ period.end|date:"M j, Y" }}</strong>
+    </p>
+</div>
+
+<div class="alert alert-primary p-4">
+    <p class="heading-2">
+        <strong>
+            <i class="fas fa-exclamation-triangle"></i>
+            Your Company Does Not Have Any Cash Account
+        </strong>
+    </p>
+    <p>
+        At least 1 current asset account associated with {{ period.company.name }} must be tagged as a cash account in order to compile cash flow statements.
+    </p>
+    <p>
+        <a href="/app/company/{{ period.company.slug }}/account/">Accounts Page</a>
+    </p>
+</div>
+{% endblock %}

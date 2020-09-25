@@ -764,6 +764,20 @@ def statement_of_cash_flows_worksheet(request, slug):
         Period, company__user=request.user, slug=slug)
     company = current_period.company
 
+    if not company.account_set.filter(
+        type=Account.TYPE_ASSET,
+        is_current=True,
+        is_contra=False,
+        tag=Account.TAG_CASH).exists():
+
+        breadcrumbs = get_report_page_breadcrumbs(current_period, "Cash Flow Worksheet")
+        data = {
+            'period':current_period,
+            'breadcrumbs':breadcrumbs,
+        }
+
+        return render(request, "app_report_cash_flow_error.html", data)
+
 
     cash_flow_worksheet = current_period.cash_flow_worksheet
     is_complete = cash_flow_worksheet and cash_flow_worksheet.in_sync
@@ -792,6 +806,21 @@ def statement_of_cash_flows(request, slug):
     if not cash_flow_worksheet.in_sync:
         cash_flow_worksheet.delete()
         return redirect("app-cash-flow-worksheet", slug=slug)
+
+    if not current_period.company.account_set.filter(
+        type=Account.TYPE_ASSET,
+        is_current=True,
+        is_contra=False,
+        tag=Account.TAG_CASH).exists():
+
+        breadcrumbs = get_report_page_breadcrumbs(current_period, "Cash Flow Statement")
+        data = {
+            'period':current_period,
+            'breadcrumbs':breadcrumbs,
+        }
+
+        return render(request, "app_report_cash_flow_error.html", data)
+
 
     cashflow_data = reports_lib.get_statement_of_cash_flows_data(current_period)
     breadcrumbs = get_report_page_breadcrumbs(current_period, "Cash Flow Statement")
