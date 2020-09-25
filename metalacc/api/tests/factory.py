@@ -18,12 +18,13 @@ class TestObjectFactory:
     def create_period(self, company, start, end):
         return Period.objects.create(company=company, start=start, end=end)
 
-    def create_journal_entry(self, period, date, memo="foobar", is_adjusting_entry=False):
+    def create_journal_entry(self, period, date, memo="foobar", is_adjusting_entry=False, is_closing_entry=False):
         return JournalEntry.objects.create(
             period=period,
             date=date,
             memo=memo,
-            is_adjusting_entry=is_adjusting_entry)
+            is_adjusting_entry=is_adjusting_entry,
+            is_closing_entry=is_closing_entry)
     
     def create_journal_entry_line(self, journal_entry, account, type, amount):
         return JournalEntryLine.objects.create(

@@ -120,14 +120,14 @@ $("#save-company-name-btn").click(()=>{
         </div>
         <div class="card-body">
             <div>
-                <a href="/app/company/{{ company.slug }}/export/">
+                <a href="/app/company/{{ company.slug }}/export/" style="font-size:1.2rem;">
                     <i class="fas fa-copy"></i>
                     Download Company Export
                 </a>
             </div>
             <div class="mt-2">
-                Take a snapshop of <em>{{ company.name }}'s</em> accounts, periods, and journal entries.
-                Exported companies can be imported as a new company by you or others.
+                Take a snapshop of <em>{{ company.name }}'s</em> accounts, periods, journal entries, and cash flow worksheets.
+                A snapshot can be imported as a new company by you or others.
             </div>
             <div class="mt-3">
                 <a href="/app/export-tools/">Export Tools</a>

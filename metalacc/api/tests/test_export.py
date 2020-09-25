@@ -1,11 +1,13 @@
 
+import json
+
 from django.urls import reverse
 from django.contrib.auth.models import User
 from rest_framework import status
 from freezegun import freeze_time
 
 from .base import BaseTestBase
-from api.models import Company, Account, JournalEntryLine, JournalEntry, Period, UserProfile
+from api.models import Company, Account, JournalEntryLine, JournalEntry, Period, UserProfile, CashFlowWorksheet
 from api.models.account import DEFAULT_ACCOUNTS
 
 
@@ -158,6 +160,126 @@ class ObjectExportViewTests(BaseTestBase):
         self.assertNotEqual(new_company.id, self.company.id)
         self.assertNotEqual(new_company.name, self.company.name)
 
+
+    def test_that_in_sync_cash_flow_worksheets_are_properly_exported_and_imported(self):
+        """ Test that a company's cash flow worksheets are properly exported and imported.
+        """
+
+        # buy inventory
+        journal_entry_2 = self.factory.create_journal_entry(self.period, "2020-01-05")
+        jel3 = self.factory.create_journal_entry_line(
+            journal_entry_2,
+            Account.objects.get(name="Inventory", user=self.user),
+            JournalEntryLine.TYPE_DEBIT,
+            100000)
+        jel4 = self.factory.create_journal_entry_line(
+            journal_entry_2,
+            Account.objects.get(name="Cash", user=self.user),
+            JournalEntryLine.TYPE_CREDIT,
+            100000)
+
+        # sell inventory
+        journal_entry_3 = self.factory.create_journal_entry(self.period, "2020-01-08")
+        jel5 = self.factory.create_journal_entry_line(
+            journal_entry_3,
+            Account.objects.get(name="CoGS", user=self.user),
+            JournalEntryLine.TYPE_DEBIT,
+            50000)
+        jel6 = self.factory.create_journal_entry_line(
+            journal_entry_3,
+            Account.objects.get(name="Cash", user=self.user),
+            JournalEntryLine.TYPE_DEBIT,
+            70000)
+        jel7 = self.factory.create_journal_entry_line(
+            journal_entry_3,
+            Account.objects.get(name="Inventory", user=self.user),
+            JournalEntryLine.TYPE_CREDIT,
+            50000)
+        jel8 = self.factory.create_journal_entry_line(
+            journal_entry_3,
+            Account.objects.get(name="Sales Revenue", user=self.user),
+            JournalEntryLine.TYPE_CREDIT,
+            70000)
+        
+        # closing entry
+        journal_entry_4 = self.factory.create_journal_entry(
+            self.period, "2020-01-08", is_closing_entry=True)
+        jel9 = self.factory.create_journal_entry_line(
+            journal_entry_4,
+            Account.objects.get(name="CoGS", user=self.user),
+            JournalEntryLine.TYPE_CREDIT,
+            50000)
+        jel10 = self.factory.create_journal_entry_line(
+            journal_entry_4,
+            Account.objects.get(name="Sales Revenue", user=self.user),
+            JournalEntryLine.TYPE_DEBIT,
+            70000)
+        jel11 = self.factory.create_journal_entry_line(
+            journal_entry_4,
+            Account.objects.get(name="Retained Earnings", user=self.user),
+            JournalEntryLine.TYPE_CREDIT,
+            20000)
+
+        # create a cash flow worksheet
+        url = reverse("period-create-cashflow-worksheet", kwargs={"slug":self.period.slug})
+        data = [
+            {
+                'journal_entry_slug':self.journal_entry.slug,
+                'operations':0,
+                'investments':0,
+                'finances':1000000,
+            }, {
+                'journal_entry_slug':journal_entry_2.slug,
+                'operations':100000,
+                'investments':0,
+                'finances':0,
+            },{
+                'journal_entry_slug':journal_entry_3.slug,
+                'operations':70000,
+                'investments':0,
+                'finances':0,
+            }
+        ]
+        response = self.client.post(
+            url, json.dumps(data), content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(CashFlowWorksheet.objects.count(), 1)
+        original_cfws = CashFlowWorksheet.objects.first()
+
+        # export company info to serialized data
+        url = reverse("app-company-export", kwargs={"slug":self.company.slug})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        signed_jwt = response.content.decode()
+        self.assertTrue(len(signed_jwt) > 0)
+
+        # auth as another user and import the company
+        self.client.force_login(self.other_user)
+        url = reverse("company-import")
+        data = {
+            'data':signed_jwt,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # verify new company was created 
+        self.assertEqual(CashFlowWorksheet.objects.count(), 2)
+        self.assertEqual(self.other_user.company_set.count(), 1)
+        new_company = self.other_user.company_set.first()
+        self.assertEqual(new_company.name, self.company.name)
+        self.assertEqual(new_company.period_set.count(), 1)
+        new_period = new_company.period_set.first()
+        self.assertEqual(new_period.journalentry_set.count(), 4)
+
+        # verify cash flow worksheet data.
+        cfws = new_period.cash_flow_worksheet
+        self.assertIsNotNone(cfws)
+        cfws_data = cfws.worksheet_data
+        for row in cfws_data:
+            je = JournalEntry.objects.get(slug=row['journal_entry'], period=new_period)
+            cash_jel = je.lines.get(account__name="Cash")
+            self.assertEqual(cash_jel.amount, row['operations'] + row['investments'] + row['finances'])
+        
 
     def test_a_user_cannot_export_another_users_company(self):
         """ Test that a user cannot export another user's company
