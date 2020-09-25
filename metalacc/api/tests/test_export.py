@@ -65,7 +65,7 @@ class ObjectExportViewTests(BaseTestBase):
         self.client.force_login(self.other_user)
         url = reverse("company-import")
         data = {
-            'data':signed_jwt,
+            'company_text_data':signed_jwt,
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -142,7 +142,7 @@ class ObjectExportViewTests(BaseTestBase):
         # reimport the company as a copy
         url = reverse("company-import")
         data = {
-            'data':signed_jwt,
+            'company_text_data':signed_jwt,
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -257,7 +257,7 @@ class ObjectExportViewTests(BaseTestBase):
         self.client.force_login(self.other_user)
         url = reverse("company-import")
         data = {
-            'data':signed_jwt,
+            'company_text_data':signed_jwt,
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -315,7 +315,7 @@ class ObjectExportViewTests(BaseTestBase):
         self.client.force_login(self.other_user)
         url = reverse("company-import")
         data = {
-            'data':signed_jwt,
+            'company_text_data':signed_jwt,
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -338,7 +338,7 @@ class ObjectExportViewTests(BaseTestBase):
         self.client.force_login(self.other_user)
         url = reverse("company-import")
         data = {
-            'data':signed_jwt,
+            'company_text_data':signed_jwt,
         }
         with freeze_time("2012-01-14 03:25:34"):
             response = self.client.post(url, data, format="json")
@@ -358,7 +358,7 @@ class ObjectExportViewTests(BaseTestBase):
         self.client.force_login(self.third_user)
         url = reverse("company-import")
         data = {
-            'data':signed_jwt,
+            'company_text_data':signed_jwt,
         }
         with freeze_time("2012-01-14 03:32:34"):
             response = self.client.post(url, data, format="json")
@@ -379,7 +379,7 @@ class ObjectExportViewTests(BaseTestBase):
 
         # View company history
         data = {
-            'data':signed_jwt,
+            'company_text_data':signed_jwt,
         }
         url = reverse("company-export-history")
         response = self.client.post(url, data, format="json")
