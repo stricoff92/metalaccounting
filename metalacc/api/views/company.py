@@ -23,7 +23,7 @@ def company_import(request):
     if request.data.get('company_text_file'):
         uploaded_file = request.data['company_text_file']
         if uploaded_file.content_type.lower() != "text/plain":
-            return Response("Invalid File Format. Expected plain/text", status.HTTP_400_BAD_REQUEST)
+            return Response("Invalid File Format. Expected text/plain", status.HTTP_400_BAD_REQUEST)
         form_data = {
             "company_text_data": uploaded_file.file.read().decode()
         }
@@ -53,7 +53,7 @@ def account_data_export_history(request):
     if request.data.get('company_text_file'):
         uploaded_file = request.data['company_text_file']
         if uploaded_file.content_type.lower() != "text/plain":
-            return Response("Invalid File Format. Expected plain/text", status.HTTP_400_BAD_REQUEST)
+            return Response("Invalid File Format. Expected text/plain", status.HTTP_400_BAD_REQUEST)
         form_data = {
             "company_text_data": uploaded_file.file.read().decode()
         }
