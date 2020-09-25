@@ -61,7 +61,7 @@ class JournalEntry(models.Model):
     period = models.ForeignKey("api.Period", on_delete=models.CASCADE)
     
     date = models.DateField()
-    memo = models.CharField(max_length=1000, blank=True, null=True, default=None)
+    memo = models.CharField(max_length=79, blank=True, null=True, default=None)
     is_adjusting_entry = models.BooleanField(blank=True, default=False)
     is_closing_entry = models.BooleanField(blank=True, default=False)
 
