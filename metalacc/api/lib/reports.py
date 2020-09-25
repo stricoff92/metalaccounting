@@ -259,6 +259,7 @@ def get_t_account_data_for_account(account, current_period) -> tuple:
 
 
 KEY_OPERATING_REVENUE = 'operating_revenue'
+KEY_COST_OF_GOODS_SOLD = 'cost_of_goods_sold'
 KEY_NON_OPERATING_REVENUE = 'non_operating_revenue'
 KEY_OPERATING_EXPENSE = 'operating_expense'
 KEY_NON_OPERATING_EXPENSE = 'non_operating_expense'
@@ -300,6 +301,10 @@ def _invoice_statement_date_for_period(period) -> dict:
     operating_account_slugs = (period.company.account_set
         .filter(type__in=Account.OPERATING_TYPES, is_operating=True)
         .values_list('slug', flat=True))
+    
+    cost_of_goods_sold_account_slugs = (period.company.account_set
+        .filter(type__in=Account.OPERATING_TYPES, is_operating=True, tag=Account.TAG_COST_OF_GOODS)
+        .values_list('slug', flat=True))
 
     data = {
         KEY_OPERATING_REVENUE:{
@@ -308,6 +313,11 @@ def _invoice_statement_date_for_period(period) -> dict:
             'total':0,
         },
         KEY_NON_OPERATING_REVENUE:{
+            'rows':[],
+            'rows_by_account':{},
+            'total':0,
+        },
+        KEY_COST_OF_GOODS_SOLD :{
             'rows':[],
             'rows_by_account':{},
             'total':0,
@@ -364,7 +374,9 @@ def _invoice_statement_date_for_period(period) -> dict:
                 data[KEY_NON_OPERATING_REVENUE]['rows'].append(row)
     
         elif account['type'] == Account.TYPE_EXPENSE:
-            if account['slug'] in operating_account_slugs:
+            if account['slug'] in cost_of_goods_sold_account_slugs:
+                data[KEY_COST_OF_GOODS_SOLD]['rows'].append(row)
+            elif account['slug'] in operating_account_slugs:
                 data[KEY_OPERATING_EXPENSE]['rows'].append(row)
             else:
                 data[KEY_NON_OPERATING_EXPENSE]['rows'].append(row)
@@ -579,7 +591,7 @@ def get_retained_earnings_data(current_period):
     # Given net income, retained earnings start/end, calculate dividends
     income_data = _invoice_statement_date_for_period(current_period)
     total_revenue = income_data[KEY_OPERATING_REVENUE]['total'] + income_data[KEY_NON_OPERATING_REVENUE]['total']
-    total_expenses = income_data[KEY_OPERATING_EXPENSE]['total'] + income_data[KEY_NON_OPERATING_EXPENSE]['total']
+    total_expenses = income_data[KEY_COST_OF_GOODS_SOLD]['total'] + income_data[KEY_OPERATING_EXPENSE]['total'] + income_data[KEY_NON_OPERATING_EXPENSE]['total']
     net_income = total_revenue - total_expenses
     data['net_income'] = net_income
 
@@ -828,11 +840,12 @@ def get_statement_of_cash_flows_data(period):
     income_data = _invoice_statement_date_for_period(period)
 
     income_data['net_income'] = ((
-        income_data['operating_revenue']['total']
-        + income_data['non_operating_revenue']['total'])
+        income_data[KEY_OPERATING_REVENUE]['total']
+        + income_data[KEY_NON_OPERATING_REVENUE]['total'])
         - (
-            income_data['operating_expense']['total']
-            + income_data['non_operating_expense']['total']))
+            income_data[KEY_COST_OF_GOODS_SOLD]['total']
+            + income_data[KEY_OPERATING_EXPENSE]['total']
+            + income_data[KEY_NON_OPERATING_EXPENSE]['total']))
 
     data = {
         'income_data':income_data,

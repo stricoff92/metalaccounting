@@ -523,11 +523,15 @@ def income_statement(request, slug):
         [current_is_data, previous_is_data], reports_lib.KEY_NON_OPERATING_REVENUE)
     operating_expense_accounts = reports_lib.union_account_slugs_across_income_statement_data(
         [current_is_data, previous_is_data], reports_lib.KEY_OPERATING_EXPENSE)
+    cogs_expense_accounts = reports_lib.union_account_slugs_across_income_statement_data(
+        [current_is_data, previous_is_data], reports_lib.KEY_COST_OF_GOODS_SOLD)
     non_operating_expense_accounts = reports_lib.union_account_slugs_across_income_statement_data(
         [current_is_data, previous_is_data], reports_lib.KEY_NON_OPERATING_EXPENSE)
+
     operating_revenue_accounts = Account.objects.filter(slug__in=operating_revenue_accounts).order_by("number")
     non_operating_revenue_accounts = Account.objects.filter(slug__in=non_operating_revenue_accounts).order_by("number")
     operating_expense_accounts = Account.objects.filter(slug__in=operating_expense_accounts).order_by("number")
+    cost_of_goods_sold_expense_accounts = Account.objects.filter(slug__in=cogs_expense_accounts).order_by("number")
     non_operating_expense_accounts = Account.objects.filter(slug__in=non_operating_expense_accounts).order_by("number")
 
 
@@ -566,6 +570,34 @@ def income_statement(request, slug):
             'col3value':(
                 current_is_data[reports_lib.KEY_OPERATING_REVENUE]['total']),
         })
+
+    # Cost of Goods Sold and gross profit
+    if cost_of_goods_sold_expense_accounts.exists():
+        rows.append({
+            'new_section':True,
+            'padding':1,
+            'bold':True,
+            'col1value':"Cost of Goods Sold",
+        })
+        for account in cost_of_goods_sold_expense_accounts:
+            rows.append({
+                'padding':3,
+                'col1value':f"({account.number}) {account.name}",
+                'col2value':_get_amount_info_from_is_data(
+                    previous_is_data[reports_lib.KEY_COST_OF_GOODS_SOLD]['rows'], account) if previous_is_data else None,
+                'col3value':_get_amount_info_from_is_data(
+                    current_is_data[reports_lib.KEY_COST_OF_GOODS_SOLD]['rows'], account),
+            })
+
+        rows.append({
+            'border':'border-top',
+            'padding':4,
+            'col1value':"Gross Profit",
+            'col2value':(
+                previous_is_data[reports_lib.KEY_OPERATING_REVENUE]['total'] - previous_is_data[reports_lib.KEY_COST_OF_GOODS_SOLD]['total'] if previous_is_data else None),
+            'col3value':(
+                current_is_data[reports_lib.KEY_OPERATING_REVENUE]['total'] - current_is_data[reports_lib.KEY_COST_OF_GOODS_SOLD]['total']),
+        })
     
 
     # Operating Expenses
@@ -591,9 +623,9 @@ def income_statement(request, slug):
             'padding':4,
             'col1value':"Total Operating Expenses",
             'col2value':(
-                previous_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total'] if previous_is_data else None),
+                (previous_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total'] + previous_is_data[reports_lib.KEY_COST_OF_GOODS_SOLD]['total']) if previous_is_data else None),
             'col3value':(
-                current_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total']),
+                current_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total'] + current_is_data[reports_lib.KEY_COST_OF_GOODS_SOLD]['total']),
         })
 
         operating_income_row = {
@@ -602,13 +634,13 @@ def income_statement(request, slug):
             'col1value':"Operating Income",
             "col3value": (
                 current_is_data[reports_lib.KEY_OPERATING_REVENUE]['total']
-                - current_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total']
+                - (current_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total'] + current_is_data[reports_lib.KEY_COST_OF_GOODS_SOLD]['total'])
             )
         }
         if previous_is_data:
             operating_income_row['col2value'] = (
                 previous_is_data[reports_lib.KEY_OPERATING_REVENUE]['total']
-                - previous_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total']
+                - (previous_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total'] + previous_is_data[reports_lib.KEY_COST_OF_GOODS_SOLD]['total'])
             )
         rows.append(operating_income_row)
 
@@ -647,6 +679,7 @@ def income_statement(request, slug):
     # Non Operating Expenses
     if non_operating_expense_accounts.exists():
         rows.append({
+            'new_section':True,
             'padding':1,
             'bold':True,
             'col1value':"Non-Operating Expenses",
@@ -698,6 +731,7 @@ def income_statement(request, slug):
                 (current_is_data[reports_lib.KEY_OPERATING_REVENUE]['total']
                 + current_is_data[reports_lib.KEY_NON_OPERATING_REVENUE]['total'])
                 - (current_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total']
+                + current_is_data[reports_lib.KEY_COST_OF_GOODS_SOLD]['total']
                 + current_is_data[reports_lib.KEY_NON_OPERATING_EXPENSE]['total'])
             )
         }
@@ -706,6 +740,7 @@ def income_statement(request, slug):
                 (previous_is_data[reports_lib.KEY_OPERATING_REVENUE]['total']
                 + previous_is_data[reports_lib.KEY_NON_OPERATING_REVENUE]['total'])
                 - (previous_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total']
+                + previous_is_data[reports_lib.KEY_COST_OF_GOODS_SOLD]['total']
                 + previous_is_data[reports_lib.KEY_NON_OPERATING_EXPENSE]['total'])
             )
         rows.append(net_income_row)
