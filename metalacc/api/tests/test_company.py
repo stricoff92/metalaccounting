@@ -29,6 +29,7 @@ class CompanyViewTests(BaseTestBase):
         company = Company.objects.first()
         self.assertEqual(company.user, self.user)
         self.assertEqual(company.name, "foobar")
+        self.assertIsNone(company.user_finger_print_str)
         self.assertIsNotNone(company.slug)
 
 

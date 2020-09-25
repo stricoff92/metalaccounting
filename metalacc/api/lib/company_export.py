@@ -1,4 +1,6 @@
 
+import json
+
 from api.models import Company, Account, Period, JournalEntry, JournalEntryLine
 
 import jwt
@@ -21,7 +23,14 @@ def export_company_to_jwt(company):
         "meta":{
             'version':settings.OBJECT_SERIALIZATION_VERSION,
             'issued_at':timezone.now().strftime("%s"),
-            'author':company.user.id,
+            'last_exported_by_author':company.user.id,
+            'user_history':[
+                {
+                    'user_hash':company.user.userprofile.slug,
+                    'timestamp':timezone.now().strftime("%s"),
+                    'event':'export'
+                }
+            ] + company.user_fingerprints
         }
     }
 
@@ -87,7 +96,16 @@ def import_company_data(data:dict, user) -> Company:
     else:
         new_company_name = company_name
 
-    new_company = Company.objects.create(user=user, name=new_company_name)
+    new_user_history = data['meta']['user_history'] + [{
+        'user_hash':user.userprofile.slug,
+        'timestamp':timezone.now().strftime("%s"),
+        'event':'import',
+    }]
+    new_company = Company.objects.create(
+        user=user, name=new_company_name,
+        user_finger_print_str=json.dumps(new_user_history))
+
+
     data['company']['new_id'] = new_company.id
 
     # create new accounts

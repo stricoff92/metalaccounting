@@ -6,6 +6,9 @@ from website import views
 urlpatterns = [
     path('', views.anon_landing, name="anon-landing"),
     path('app/', views.app_main_menu, name="app-main-menu"),
+
+    path('app/export-tools/', views.app_export_tools_menu, name="app-export-tools-menu"),
+
     path('app/company/', views.app_landing, name="app-landing"),
     path('app/company/import/', views.app_import_company, name="app-company-import"),
     path('app/company/<slug:slug>/', views.app_company, name="app-company"),
