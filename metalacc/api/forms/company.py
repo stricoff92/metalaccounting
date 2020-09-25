@@ -20,12 +20,12 @@ class CompanySelectionForm(forms.Form):
 
 
 class ImportCompanyForm(forms.Form):
-    data = forms.CharField(required=True)
+    company_text_data = forms.CharField(required=True)
 
     def clean(self):
         cleaned_data = super().clean()
         try:
-            cleaned_data['decoded_data'] = company_export.decode_signed_jwt(cleaned_data['data'])
+            cleaned_data['decoded_data'] = company_export.decode_signed_jwt(cleaned_data['company_text_data'])
         except (BadSignature, jwt.InvalidSignatureError):
             raise forms.ValidationError("Invalid Data")
         
