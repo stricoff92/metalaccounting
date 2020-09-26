@@ -39,7 +39,11 @@
             Dividends
         </div>
         <div class="col-3 col-lg-2">
-            {{ retained_earnings_data.dividends|intcomma }}
+            {% if retained_earnings_data.dividends >= 0 %}
+                {{ retained_earnings_data.dividends|intcomma }}
+            {% else %}
+                <i class="fas fa-times"></i> Cannot Plug
+            {% endif %}
         </div>
     </div>
     <div class="row p-2 report-row border-top border-bottom mt-3">

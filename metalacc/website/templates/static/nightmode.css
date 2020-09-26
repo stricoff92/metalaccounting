@@ -6,6 +6,13 @@
   background-color:#463f00;
 }
 
+.diff-minus-row {
+  background-color: #374936;
+}
+.diff-plus-row {
+  background-color: #5d3737;
+}
+
 /*!
  * Bootswatch v4.5.0
  * Homepage: https://bootswatch.com

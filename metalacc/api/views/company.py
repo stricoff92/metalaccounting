@@ -6,14 +6,19 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from api.models import Company
-from api.forms.company import CompanyForm, ImportCompanyForm
+from api.forms.company import (
+    CompanyForm,
+    ImportCompanyForm,
+    CompareCompanyDataForm,
+    CompareCompanySettingsForm
+)
 from api.lib import company_export
+from api.lib.grader import Grader
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def company_import(request):
-
     # Check object limit.
     if request.user.userprofile.at_company_object_limit:
         return Response(
@@ -116,3 +121,33 @@ def company_delete(request, slug):
     company.delete()
     return Response({}, status.HTTP_204_NO_CONTENT)
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def company_compare(request):
+    print("request.data", request.data)
+
+    form = CompareCompanyDataForm(request.data)
+    if not form.is_valid():
+        return Response(form.errors, status.HTTP_400_BAD_REQUEST)
+    
+    settings_form = CompareCompanySettingsForm(request.data)
+    if not settings_form.is_valid():
+        return Response(settings_form.errors, status.HTTP_400_BAD_REQUEST)
+
+    grader = Grader(
+        form.cleaned_data['decoded_test_company_text_data'],
+        form.cleaned_data['decoded_control_company_text_data'],
+        **settings_form.cleaned_data)
+    
+    diff_text = grader.generate_git_diff()
+    diff_rows = diff_text.split("\n")
+    diff_rows = diff_rows[4:]
+
+    data = {
+        'diff_rows':diff_rows,
+        'test_user_hash':form.cleaned_data['decoded_test_company_text_data']['meta']['user_history'][0]['user_hash'],
+        'control_user_hash':form.cleaned_data['decoded_control_company_text_data']['meta']['user_history'][0]['user_hash'],
+    }
+
+    return Response(data, status.HTTP_200_OK)

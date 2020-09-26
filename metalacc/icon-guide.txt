@@ -12,6 +12,7 @@ MACRO   <i class="fas fa-bolt"></i>
 CSV     <i class="fas fa-file-csv"></i>
 EXPORT  <i class="fas fa-copy"></i>
 DOUBLE CHECK <i class="fas fa-check-double"></i>
+Error        <i class="fas fa-times"></i>
 
 
 DATE RANGE <i class="fas fa-arrow-right"></i>

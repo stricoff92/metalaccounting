@@ -167,6 +167,18 @@
                 })
             }
 
+            function postFormData(url, data, successCb, errorCb) {
+                $.ajax({
+                    url,
+                    type:'POST',
+                    data,
+                    contentType: false, 
+                    processData: false, 
+                    success:successCb,
+                    error:errorCb,
+                })
+            }
+
             // Object.keys polyfill
             if (!Object.keys) {
                 Object.keys = (function() {

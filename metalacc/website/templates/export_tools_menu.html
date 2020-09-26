@@ -6,47 +6,14 @@
 </div>
 <div class="card p-4">
     <p class="heading-2">
-        Compare Company Data
+        Import a Company
     </p>
-    <div>
-        <button style="display:inline;" class="btn btn-secondary">
-            <i class="fas fa-sync"></i>
-            Flip Colors
-        </button>
-    </div>
-    <div class="row">
-        <div class="col-12 col-lg-6 mt-4">
-            <div class="mb-3">
-                Highlight with:
-                    <div 
-                        style="display:inline-block;width:35px;height:15px;background-color:#d37878;border-radius:4px; "
-                        id="color-left-indicator"
-                    ></div>
-            </div>
-            <textarea style="width:100%; min-height:200px"></textarea>
-        </div>
-        <div class="col-12 col-lg-6 mt-4">
-            <div class="mb-3">
-                Highlight with:
-                <div
-                    id="color-right-indicator"
-                    style="display:inline-block;width:35px;height:15px;background-color:#00ff00;border-radius:4px;"
-                ></div>
-            </div>
-            <textarea style="width:100%;  min-height:200px"></textarea>
-        </div>
-
-    </div>
-    <button class="btn btn-success mt-3">
-        <strong>Compare</strong>
-    </button>
+    <a href="{% url 'app-company-import' %}">Import a Company</a>
 </div>
-<script>
-    $(document).ready(()=>{
 
-    })
-</script>
-<div class="card p-4 mt-4">
+<!-- EXPORT USER HISTORY -->
+<hr>
+<div class="card p-4 mt-5">
     <p class="heading-2">
         View Export User History
     </p>
@@ -54,9 +21,14 @@
     <div id="output-area">
     </div>
 
-    <div class="alert alert-danger mt-3" id="view-export-history-errors" style="display:none;">
+    <div class="alert alert-danger mt-4" id="view-export-history-errors" style="display:none;">
     </div>
-
+    <div class="mt-4">
+        <input type="file" accept=".txt" id="import-company-file-picker">
+    </div>
+    <div class="mt-3">
+        <strong>or</strong>
+    </div>
     <textarea 
         class="mt-3"
         style="width:100%; 
@@ -77,6 +49,12 @@ function resetExportHistoryErrorArea() {
 function drawExportHistoryErrors(errors) {
     $("#view-export-history-errors").css("display", "block")
     $("#view-export-history-errors").text(errors)
+}
+function disableSeeHistoryBtn() {
+    $("#see-company-export-history-btn").prop("disabled", true)
+}
+function enableSeeHistoryBtn() {
+    $("#see-company-export-history-btn").prop("disabled", false)
 }
 function drawResults(results) {
     $("#output-area").html("")
@@ -112,27 +90,302 @@ function drawResults(results) {
 }
 $(document).ready(()=>{
     $("#see-company-export-history-btn").click(()=>{
+        disableSeeHistoryBtn()
         resetExportHistoryErrorArea()
 
-        const serializedData = $("#see-history-text-input").val().replace(/\s+/g, '')
-        if(!!!serializedData) {
-            return drawExportHistoryErrors("This Field is Required")
-        }
-        if(!/^\S+\:\S{15,}$/.test(serializedData)) {
-            return drawExportHistoryErrors("Invalid Format")
-        }
-        postJson(companyExportHistoryUrl, {data:serializedData},
-            (data, status, xhr)=>{
-                if(xhr.status == 200) {
-                    drawResults(data)
-                    $("#see-history-text-input").val("")
-                }
-            },
-            (data, status, xhr)=>{
-                return drawExportHistoryErrors("An Error Occured")
+        const selectedFile = $("#import-company-file-picker")[0].files[0]
+        if (selectedFile) {
+            // Upload with file picker
+            if (selectedFile.type != "text/plain") {
+                enableSeeHistoryBtn()
+                return addErrorToForm("Invalid file type selected")
             }
-        )
+            const formData = new FormData(); 
+            formData.append('company_text_file', selectedFile);
+            postFormData(companyExportHistoryUrl, formData,
+                (data, status, xhr)=>{ 
+                    if(xhr.status == 200) {
+                        enableSeeHistoryBtn()
+                        drawResults(data)
+                        $("#import-company-file-picker").val("")
+                    }
+                },
+                (data, status, xhr)=>{
+                    enableSeeHistoryBtn()
+                    addErrorToForm("An Error Occured.")
+                })
+        }
+        else {
+            const serializedData = $("#see-history-text-input").val().replace(/\s+/g, '')
+            if(!!!serializedData) {
+                enableSeeHistoryBtn()
+                return drawExportHistoryErrors("Either select a file or paste company data into the text box.")
+            }
+            if(!/^\S+\:\S{15,}$/.test(serializedData)) {
+                enableSeeHistoryBtn()
+                return drawExportHistoryErrors("Invalid Format")
+            }
+            postJson(companyExportHistoryUrl, {company_text_data:serializedData},
+                (data, status, xhr)=>{
+                    if(xhr.status == 200) {
+                        drawResults(data)
+                        $("#see-history-text-input").val("")
+                        enableSeeHistoryBtn()
+                    }
+                },
+                (data, status, xhr)=>{
+                    enableSeeHistoryBtn()
+                    return drawExportHistoryErrors("An Error Occured")
+                }
+            )
+        }
     })
 })
 </script>
+
+<!-- GRADER -->
+<hr>
+<div class="card p-4 mt-5">
+    <p class="heading-2">
+        Compare Company Data
+    </p>
+    <div class="mt-4">
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="check-order-check" onclick="return false;" checked>
+            <label class="form-check-label" for="check-order-check"><em>Entry Order: Always checked</em></label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="check-accounts-check" onclick="return false;" checked>
+            <label class="form-check-label" for="check-accounts-check"><em>Entry Accounts & Amounts: Always checked</em></label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="case-sensitive-check">
+            <label class="form-check-label" for="case-sensitive-check">Case Sensitive</label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="check-date-check" checked>
+            <label class="form-check-label" for="check-date-check">Check Entry Date</label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="check-memo-check">
+            <label class="form-check-label" for="check-memo-check">Check Entry Memo</label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="check-period-boundary-check" checked>
+            <label class="form-check-label" for="check-period-boundary-check">Check Period Boundaries</label>
+        </div>
+    </div>
+
+    <div id="compare-companies-errors" class="alert alert-danger mt-4" style="display:none;">
+    </div>
+    <div class="row">
+        <div class="col-12 col-lg-6 mt-4">
+            <div class="mb-3">
+                <p style="font-size:1.15rem;"><strong>Test</strong></p>
+            </div>
+            <div class="mb-3">
+                Highlight test company with:
+                    <div 
+                        style="display:inline-block;width:35px;height:15px;background-color:#d37878;border-radius:4px; "
+                        id="color-left-indicator"
+                    ></div>
+            </div>
+            <div class="mt-4">
+                <input type="file" accept=".txt" id="test-company-file-input">
+            </div>
+            <div class="mt-3">
+                <strong>Or</strong>
+            </div>
+            <textarea
+                class="mt-4"
+                style="width:100%; min-height:200px"
+                placeholder="Paste Company Data Here"
+                id="test-company-text-input"
+            ></textarea>
+        </div>
+        <div class="col-12 col-lg-6 mt-4">
+            <div class="mb-3">
+                <p style="font-size:1.15rem;"><strong>Control</strong></p>
+            </div>
+            <div class="mb-3">
+                Highlight control company with:
+                <div
+                    id="color-right-indicator"
+                    style="display:inline-block;width:35px;height:15px;background-color:#00ff00;border-radius:4px;"
+                ></div>
+            </div>
+            <div class="mt-4">
+                <input type="file" accept=".txt" id="control-company-file-input">
+            </div>
+            <div class="mt-3">
+                <strong>Or</strong>
+            </div>
+            <textarea
+                class="mt-4"
+                style="width:100%; min-height:200px"
+                placeholder="Paste Company Data Here"
+                id="control-company-text-input"
+            ></textarea>
+        </div>
+
+    </div>
+    <button class="btn btn-success mt-3" id="compare-companies-btn">
+        <strong>Compare</strong>
+    </button>
+    <div class="mt-4" id="comparison-results-area">
+
+    </div>
+</div>
+<script>
+function resetCompareCompaniesFormErrors(){
+    $("#compare-companies-errors").text("")
+    $("#compare-companies-errors").css("display", "none")
+}
+function setCompareCompaniesFormErrors(errors){
+    $("#compare-companies-errors").css("display", "block")
+    $("#compare-companies-errors").text(errors)
+}
+function countLeadingWhiteSpace(string) {
+    strLen = string.length
+    let ix = 0
+    while(string.charAt(ix) == " " && ix <strLen) {
+        ix++
+    }
+    return ix
+}
+function getPixelIndentFromWhitespaceCount(count) {
+    return count * 5
+}
+function drawComparisonResults(data) {
+    $("#comparison-results-area").html(`
+        <div class="mt-4 mb-3">
+            <p class="heading-2">
+                Company Data Difference
+            </p>
+            <div class="diff-plus-row p-2">
+                <strong>(User ${data.control_user_hash}) Test Data Version</strong>
+            </div>
+            <div class="diff-minus-row p-2">
+                <strong>(User ${data.control_user_hash}) Control Data Version</strong>
+            </div>
+        </div>
+    `)
+    if (!data.diff_rows.length) {
+        $("#comparison-results-area").append(`
+            <div class="mt-4 mb-3">
+                <p class="heading-3">
+                    <i class="fas fa-check-double"></i>
+                    Companies Match 
+                </p>
+            </div>
+        `)
+        return
+    }
+    data.diff_rows.forEach(row=>{
+        const diffTableRow = document.createElement("div")
+        const isPlus = row.charAt(0) == "+"
+        const isMinus = row.charAt(0) == "-"
+        const isInfo = /^\@\@/.test(row)
+        const isContext = !isPlus && !isMinus
+        if(isInfo) {
+            $(diffTableRow).addClass("border-bottom mb-3")
+            $(diffTableRow).text("....")
+        }
+        else if (isContext) {
+            whiteSpaceCount = countLeadingWhiteSpace(row)
+            pxIndent = getPixelIndentFromWhitespaceCount(whiteSpaceCount)
+            $(diffTableRow).css("padding-left", `${pxIndent}px`)
+            $(diffTableRow).text(row)
+        }
+        else if (isPlus) {
+            whiteSpaceCount = countLeadingWhiteSpace(row.replace("+", " "))
+            pxIndent = getPixelIndentFromWhitespaceCount(whiteSpaceCount)
+            $(diffTableRow).css({"padding-left": `${pxIndent}px`})
+            $(diffTableRow).addClass("diff-plus-row pt-1 pb-1")
+            $(diffTableRow).text(row.replace("+", " "))
+        } else if (isMinus) {
+            whiteSpaceCount = countLeadingWhiteSpace(row.replace("-", " "))
+            pxIndent = getPixelIndentFromWhitespaceCount(whiteSpaceCount)
+            $(diffTableRow).css({"padding-left": `${pxIndent}px`})
+            $(diffTableRow).addClass("diff-minus-row pt-1 pb-1")
+            $(diffTableRow).text(row.replace("-", " "))
+        }
+        $("#comparison-results-area").append(diffTableRow)
+
+    })
+}
+$(document).ready(()=>{
+    $("#compare-companies-btn").click(()=>{
+        resetCompareCompaniesFormErrors()
+        let errors = []
+
+        const testDataPastedText = $("#test-company-text-input").val().replace(/\s+/g, '')
+        const testDataSelectedFile = $("#test-company-file-input")[0].files[0]
+        const controlDataPastedText = $("#control-company-text-input").val().replace(/\s+/g, '')
+        const controlDataSelectedFile = $("#control-company-file-input")[0].files[0]
+
+        if(!!testDataPastedText && testDataSelectedFile) {
+            errors.push('Select either a test company file or paste test company data into the text box.')
+        }
+        if(!!controlDataPastedText && controlDataSelectedFile) {
+            errors.push('Select either a control company file or paste control company data into the text box.')
+        }
+        if(!!!testDataPastedText && !testDataSelectedFile) {
+            errors.push('Select either a test company file or paste test company data into the text box.')
+        }
+        if(!!!controlDataPastedText && !controlDataSelectedFile) {
+            errors.push('Select either a control company file or paste control company data into the text box.')
+        }
+        if(!!testDataPastedText && !/^\S+\:\S{15,}$/.test(testDataPastedText)) {
+            errors.push('Invalid test company data.')
+        }
+        if(!!controlDataPastedText && !/^\S+\:\S{15,}$/.test(controlDataPastedText)) {
+            errors.push('Invalid control company data.')
+        }
+        if(!!testDataSelectedFile && testDataSelectedFile.type != "text/plain") {
+            errors.push('Invalid test company file selected.')
+        }
+        if(!!controlDataSelectedFile && controlDataSelectedFile.type != "text/plain") {
+            errors.push('Invalid control company file selected.')
+        }
+        if (errors.length) {
+            return setCompareCompaniesFormErrors(errors.join(" "))
+        }
+
+        const formData = new FormData();
+        if(!!testDataPastedText) {
+            formData.append("test_company_text_data", testDataPastedText)
+        } else if (testDataSelectedFile) {
+            formData.append("test_company_text_file", testDataSelectedFile)
+        } else {
+            throw new Error("Not Implemented")
+        }
+        if(!!controlDataPastedText) {
+            formData.append("control_company_text_data", controlDataPastedText)
+        } else if (controlDataSelectedFile) {
+            formData.append("control_company_text_file", controlDataSelectedFile)
+        } else {
+            throw new Error("Not Implemented")
+        }
+
+        // Load settings onto the form
+        formData.append("ignore_case", !$("#case-sensitive-check").prop("checked"))
+        formData.append("ignore_date", !$("#check-date-check").prop("checked"))
+        formData.append("ignore_memo", !$("#check-memo-check").prop("checked"))
+        formData.append("ignore_period_boundaries", !$("#check-period-boundary-check").prop("checked"))
+
+        postFormData(compareCompanyUrl, formData,
+            (data, status, xhr)=>{
+                if(xhr.status == 200) {
+                    drawComparisonResults(data)
+                }
+            },
+            (data, status, xhr)=>{
+                console.error(data)
+                setCompareCompaniesFormErrors("An Error Occured.")
+            })
+    })
+})
+</script>
+
 {% endblock %}

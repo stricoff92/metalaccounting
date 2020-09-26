@@ -19,6 +19,7 @@ urlpatterns = [
     path('company/edit/<slug:slug>/', views.company_edit, name="company-edit"),
     path('company/delete/<slug:slug>/', views.company_delete, name="company-delete"),
     path('company/import/', views.company_import, name="company-import"),
+    path('company/compare/', views.company_compare, name="company-compare"),
 
     path('company/export-history/', views.account_data_export_history, name="company-export-history"),
 

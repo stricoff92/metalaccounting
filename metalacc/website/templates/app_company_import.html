@@ -15,6 +15,12 @@
     </div>
 
     <div class="mt-3">
+        <input type="file" accept=".txt" id="import-company-file-picker">
+    </div>
+    <div class="mt-3">
+        <strong>or</strong>
+    </div>
+    <div class="mt-3">
         <textarea
             id="new-account-import-text-area-import"
             class="p-1 form-control"
@@ -37,27 +43,53 @@ $(document).ready(()=>{
     $("#import-company-btn").click(()=>{
         resetErrorForm()
         disabledButton()
-        const serializedData = $("#new-account-import-text-area-import").val().replace(/\s+/g, '')
-        if(!!!serializedData) {
-            enableButton()
-            return addErrorToForm("This field is required.")
-        }
-        if(!/^\S+\:\S{15,}$/.test(serializedData)) {
-            enableButton()
-            return addErrorToForm("Data format is incorrect.")
+        
+        const selectedFile = $("#import-company-file-picker")[0].files[0]
+        if (selectedFile) {
+            // Upload with file picker
+            if (selectedFile.type != "text/plain") {
+                enableButton()
+                return addErrorToForm("Invalid file type selected")
+            }
+            const formData = new FormData(); 
+            formData.append('company_text_file', selectedFile);
+            postFormData(importCompanyUrl, formData,
+                (data, status, xhr)=>{ 
+                    if(xhr.status == 201) {
+                        window.location = `/app/company/${data.slug}/`
+                    }
+                },
+                (data, status, xhr)=>{
+                    enableButton()
+                    addErrorToForm("An Error Occured.")
+                })
+
+        } else {
+            // Upload via text pasted in the box
+            const serializedData = $("#new-account-import-text-area-import").val().replace(/\s+/g, '')
+            if(!!!serializedData) {
+                enableButton()
+                return addErrorToForm("Either select a file or paste company data into the text box.")
+            }
+            if(!/^\S+\:\S{15,}$/.test(serializedData)) {
+                enableButton()
+                return addErrorToForm("Data format is incorrect.")
+            }
+
+            postJson(importCompanyUrl, {company_text_data:serializedData},
+                (data, status, xhr)=>{
+                    if(xhr.status == 201) {
+                        window.location = `/app/company/${data.slug}/`
+                    }
+                },
+                (data, status, xhr)=>{
+                    enableButton()
+                    addErrorToForm("An Error Occured.")
+                },
+            )
         }
 
-        postJson(importCompanyUrl, {data:serializedData},
-            (data, status, xhr)=>{
-                if(xhr.status == 201) {
-                    window.location = `/app/company/${data.slug}/`
-                }
-            },
-            (data, status, xhr)=>{
-                enableButton()
-                addErrorToForm("An Error Occured.")
-            },
-        )
+
     })
 })
 function resetErrorForm(){
