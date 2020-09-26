@@ -46,7 +46,7 @@ class Grader:
         with open(self.control_file, "w") as f:
             f.write(control_str)
         
-        os.system(f"git diff -U9 --no-index {self.control_file} {self.test_file} > {self.diff_file}")
+        os.system(f"git diff -U8 --no-index {self.control_file} {self.test_file} > {self.diff_file}")
         with open(self.diff_file) as f:
             diff_str = f.read()
         
