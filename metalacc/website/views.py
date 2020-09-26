@@ -514,8 +514,6 @@ def income_statement(request, slug):
     (previous_is_data,
     current_is_data) = reports_lib.get_income_statement_data(current_period)
 
-
-    # TODO: CONTINUE HERE ON THIS BRANCH< IF thou DARE
     # union accounts accross mulple periods
     operating_revenue_accounts = reports_lib.union_account_slugs_across_income_statement_data(
         [current_is_data, previous_is_data], reports_lib.KEY_OPERATING_REVENUE)
