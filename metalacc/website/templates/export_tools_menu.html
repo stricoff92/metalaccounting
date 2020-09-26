@@ -6,12 +6,40 @@
 </div>
 <div class="card p-4">
     <p class="heading-2">
+        Import a Company
+    </p>
+    <a href="{% url 'app-company-import' %}">Import a Company</a>
+</div>
+<div class="card p-4 mt-4">
+    <p class="heading-2">
         Compare Company Data
     </p>
+    <div class="mt-4">
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="check-order-check" onclick="return false;" checked>
+            <label class="form-check-label" for="check-order-check"><em>Entry Order: Always checked</em></label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="check-order-check" onclick="return false;" checked>
+            <label class="form-check-label" for="check-order-check"><em>Entry Accounts & Ammounts: Always checked</em></label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="check-date-check">
+            <label class="form-check-label" for="check-date-check">Entry Date</label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="check-memo-check">
+            <label class="form-check-label" for="check-memo-check">Entry Memo</label>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-12 col-lg-6 mt-4">
             <div class="mb-3">
-                Highlight with:
+                <p style="font-size:1.1rem;">Test</p>
+            </div>
+            <div class="mb-3">
+                Highlight test company with:
                     <div 
                         style="display:inline-block;width:35px;height:15px;background-color:#d37878;border-radius:4px; "
                         id="color-left-indicator"
@@ -21,7 +49,10 @@
         </div>
         <div class="col-12 col-lg-6 mt-4">
             <div class="mb-3">
-                Highlight with:
+                <p style="font-size:1.1rem;">Control</p>
+            </div>
+            <div class="mb-3">
+                Highlight control company with:
                 <div
                     id="color-right-indicator"
                     style="display:inline-block;width:35px;height:15px;background-color:#00ff00;border-radius:4px;"
@@ -77,6 +108,12 @@ function drawExportHistoryErrors(errors) {
     $("#view-export-history-errors").css("display", "block")
     $("#view-export-history-errors").text(errors)
 }
+function disableSeeHistoryBtn() {
+    $("#see-company-export-history-btn").prop("disabled", true)
+}
+function enableSeeHistoryBtn() {
+    $("#see-company-export-history-btn").prop("disabled", false)
+}
 function drawResults(results) {
     $("#output-area").html("")
     $("#output-area").append(`
@@ -111,13 +148,14 @@ function drawResults(results) {
 }
 $(document).ready(()=>{
     $("#see-company-export-history-btn").click(()=>{
+        disableSeeHistoryBtn()
         resetExportHistoryErrorArea()
 
         const selectedFile = $("#import-company-file-picker")[0].files[0]
         if (selectedFile) {
             // Upload with file picker
             if (selectedFile.type != "text/plain") {
-                enableButton()
+                enableSeeHistoryBtn()
                 return addErrorToForm("Invalid file type selected")
             }
             const formData = new FormData(); 
@@ -125,21 +163,24 @@ $(document).ready(()=>{
             postFormData(companyExportHistoryUrl, formData,
                 (data, status, xhr)=>{ 
                     if(xhr.status == 200) {
+                        enableSeeHistoryBtn()
                         drawResults(data)
                         $("#import-company-file-picker").val("")
                     }
                 },
                 (data, status, xhr)=>{
-                    enableButton()
+                    enableSeeHistoryBtn()
                     addErrorToForm("An Error Occured.")
                 })
         }
         else {
             const serializedData = $("#see-history-text-input").val().replace(/\s+/g, '')
             if(!!!serializedData) {
+                enableSeeHistoryBtn()
                 return drawExportHistoryErrors("Either select a file or paste company data into the text box.")
             }
             if(!/^\S+\:\S{15,}$/.test(serializedData)) {
+                enableSeeHistoryBtn()
                 return drawExportHistoryErrors("Invalid Format")
             }
             postJson(companyExportHistoryUrl, {company_text_data:serializedData},
@@ -147,9 +188,11 @@ $(document).ready(()=>{
                     if(xhr.status == 200) {
                         drawResults(data)
                         $("#see-history-text-input").val("")
+                        enableSeeHistoryBtn()
                     }
                 },
                 (data, status, xhr)=>{
+                    enableSeeHistoryBtn()
                     return drawExportHistoryErrors("An Error Occured")
                 }
             )

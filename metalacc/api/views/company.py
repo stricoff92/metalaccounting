@@ -19,19 +19,7 @@ def company_import(request):
             "user cannot add additional companies",
             status.HTTP_400_BAD_REQUEST)
 
-    # If user uploaded a file check content type and read it into memory.
-    if request.data.get('company_text_file'):
-        uploaded_file = request.data['company_text_file']
-        if uploaded_file.content_type.lower() != "text/plain":
-            return Response("Invalid File Format. Expected text/plain", status.HTTP_400_BAD_REQUEST)
-        form_data = {
-            "company_text_data": uploaded_file.file.read().decode()
-        }
-    else:
-        form_data = request.data
-        
-
-    form = ImportCompanyForm(form_data)
+    form = ImportCompanyForm(request.data)
     if not form.is_valid():
         return Response("Invalid data.", status.HTTP_400_BAD_REQUEST)
     
@@ -49,18 +37,7 @@ def company_import(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def account_data_export_history(request):
-    # If user uploaded a file check content type and read it into memory.
-    if request.data.get('company_text_file'):
-        uploaded_file = request.data['company_text_file']
-        if uploaded_file.content_type.lower() != "text/plain":
-            return Response("Invalid File Format. Expected text/plain", status.HTTP_400_BAD_REQUEST)
-        form_data = {
-            "company_text_data": uploaded_file.file.read().decode()
-        }
-    else:
-        form_data = request.data
-
-    form = ImportCompanyForm(form_data)
+    form = ImportCompanyForm(request.data)
     if not form.is_valid():
         return Response("Invalid data.", status.HTTP_400_BAD_REQUEST)
         
