@@ -24,7 +24,6 @@ def export_company_to_jwt(company):
         "meta":{
             'version':settings.OBJECT_SERIALIZATION_VERSION,
             'issued_at':timezone.now().strftime("%s"),
-            'last_exported_by_author':company.user.id,
             'user_history':[
                 {
                     'user_hash':company.user.userprofile.slug,
