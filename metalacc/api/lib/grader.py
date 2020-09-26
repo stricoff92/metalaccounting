@@ -1,10 +1,12 @@
 
 import os
+import os.path
 import uuid
 
 from collections import OrderedDict
 import datetime as dt
 import json
+from django.conf import settings as django_settings
 
 
 from api.models import JournalEntryLine
@@ -26,15 +28,22 @@ class Grader:
         self.settings = settings
         self.test_company_data = test_company_data
         self.control_company_data = control_company_data
-
+    
         self.file_uid = str(uuid.uuid4()).replace("-", "")
-        self.test_file = f'/tmp/test_{self.file_uid}.json'
-        self.control_file = f'/tmp/control_{self.file_uid}.json'
-        self.diff_file = f'/tmp/diff_{self.file_uid}.json'
+
+        self.test_file = os.path.join(
+            django_settings.TMP_DIR_PATH, f'test_{self.file_uid}.json')
+
+        self.control_file = os.path.join(
+            django_settings.TMP_DIR_PATH, f'control_{self.file_uid}.json')
+
+        self.diff_file = os.path.join(
+            django_settings.TMP_DIR_PATH, f'diff_{self.file_uid}.json')
 
 
     def generate_git_diff(self) -> str:
-        # Convert test and control to human readable JSON
+        """Convert test and control data to human readable JSON, then take the GIT DIFF between the 2 JSON blobs
+        """
 
         test_str = self._decoded_company_data_to_comparison_json(
             self.test_company_data)

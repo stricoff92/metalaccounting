@@ -6,6 +6,23 @@
         <i class="fas fa-arrow-right"></i>
         {{ period.end|date:"M j, Y" }}
     </p>
+    {% if period.previous_period or period.period_after %}
+        <p>
+            {% if period.period_before %}
+
+                <button class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i>
+                    Previous
+                </button>
+            {% endif %}
+            {% if period.period_after %}
+                <button class="btn btn-primary" onclick="window.location='/app/period/{{ period.period_after.slug }}/'">
+                    <i class="fas fa-arrow-right"></i>
+                    Next
+                </button>
+            {% endif %}   
+        </p>
+    {% endif %}
     <p class="heading-2">
         Fiscal Period for {{ company.name }}
     </p>
@@ -204,6 +221,10 @@
                     <i class="fas fa-save"></i>
                     Save
                 </button>
+                <button class="btn btn-secondary" id="cancel-new-journal-entry-btn">
+                    <i class="fas fa-window-close"></i>
+                    Cancel
+                </button>
             </div>
             <hr>
         </div>
@@ -219,6 +240,11 @@ $(document).ready(()=>{
     $("#open-new-journal-entry-form-btn").click(()=>{
         $("#open-new-journal-entry-form-btn").prop("disabled", true)
         $("#add-new-journal-entry-form-container").slideDown(350)
+    })
+    $("#cancel-new-journal-entry-btn").click(()=>{
+        $("#add-new-journal-entry-form-container").slideUp(350)
+        resetNewJournalEntryForm()
+        $("#open-new-journal-entry-form-btn").prop("disabled", false)
     })
     $("#save-new-journal-entry-btn").click(()=>{
         resetNewJournalEntryFormErrors()
