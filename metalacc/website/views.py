@@ -769,6 +769,7 @@ def balance_sheet(request, slug):
         'balance_sheet_data':balance_sheet_data,
         'current_period':current_period,
         'breadcrumbs':breadcrumbs,
+        'period':current_period,
     }
     return render(request, "app_report_balance_sheet.html", data)
 
