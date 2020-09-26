@@ -117,12 +117,6 @@ def app_period_detail(request, slug):
         last_je = period.journalentry_set.latest("date")
     except JournalEntry.DoesNotExist:
         last_je = None
-    
-    previous_period = period.period_before
-    next_period = period.period_after
-
-    print(period.period_before)
-
     company = period.company
     date_format = "%b %-d, %Y"
     breadcrumbs = [
