@@ -17,6 +17,9 @@ from .applocals import (
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+TMP_DIR_PATH = "/tmp/"
+
+
 SECRET_KEY = _SECRET_KEY
 
 # data for exporting objects
