@@ -2,11 +2,11 @@
 {% load humanize %}
 {% block 'body' %}
 <div>
-    <p class="heading-1">Exported Company Tools</p>
+    <p class="heading-1">Snapshot Tools</p>
 </div>
 <div class="card p-4">
     <p class="heading-2">
-        Import a Company
+        Import a Company From Snapshot
     </p>
     <a href="{% url 'app-company-import' %}">Import a Company</a>
 </div>
@@ -15,7 +15,7 @@
 <hr>
 <div class="card p-4 mt-5">
     <p class="heading-2">
-        View Export User History
+        View a Snapshot's User Events
     </p>
 
     <div id="output-area">
@@ -79,7 +79,7 @@ function drawResults(results) {
                     ${moment((results[i].timestamp - 0) * 1000).format('lll')}
                 </div>
                 <div class="col-3 col-lg-2">
-                    ${results[i].user_hash}
+                    ${results[i].user_hash=="{{ user.userprofile.slug }}" ? "YOU" : results[i].user_hash}
                 </div>
                 <div class="col-3 col-lg-2">
                     ${results[i].event}

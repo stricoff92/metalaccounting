@@ -19,10 +19,12 @@ urlpatterns = [
     path('app/company/<slug:slug>/default-account/', views.app_company_add_default_accounts, name="app-default-accounts"),
     path('app/account/<slug:slug>/', views.app_account_details, name="app-account-details"),
     path('app/period/<slug:slug>/', views.app_period_detail, name="app-period-details"),
+    path("app/period/<slug:slug>/je/csv/", views.app_period_je_csv, name="app-period-je-csv"),
 
     path('app/journal_entry/<slug:slug>/', views.app_jounral_entry_detail, name="app-journal-entry-details"),
 
     path('app/period/<slug:period_slug>/taccount/<slug:account_slug>/', views.t_account, name="app-t-account"),
+    path('app/period/<slug:period_slug>/taccount/csv/<slug:account_slug>/', views.t_account_csv, name="app-t-account-csv"),
 
     path('app/period/<slug:slug>/trial-balance/', views.trial_balance, name="app-trial-balance"),
     path('app/period/<slug:slug>/trial-balance/csv/', views.trial_balance_csv, name="app-trial-balance-csv"),
