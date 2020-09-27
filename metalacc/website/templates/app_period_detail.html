@@ -6,11 +6,10 @@
         <i class="fas fa-arrow-right"></i>
         {{ period.end|date:"M j, Y" }}
     </p>
-    {% if period.previous_period or period.period_after %}
+    {% if period.period_before or period.period_after %}
         <p>
             {% if period.period_before %}
-
-                <button class="btn btn-primary">
+                <button class="btn btn-primary" onclick="window.location='/app/period/{{ period.period_before.slug }}/'">
                     <i class="fas fa-arrow-left"></i>
                     Previous
                 </button>
