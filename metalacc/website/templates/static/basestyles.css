@@ -14,3 +14,13 @@
 .text-input-max-200 {
     max-width:200px;
 }
+
+#snackbar-container {
+    min-width: 250px;
+    margin-left: -125px;
+    position: fixed;
+    z-index: 1;
+    left: 50%;
+    bottom: 30px;
+    font-size:1.25rem;
+}

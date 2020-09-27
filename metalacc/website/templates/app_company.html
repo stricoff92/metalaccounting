@@ -68,6 +68,7 @@ $("#save-company-name-btn").click(()=>{
                 $("#breadcrum-company-name").text(data.name)
                 $("#edit-company-name-form-container").css("display", "none")
                 $("#company-name-container").css("display", "block")
+                addSuccessToast("Company Saved")
             } else {
                 drawEditCompanyFormError("An error occured.")
             }
