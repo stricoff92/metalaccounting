@@ -284,6 +284,7 @@ $(document).ready(()=>{
         postJson(newJournalEntryUrl, data, 
             (data, status, xhr)=>{
                 if(xhr.status == 201) {
+                    addSuccessToast("Journal Entry Created")
                     resetNewJournalEntryForm()
                     addJournalEntry(data)
                 }

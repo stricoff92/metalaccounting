@@ -104,6 +104,7 @@ $(document).ready(()=>{
                     if($("#no-periods-yet-msg").length) {
                         $("#no-periods-yet-msg").css("display", "none")
                     }
+                    addSuccessToast("Period Created")
                     resetNewPeriodForm()
                     return addPeriodToList(data)
                 }
@@ -247,6 +248,7 @@ function addPeriodToList(periodData) {
         const url = deletePeriodUrl(periodData.slug)
         postJson(url, {}, (data, status, xhr) =>{
             if(xhr.status == 204) {
+                addSuccessToast("Period Deleted")
                 return $(`#period-card-${periodData.slug}`).remove()
             }
             alert('An error occured: ' + status)
@@ -289,6 +291,8 @@ function addPeriodToList(periodData) {
         postJson(url, data,
             (data, status, xhr)=>{
                 if(xhr.status == 200) {
+                    addSuccessToast("Period Saved")
+
                     // update state
                     $(`#period-card-${periodData.slug}`).data('start', data.start)
                     $(`#period-card-${periodData.slug}`).data('end', data.end)

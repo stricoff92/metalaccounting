@@ -324,6 +324,7 @@ $(document).ready(()=>{
                 if(xhr.status != 201) {
                     return alert("An Error Occured: " + status)
                 }
+                addSuccessToast("Account Created")
                 if (clearForm) {
                     $("#no-accounts-yet-msg").css("display", "none")
                     $("#new-account-name-input").val("")
@@ -431,6 +432,7 @@ function addAccountToList(accountData) {
             postJson(url, data, 
                 (data, status, xhr)=>{
                     if(xhr.status == 204) {
+                        addSuccessToast("Account Deleted")
                         return $(`#account-row-${accountData.slug}`).remove()
                     }
                     alert("An Error Occured: " + status)

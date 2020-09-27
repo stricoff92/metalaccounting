@@ -92,13 +92,30 @@
             {% endif %}
             {% block 'body' %}
             {% endblock %}
+            
+            <div id="snackbar-container">
+            </div>
 
             <script>
                 function addToast(text, duration, bsClasses) {
-
+                    const newAlertUID = getNewUID()
+                    const newAlert = document.createElement("div")
+                    $(newAlert).addClass("alert " + bsClasses)
+                    $(newAlert).attr("id", "toast-" + newAlertUID)
+                    $(newAlert).css("display", "none")
+                    $(newAlert).text(text)
+                    $("#snackbar-container").append(newAlert)
+                    $("#toast-" + newAlertUID).slideDown(150, ()=>{
+                        setTimeout(()=>{
+                            $("#toast-" + newAlertUID).slideUp(150)
+                        }, duration)
+                    })
                 }
                 function addSuccessToast(text) {
                     addToast(text, 3500, "alert-success")
+                }
+                function addErrorToast(text) {
+                    addToast(text, 3500, "alert-danger")
                 }
             </script>
 
