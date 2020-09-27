@@ -1,4 +1,5 @@
 
+from collections import defaultdict
 import random
 import csv
 
@@ -244,6 +245,74 @@ def app_company_accounts(request, slug):
 
 
 @login_required
+def app_period_je_csv(request, slug):
+    period = get_object_or_404(Period, company__user=request.user, slug=slug)
+    journal_entries = JournalEntry.objects.filter(period=period)
+    try:
+        repeat_values = bool(int(request.GET.get("printrepeats", 0)))
+    except Exception:
+        repeat_values = False
+    try:
+        past_values = bool(int(request.GET.get("past", 0)))
+    except Exception:
+        past_values = False
+    try:
+        future_values = bool(int(request.GET.get("future", 0)))
+    except Exception:
+        future_values = False
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="jounral-entries-{slug}.csv"'
+    writer = csv.writer(response)
+    writer.writerow([
+        "journal entry number", "closing Entry", "adjusting entry", "date", "memo", "account name", "account number",
+        "debit", "credit", "magnitude",
+    ])
+
+    journal_entry_lines = JournalEntryLine.objects.filter(journal_entry__in=journal_entries)
+    journal_entry_lines = journal_entry_lines.values(
+        "journal_entry_id", "account_id", "amount", "type")
+    
+    jel_map = defaultdict(lambda:{
+        'dr_lines':[],
+        'cr_lines':[],
+    })
+    for jel in journal_entry_lines:
+        if jel['type'] == JournalEntryLine.TYPE_DEBIT:
+            jel_map[jel['journal_entry_id']]['dr_lines'].append(jel)
+        elif jel['type'] == JournalEntryLine.TYPE_CREDIT:
+            jel_map[jel['journal_entry_id']]['cr_lines'].append(jel)
+
+    accounts = Account.objects.filter(company=period.company)
+    accounts = accounts.values("id", "name", "number")
+    acc_map = {a['id']:a for a in accounts}
+
+    journal_entries = journal_entries.order_by("display_id").values(
+        "id", "date", "memo", "display_id", "is_adjusting_entry", "is_closing_entry")
+
+    for je in journal_entries:
+        dr_jels = sorted(jel_map[je['id']]['dr_lines'], key=lambda jel: acc_map[jel['account_id']]['number'])
+        cr_jels = sorted(jel_map[je['id']]['cr_lines'], key=lambda jel: acc_map[jel['account_id']]['number'])
+        for dr_jel in dr_jels:
+            writer.writerow([
+                je['display_id'], je['is_closing_entry'], je['is_adjusting_entry'],
+                je['date'], je['memo'],
+                acc_map[dr_jel['account_id']]['name'], acc_map[dr_jel['account_id']]['number'],
+                dr_jel['amount'], 0, dr_jel['amount']
+            ])
+        for cr_jel in cr_jels:
+            writer.writerow([
+                je['display_id'], je['is_closing_entry'], je['is_adjusting_entry'],
+                je['date'], je['memo'],
+                acc_map[cr_jel['account_id']]['name'], acc_map[cr_jel['account_id']]['number'],
+                0, cr_jel['amount'], cr_jel['amount']
+            ])
+    
+    return response
+    
+
+
+@login_required
 def app_company_accounts_csv(request, slug):
     company = get_object_or_404(
         Company, user=request.user, slug=slug)
@@ -448,6 +517,40 @@ def t_account(request, period_slug, account_slug):
         't_account_rows':rows,
     }
     return render(request, "app_report_t_account.html", data)
+
+
+@login_required
+def t_account_csv(request, period_slug, account_slug):
+    current_period = get_object_or_404(
+        Period, company__user=request.user, slug=period_slug)
+    account = get_object_or_404(Account, company=current_period.company, slug=account_slug)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = (
+        f'attachment; filename="taccount-{account_slug}-{period_slug}.csv"')
+    writer = csv.writer(response)
+    writer.writerow([
+        "Entry Date", "Journal Entry Id", "Closing Entry", "Adjusting Entry", "Debit Amount", "Credit Amount",
+    ])
+
+    (rows,
+    start_balance,
+    end_balance,
+    prev_dr_total,
+    prev_cr_total,
+    curr_dr_total,
+    curr_cr_total,) = reports_lib.get_t_account_data_for_account(account, current_period)
+
+    for row in rows:
+        writer.writerow([
+            row['journal_entry__date'], row['journal_entry__display_id'],
+            row['journal_entry__is_closing_entry'],
+            row['journal_entry__is_adjusting_entry'],
+            row['amount'] if row['type'] == JournalEntryLine.TYPE_DEBIT else 0,
+            row['amount'] if row['type'] == JournalEntryLine.TYPE_CREDIT else 0,
+        ])
+
+    return response
 
 
 @login_required
