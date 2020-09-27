@@ -55,7 +55,11 @@ class Grader:
         with open(self.control_file, "w") as f:
             f.write(control_str)
         
-        os.system(f"git diff -U8 --no-index {self.control_file} {self.test_file} > {self.diff_file}")
+        git_cmd = f"git diff -U8 --no-index {self.control_file} {self.test_file} > {self.diff_file}"
+        exit_code = os.system(git_cmd)
+        if exit_code != 0:
+            raise Exception(f"Unexpected exit code {exit_code}")
+
         with open(self.diff_file) as f:
             diff_str = f.read()
         

@@ -93,6 +93,15 @@
             {% block 'body' %}
             {% endblock %}
 
+            <script>
+                function addToast(text, duration, bsClasses) {
+
+                }
+                function addSuccessToast(text) {
+                    addToast(text, 3500, "alert-success")
+                }
+            </script>
+
             <div id="app-footer" class="jumbotron mt-5 pt-4 pb-4 mb-2">
                 <div style="display:flex;">
                     <i class="fas fa-balance-scale"></i>
