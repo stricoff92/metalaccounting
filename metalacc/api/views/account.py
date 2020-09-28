@@ -157,10 +157,14 @@ def account_edit(request, slug):
     account = get_object_or_404(Account, slug=slug, user=request.user)
     account_type = account.type
     company = account.company
+    account_was_cash_tag = account.tag == Account.TAG_CASH
 
     form = EditAccountForm(request.data, instance=account)
     if not form.is_valid():
         return Response(form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
+    
+    reset_period_version_hash =(
+        account_was_cash_tag and form.cleaned_data['tag'] != Account.TAG_CASH)
     
     # Check for duplicate name/number combinations.
     duplicate_account_names = Account.objects.exclude(id=account.id).filter(
@@ -206,6 +210,10 @@ def account_edit(request, slug):
         account = form.save()
     except ValidationError as e:
         return Response(e, status.HTTP_400_BAD_REQUEST)
+    else:
+        if reset_period_version_hash:
+            for p in company.period_set.all():
+                p.cycle_version_hash()
     
     data = {
         'slug':account.slug,
