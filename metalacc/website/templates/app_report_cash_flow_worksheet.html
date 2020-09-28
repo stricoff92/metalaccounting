@@ -311,21 +311,16 @@
             if(journalEntriesWithInvalidCashAmount.length) {
                 return drawInvalidCashAmountWorkSheetErrors(journalEntriesWithInvalidCashAmount)
             }
-            console.log("SUBMITTING!!!!!")
-            console.log(data)
 
             postJson(createCashFlowWorksheetUrl("{{ period.slug }}"), data,
             (data, status, xhr)=>{
                 if(xhr.status == 201) {
-                    window.location = "/app/period/{{ period.slug }}/statement-of-cash-flows/"
+                    window.location = "/app/period/{{ period.slug }}/statement-of-cash-flows/?stoast=Worksheet Saved"
                 }
             },
             (data, status, xhr)=>{
                 alert("an error occured")
             })
-
-
-
         })
     })
 </script>

@@ -122,6 +122,20 @@
                     addToast(text, 3500, "alert-danger")
                 }
             </script>
+            <script>
+                $(document).ready(()=>{
+                    const search = location.search.substring(1)
+                    if(search){
+                        const qp = JSON.parse('{"' + decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"') + '"}')
+                        console.log(qp)
+                        if(qp.stoast) {
+                            setTimeout(()=>{
+                                addSuccessToast(qp.stoast)
+                            }, 750)
+                        }
+                    }
+                })
+            </script>
 
             <div id="app-footer" class="jumbotron mt-5 pt-4 pb-4 mb-2">
                 <div style="display:flex;">

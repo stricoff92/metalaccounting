@@ -70,7 +70,7 @@ $(document).ready(()=>{
         postJson(companyNewUrl, {name: newCompanyName}, 
             (data, status, xhr)=>{
                 if (xhr.status == 201) {
-                    window.location = "/app/company/" + data.slug + "/"
+                    window.location = "/app/company/" + data.slug + "/?stoast=Company Created"
                 } else {
                     drawFormError("An Error Occured")
                 }
@@ -144,6 +144,7 @@ function addCompanyToList (companyData) {
         const url = companyDeleteUrl(companyData.slug)
         postJson(url, {}, (data, status, xhr)=>{
             if(xhr.status == 204) {
+                addSuccessToast("Comapny Deleted")
                 $(companyContainerDiv).remove()
             }
         }, (data, status, xhr) => {
