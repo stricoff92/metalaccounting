@@ -127,7 +127,6 @@
                     const search = location.search.substring(1)
                     if(search){
                         const qp = JSON.parse('{"' + decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"') + '"}')
-                        console.log(qp)
                         if(qp.stoast) {
                             setTimeout(()=>{
                                 addSuccessToast(qp.stoast)
