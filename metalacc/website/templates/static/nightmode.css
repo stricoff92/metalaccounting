@@ -13,6 +13,11 @@
   background-color: #5d3737;
 }
 
+.select2-results {
+  background-color: #bdbdbd;
+  color:#141414;
+}
+
 /*!
  * Bootswatch v4.5.0
  * Homepage: https://bootswatch.com
