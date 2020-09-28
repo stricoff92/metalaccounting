@@ -432,7 +432,7 @@ function addAccountRowLine(isDebit, disableDeleteBtn) {
     })
     $("body").data('accounts').forEach(account => {
         $(`#account-select-${rowUID}`).append(`
-            <option value="${account.slug}" style="background-color:white;color:black;">
+            <option value="${account.slug}">
                 ${account.name} (${account.number})
             </option>
         `)
