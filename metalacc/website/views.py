@@ -142,6 +142,7 @@ def app_period_detail(request, slug):
         'company':company,
         'last_je':last_je,
         'breadcrumbs':breadcrumbs,
+        'include_select2':True,
     }
     return render(request, "app_period_detail.html", data)
 

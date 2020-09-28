@@ -410,7 +410,7 @@ function addAccountRowLine(isDebit, disableDeleteBtn) {
                     X
                 </button>
                 <select
-                    class="form-control"
+                    style="width:100%"
                     id="account-select-${rowUID}"
                 >
                     <option value="">--</option>
@@ -432,11 +432,12 @@ function addAccountRowLine(isDebit, disableDeleteBtn) {
     })
     $("body").data('accounts').forEach(account => {
         $(`#account-select-${rowUID}`).append(`
-            <option value="${account.slug}">
+            <option value="${account.slug}" style="background-color:white;color:black;">
                 ${account.name} (${account.number})
             </option>
         `)
     })
+    $(`#account-select-${rowUID}`).select2()
 }
 function searchByName(searchName) {
     const allAccounts = $("body").data('accounts')
