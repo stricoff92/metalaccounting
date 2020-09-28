@@ -79,7 +79,7 @@ $(document).ready(()=>{
             postJson(importCompanyUrl, {company_text_data:serializedData},
                 (data, status, xhr)=>{
                     if(xhr.status == 201) {
-                        window.location = `/app/company/${data.slug}/`
+                        window.location = `/app/company/${data.slug}/?stoast=Company Imported`
                     }
                 },
                 (data, status, xhr)=>{

@@ -1263,6 +1263,52 @@ class AccountViewTests(BaseTestBase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
+    def test_removing_an_accounts_cash_tag_resets_all_company_period_version_hashes(self):
+        """ Test that removing an accounts CASH tag resets all the periods version hash 
+        """
+        period = self.factory.create_period(self.company, "2020-01-01", "2020-03-31")
+        original_version_hash = period.version_hash
+
+        account = self.factory.create_account(
+            self.company, "Cash", Account.TYPE_ASSET, 1000, is_current=True, tag=Account.TAG_CASH)
+        url = reverse("account-edit", kwargs={'slug':account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1100,
+            "is_current":True,
+            "tag":"",
+        } 
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        account.refresh_from_db()
+        period.refresh_from_db()
+        self.assertIsNone(account.tag)
+        self.assertNotEqual(original_version_hash, period.version_hash)
+
+
+    def test_not_removing_an_accounts_cash_tag_does_not_resets_all_company_period_version_hashes(self):
+        """ Test that not removing an account's CASH tag does not reset all the period's version hash 
+        """
+        period = self.factory.create_period(self.company, "2020-01-01", "2020-03-31")
+        original_version_hash = period.version_hash
+
+        account = self.factory.create_account(
+            self.company, "Cash", Account.TYPE_ASSET, 1000, is_current=True, tag=Account.TAG_CASH)
+        url = reverse("account-edit", kwargs={'slug':account.slug})
+        data = {
+            "name":"cold hard cash",
+            "number":1100,
+            "is_current":True,
+            "tag":Account.TAG_CASH,
+        } 
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        account.refresh_from_db()
+        period.refresh_from_db()
+        self.assertEqual(account.tag, Account.TAG_CASH)
+        self.assertEqual(original_version_hash, period.version_hash)
+
+
     def test_default_account_names_and_numbers_are_unique(self):
         numbers = [r[4] for r in DEFAULT_ACCOUNTS]
         names = [r[5] for r in DEFAULT_ACCOUNTS]

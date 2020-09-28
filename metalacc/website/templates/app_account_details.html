@@ -231,7 +231,6 @@ $(document).ready(()=>{
                 }
             },
             (data, status, xhr)=>{
-                console.error(data)
                 addEditAccountFormAPIError(errorToString(data.responseJSON))
             })
     })

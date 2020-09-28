@@ -74,7 +74,7 @@ $(document).ready(()=>{
         postJson(addDefaultAccountsUrl, data, 
             (data, status, xhr)=>{
                 if(xhr.status == 201) {
-                    window.location = "/app/company/{{ company.slug }}/account/"
+                    window.location = "/app/company/{{ company.slug }}/account/?stoast=Accounts Created"
                     return
                 }
                 alert("An Error Occured")

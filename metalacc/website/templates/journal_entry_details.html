@@ -24,7 +24,7 @@
             postJson(deleteJournalEntryUrl("{{ journal_entry.slug }}"), {},
                 (data, status, xhr)=>{
                     if(xhr.status == 204) {
-                        window.location = "/app/period/{{ period.slug }}/"
+                        window.location = "/app/period/{{ period.slug }}/?stoast=Journal Entry Deleted"
                     }
                 },
                 (data, status, xhr)=>{
