@@ -38,7 +38,7 @@ CSRF_COOKIE_SECURE = not DEBUG
 if DEBUG:
     ALLOWED_HOSTS = ['127.0.0.1', 'localhost'] + ADDITIONAL_ALLOWED_HOSTS
 else:
-    ALLOWED_HOSTS = []
+    ALLOWED_HOSTS = ADDITIONAL_ALLOWED_HOSTS
 
 
 # Application definition
@@ -121,6 +121,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LOGIN_URL = '/'
 
+
+
 AUTHENTICATION_BACKENDS = [
     'metalacc.email_backend.EmailBackend'
 ]
@@ -136,6 +138,7 @@ REST_FRAMEWORK = {
 }
 
 
+# EMAIL SETTINGS
 if ENV == 'DEV':
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
