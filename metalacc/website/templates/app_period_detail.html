@@ -206,19 +206,37 @@
                     Entry Type <i class="fas fa-question-circle"></i>
                 </p>
                 <div class="form-check">
-                    <input class="form-check-input" id="entry-type-regular" type="radio" name="entry-type-radio" value="regular" checked>
+                    <input
+                        class="form-check-input"
+                        id="entry-type-regular"
+                        type="radio"
+                        name="entry-type-radio"
+                        value="regular"
+                        {% if not has_closing_entries and not has_adjusting_entries %} checked {% endif %}>
                     <label class="form-check-label" for="entry-type-regular">
                         Regular
                     </label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" id="entry-type-adjusting" type="radio" name="entry-type-radio" value="regular">
+                    <input
+                        class="form-check-input"
+                        id="entry-type-adjusting"
+                        type="radio"
+                        name="entry-type-radio"
+                        value="regular"
+                        {% if not has_closing_entries and has_adjusting_entries %} checked {% endif %}>
                     <label class="form-check-label" for="entry-type-adjusting">
                         Adjusting
                     </label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" id="entry-type-closing" type="radio" name="entry-type-radio" value="regular">
+                    <input
+                        class="form-check-input"
+                        id="entry-type-closing"
+                        type="radio"
+                        name="entry-type-radio"
+                        value="regular"
+                        {% if has_closing_entries %} checked {% endif %}>
                     <label class="form-check-label" for="entry-type-closing">
                         Closing
                     </label>
@@ -244,7 +262,7 @@
 </div>
 <script>
 $(document).ready(()=>{
-    $("#new-journal-entry-date-input").val('{{ last_je.date|date:"Y-m-d" }}')
+    $("#new-journal-entry-date-input").val('{{ default_date|date:"Y-m-d" }}')
     $("#open-new-journal-entry-form-btn").click(()=>{
         $("#open-new-journal-entry-form-btn").prop("disabled", true)
         $("#add-new-journal-entry-form-container").slideDown(350)
