@@ -29,7 +29,7 @@ OBJECT_SERIALIZATION_VERSION = 1
 OBJECT_SERIALIZATION_SUPPORTED_VERSIONS = (1, )
 JWT_ALGORITHM = "HS256"
 
-DEBUG = ENV != 'PROD'
+DEBUG = ENV == 'DEV'
 
 
 SESSION_COOKIE_SECURE = not DEBUG
@@ -134,6 +134,11 @@ REST_FRAMEWORK = {
     #     'rest_framework.parsers.JSONParser',
     # ]
 }
+
+
+if ENV == 'DEV':
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 
 
 LANGUAGE_CODE = 'en-us'
