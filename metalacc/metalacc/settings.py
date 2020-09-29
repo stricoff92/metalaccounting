@@ -138,6 +138,8 @@ REST_FRAMEWORK = {
 
 if ENV == 'DEV':
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 
 
