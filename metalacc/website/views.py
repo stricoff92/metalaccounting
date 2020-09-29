@@ -116,8 +116,9 @@ def app_period_detail(request, slug):
     period = get_object_or_404(Period, company__user=request.user, slug=slug)
     try:
         last_je = period.journalentry_set.latest("date")
+        default_date = last_je.date
     except JournalEntry.DoesNotExist:
-        last_je = None
+        default_date = period.start
     company = period.company
     date_format = "%b %-d, %Y"
     breadcrumbs = [
@@ -137,12 +138,16 @@ def app_period_detail(request, slug):
             'value':f'{period.start.strftime(date_format)} -> {period.end.strftime(date_format)}',
         }
     ]
+    has_closing_entries = period.journalentry_set.filter(is_closing_entry=True)
+    has_adjusting_entries = period.journalentry_set.filter(is_adjusting_entry=True)
     data = {
         'period':period,
         'company':company,
-        'last_je':last_je,
+        'default_date':default_date,
         'breadcrumbs':breadcrumbs,
         'include_select2':True,
+        'has_closing_entries':has_closing_entries,
+        'has_adjusting_entries':has_adjusting_entries,
     }
     return render(request, "app_period_detail.html", data)
 
