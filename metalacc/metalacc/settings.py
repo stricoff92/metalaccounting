@@ -132,17 +132,13 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    # 'DEFAULT_PARSER_CLASSES': [
-    #     'rest_framework.parsers.JSONParser',
-    # ]
 }
 
 
 # EMAIL SETTINGS
 if ENV == 'DEV':
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-else:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
 
 
 
