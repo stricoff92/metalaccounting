@@ -29,7 +29,7 @@ OBJECT_SERIALIZATION_VERSION = 1
 OBJECT_SERIALIZATION_SUPPORTED_VERSIONS = (1, )
 JWT_ALGORITHM = "HS256"
 
-DEBUG = ENV != 'PROD'
+DEBUG = ENV == 'DEV'
 
 
 SESSION_COOKIE_SECURE = not DEBUG
@@ -38,7 +38,7 @@ CSRF_COOKIE_SECURE = not DEBUG
 if DEBUG:
     ALLOWED_HOSTS = ['127.0.0.1', 'localhost'] + ADDITIONAL_ALLOWED_HOSTS
 else:
-    ALLOWED_HOSTS = []
+    ALLOWED_HOSTS = ADDITIONAL_ALLOWED_HOSTS
 
 
 # Application definition
@@ -121,6 +121,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LOGIN_URL = '/'
 
+
+
 AUTHENTICATION_BACKENDS = [
     'metalacc.email_backend.EmailBackend'
 ]
@@ -130,10 +132,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    # 'DEFAULT_PARSER_CLASSES': [
-    #     'rest_framework.parsers.JSONParser',
-    # ]
 }
+
+
+# EMAIL SETTINGS
+if ENV == 'DEV':
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
 
 
 LANGUAGE_CODE = 'en-us'
