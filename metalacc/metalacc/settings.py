@@ -57,6 +57,11 @@ INSTALLED_APPS = [
     'django_extensions',
 ]
 
+# Allow django to serve static files in staging environment
+if ENV == "STAGING":
+    INSTALLED_APPS.insert(0, "whitenoise.middleware.WhiteNoiseMiddleware")
+
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -152,6 +157,14 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "website/templates/static"),
 ]
+
+
+if ENV == "STAGING":
+    # Directory for whitenoise to serve static files from.
+    STATIC_ROOT = os.path.join(BASE_DIR, "staging_static_root")
+elif ENV == "PROD":
+    # Directory for NGINX to serve static files from.
+    pass
 
 
 # Number of characters in each slug

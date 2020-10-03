@@ -7,3 +7,4 @@ env/
 *.ipynb
 htmlcov/
 .coverage
+staging_static_root/
