@@ -59,7 +59,7 @@ INSTALLED_APPS = [
 
 # Allow django to serve static files in staging environment
 if ENV == "STAGING":
-    INSTALLED_APPS.insert(0, "whitenoise.middleware.WhiteNoiseMiddleware")
+    INSTALLED_APPS.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
 
 MIDDLEWARE = [
