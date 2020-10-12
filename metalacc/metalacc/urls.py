@@ -8,6 +8,8 @@ urlpatterns = [
     path('', include('website.urls')),
 ]
 
+if settings.SHOW_DOCS:
+    urlpatterns.append(path('docs/', include('docs.urls')))
 
 if settings.DEBUG:
     urlpatterns.append(path('admin/', admin.site.urls))

@@ -12,6 +12,7 @@ from .applocals import (
     DB_USERNAME,
     DB_PASSWORD,
 )
+from metalacc import applocals
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -46,6 +47,7 @@ else:
 INSTALLED_APPS = [
     'api.apps.ApiConfig',
     'website.apps.WebsiteConfig',
+    'docs.apps.DocsConfig',
     'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -170,3 +172,6 @@ elif ENV == "PROD":
 
 # Number of characters in each slug
 SLUG_LENGTH = 10
+
+
+SHOW_DOCS = getattr(applocals, "SHOW_DOCS", True)

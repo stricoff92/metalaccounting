@@ -1,0 +1,20 @@
+{% extends 'base_docs.html' %} 
+{% block 'body' %}
+    <div>
+        <p class="heading-2">
+            Quick Start Guide
+        </p>
+        <p>
+            Check out our quick start guide <a href="#">here</a>
+        </p>
+    </div>
+    <hr>
+    <div class="mt-3">
+        <p class="heading-2">Index</p>
+        <ul>
+            {% for item in index_items %}
+                <li><a href="{{ item.href }}">{{ item.name }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}
