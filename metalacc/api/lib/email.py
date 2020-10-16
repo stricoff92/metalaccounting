@@ -8,7 +8,7 @@ def send_account_activation_email(user, token:str):
 
     from_email = None
     to_emails = [user.email]
-    email_message = f"Your account is ready. Click the URL to activate your account: {activation_url}"
+    email_message = f"Your MetalAccounting profile is ready. Click to activate your account: {activation_url}"
     send_mail(
         'Activate Your Account',
         email_message,

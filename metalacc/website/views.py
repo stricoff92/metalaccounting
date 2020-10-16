@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.http import HttpResponseNotAllowed, HttpResponse, HttpResponseBadRequest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -24,7 +24,7 @@ from api.utils import (
     get_report_page_breadcrumbs,
     is_valid_slug
 )
-from api.lib import reports as reports_lib, company_export, email
+from api.lib import reports as reports_lib, company_export, email as email_lib
 from api import utils
 from website.forms import LoginForm, RegisterNewUser
 
@@ -1017,6 +1017,7 @@ def login_user(request):
 
 
 @api_view(['POST'])
+@permission_classes([])
 def register(request):
     if request.user.is_authenticated:
         return Response("You must log out first.", status.HTTP_400_BAD_REQUEST)
@@ -1053,7 +1054,7 @@ def register(request):
     userprofile = UserProfile.objects.create(user=new_user)
 
     activate_user_token = utils.get_account_activation_token(userprofile.slug)
-    email.send_account_activation_email(new_user, activate_user_token)
+    email_lib.send_account_activation_email(new_user, activate_user_token)
 
     return Response("User Created.", status.HTTP_201_CREATED)
 
