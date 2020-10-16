@@ -82,12 +82,13 @@
                 <form
                     method="POST"
                     action="{% url 'password_reset_send_email' %}"
+                    onsubmit="return validateSendPWResetEmailForm()"
                 >
                     {% csrf_token %}
                     <div class="alert alert-danger" id="reset-password-form-errors" style="display:none;">
                     </div>
                     <div>
-                        <input type="email" name="email" class="form-control text-input-max-400" placeholder="E-Mail">
+                        <input type="email" name="email" class="form-control text-input-max-400" placeholder="E-Mail" id="reset-pw-email-input">
                     </div>
                     <div class="mt-2">
                         <button class="btn btn-primary">Reset Password</button>
@@ -96,6 +97,15 @@
             </div>
         </div>
         <script>
+            function validateSendPWResetEmailForm() {
+                const email = $("#reset-pw-email-input").val().trim()
+                if (!isValidEmail(email)) {
+                    $("#reset-password-form-errors").text("Invalid Email Address")
+                    $("#reset-password-form-errors").css("display", "block")
+                    return false
+                }
+                return true
+            }
             $(document).ready(()=>{
                 const search = location.search.substring(1)
                 if(search){
