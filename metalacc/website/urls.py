@@ -1,4 +1,7 @@
 from django.urls import path
+from django.conf.urls import url
+from django.contrib.auth import views as auth_views
+from django.views.decorators.http import require_POST
 
 from website import views
 
@@ -38,4 +41,29 @@ urlpatterns = [
     path('login/', views.login_user, name="login"),
     path('logout/', views.logout_user, name="logout"),
     path('register/', views.register, name="register"),
+
+    # Send Password Email
+    path('reset-password-send-email/',
+        require_POST(auth_views.PasswordResetView.as_view(
+            email_template_name="password_reset/email/password_reset.email"
+        )),
+        name='password_reset_send_email',
+    ),
+
+    # Password reset link sent confirmation
+    path('reset-password/done/', views.password_reset_email_sent, name='password_reset_done'),
+
+    # Enter new password page
+    url(r'^reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
+        auth_views.PasswordResetConfirmView.as_view(),
+        name='password_reset_confirm',
+    ),
+
+    # New password saved page
+    path('reset/complete/',
+        auth_views.PasswordResetCompleteView.as_view(template_name="password_reset/complete.html"),
+        name='password_reset_complete',
+    ),
+
+
 ]
