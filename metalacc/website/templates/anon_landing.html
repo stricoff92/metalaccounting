@@ -84,6 +84,8 @@
                     action="{% url 'password_reset_send_email' %}"
                 >
                     {% csrf_token %}
+                    <div class="alert alert-danger" id="reset-password-form-errors" style="display:none;">
+                    </div>
                     <div>
                         <input type="email" name="email" class="form-control text-input-max-400" placeholder="E-Mail">
                     </div>
@@ -93,6 +95,21 @@
                 </form>
             </div>
         </div>
+        <script>
+            $(document).ready(()=>{
+                const search = location.search.substring(1)
+                if(search){
+                    const qp = JSON.parse('{"' + decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"') + '"}')
+                    if(qp.reset_errors) {
+                        console.log(qp.reset_errors)
+                        $("#login-form").css("display", "block");
+                        $("#reset-password-form").css("display", "block")
+                        $("#reset-password-form-errors").text(qp.reset_errors)
+                        $("#reset-password-form-errors").css("display", "block")
+                    }
+                }
+            })
+        </script>
         <div class="card p-3 mt-3">
             <div>
                 <p class="heading-2">

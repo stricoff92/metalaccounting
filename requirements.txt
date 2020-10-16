@@ -8,3 +8,4 @@ PyJWT==1.7.1
 coverage==5.3
 freezegun==1.0.0
 whitenoise==5.2.0
+beautifulsoup4==4.9.3

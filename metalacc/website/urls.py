@@ -1,9 +1,36 @@
+
+from functools import wraps
+
+from bs4 import BeautifulSoup 
 from django.urls import path
 from django.conf.urls import url
 from django.contrib.auth import views as auth_views
 from django.views.decorators.http import require_POST
+from django.shortcuts import redirect
 
 from website import views
+
+
+def get_reset_password_response(func):
+    @wraps(func)
+    def decorator_function(request, *args, **kwargs):
+        resp = func(request, *args, **kwargs)
+        if resp.status_code != 200:
+            return resp
+
+        rendered_resp = resp.render()
+        admin_page = BeautifulSoup(rendered_resp.content.decode(), 'html.parser')
+        errors_list = admin_page.find("ul", class_="errorlist")
+        if errors_list:
+            errors = []
+            for list_item in errors_list.find_all("li"):
+                errors.append(list_item.text)
+            return redirect(f"/?reset_errors={', '.join(errors)}")
+
+        else:
+            raise NotImplementedError()
+
+    return decorator_function
 
 
 urlpatterns = [
@@ -44,9 +71,9 @@ urlpatterns = [
 
     # Send Password Email
     path('reset-password-send-email/',
-        require_POST(auth_views.PasswordResetView.as_view(
+        get_reset_password_response(require_POST(auth_views.PasswordResetView.as_view(
             email_template_name="password_reset/email/password_reset.email"
-        )),
+        ))),
         name='password_reset_send_email',
     ),
 
