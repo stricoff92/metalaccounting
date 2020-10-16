@@ -55,7 +55,10 @@
                         <strong>{{ user.email }}</strong></a>,
                     </span>
                     <span class="ml-1">
-                        <a href="{% url 'logout' %}">logout</a>
+                        <a href="{% url 'logout' %}">logout</a>,
+                    </span>
+                    <span class="ml-1">
+                        <a href="{% url 'docs-home' %}">docs</a>{% if user.is_superuser %},{% endif %}
                     </span>
                     {% if user.is_superuser %}
                         <span class="ml-1">
@@ -170,6 +173,10 @@
             crossorigin="anonymous">
         </script>
         {% if not skip_moment_import %}
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.26.0/moment-with-locales.min.js">
+            </script>
+        {% endif %}
+        {% if load_charts %}
             <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.26.0/moment-with-locales.min.js">
             </script>
         {% endif %}

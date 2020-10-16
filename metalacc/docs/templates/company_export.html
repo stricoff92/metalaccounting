@@ -1,0 +1,202 @@
+{% extends 'base_docs.html' %} 
+{% block 'body' %}
+    <p class="heading-2">Importing and Exporting Company Snapshots</p>
+    <p>
+        <p class="heading-3">Overview</p>
+        MetalAccounting allows all users to capture the current state of a company and all its
+        accounts, periods, and journal entries in a snapshot. This data is downloaded as
+        a plain text file and can subsequently be imported as a carbon copy by you and others.
+    </p>
+    <p>
+        <p class="heading-3">Security</p>
+        The downloaded text file is not readable or editable by humans. The text data is first obfuscated with a
+        cryptographically secure hashing algorithm (sha-2) then digitally signed with a separate key.
+        No computerized system is 100% secure from bad actors; however, <strong>snapshots are prohibitively difficult to tamper with</strong>.
+        If MetalAccounting successfully imports a company from a snapshot you can be sure that the text data has not been modified.
+    </p>
+    <p>
+        <p class="heading-3">Using Snapshots For Graded Assignments and Exams</p>
+        Snapshots are a suitable medium for submitting graded work due in part to the security implementation described above. 
+        Additionally, snapshots maintain a history of when they were imported/exported and which user ID did the action.
+        Companies created from snapshots maintain this history if they are re-exported.
+        The timestamped history is set by a MetalAccounting server (not the web browser)
+        and is baked into the snapshot's scrambled text data. Timestamps are based on UTC and offset to match your local
+        timezone settings. Like snapshots, the history of user activity is prohibitively tamper-proof.
+        MetalAccounting offers a simple tool for viewing a snapshots history of user actions.
+    </p>
+    <p>
+        <p class="mt-4">
+            The below series of actions would generate the following history
+            <ol>
+                <li>Jan 1, 2020 @ 1:30pm you generate a snapshot which serves as the starting point for an exam</li>
+                <li>Jan 15, 2020 @ 4:00pm the exam starts and a student imports the snapshot</li>
+                <li>Jan 15, 2020 @ 5:20pm the exam ends and the student submits their exported work</li>
+                <li>Jan 17, 2020 @ 11:45am you view the snapshot's user history before importing</li>
+            </ol>
+            <style>
+                th, td {
+                    padding:8px;
+                    border: 1px solid gray;
+                }
+            </style>
+            <table>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User ID</th>
+                    <th>Event</th>
+                </tr>
+                <tr>
+                    <td>Jan 1, 2020 1:30 PM</td>
+                    <td>YOU</td>
+                    <td>export</td>
+                </tr>
+                <tr>
+                    <td>Jan 15, 2020 4:00 PM</td>
+                    <td>A3FC177D</td>
+                    <td>import</td>
+                </tr>
+                <tr>
+                    <td>Jan 15, 2020 5:20 PM</td>
+                    <td>A3FC177D</td>
+                    <td>export</td>
+                </tr>
+            </table>
+        </p>
+        <p class="mt-5">
+            An instance of cheating between students A3FC177D and CFF378DA might look like this when viewing CFF378DA's submitted snapshot:
+            <table>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User ID</th>
+                    <th>Event</th>
+                </tr>
+                <tr>
+                    <td>Jan 1, 2020 1:30 PM</td>
+                    <td>YOU</td>
+                    <td>export</td>
+                </tr>
+                <tr>
+                    <td>Jan 15, 2020 4:00 PM</td>
+                    <td>A3FC177D</td>
+                    <td>import</td>
+                </tr>
+                <tr>
+                    <td>Jan 15, 2020 5:10 PM</td>
+                    <td>A3FC177D</td>
+                    <td>export</td>
+                </tr>
+                <tr>
+                    <td>Jan 15, 2020 5:12 PM</td>
+                    <td>CFF378DA</td>
+                    <td>import</td>
+                </tr>
+                <tr>
+                    <td>Jan 15, 2020 5:20 PM</td>
+                    <td>CFF378DA</td>
+                    <td>export</td>
+                </tr>
+            </table>
+        </p>
+    </p>
+    <p class="mt-5">
+        <p class="heading-2">
+            How Snapshots are Encoded and Decoded
+        </p>
+        <p><strong>Note:</strong> Understanding how snapshots are created is not required to use them.</p>
+        <p>
+            First, your company, its associated accounts, periods, journal entries, and meta data is serialized as JSON.
+            JSON is a simple, human readable data format that represents arbitrary data as plain text.
+            A company encoded as JSON text might look something like this: 
+        </p>
+        <p>
+            <code>
+                {
+                    "meta":{
+                        jtw_claims:...
+                        "version":1,
+                        "user_history":[
+                            {
+                                "user":"AB49FFCA",
+                                "event":"export",
+                                "timestamp":"2020-01-01T09:23:15-00:00"
+                            }
+                        ]
+                    },
+                    "company":{
+                        "name":"XYZ Corp."
+                    },
+                    "accounts":[
+                        {
+                            "id":1,
+                            "name":"cash",
+                            "type":"asset",
+                            "is_current":true,
+                            "is_contra":false,
+                            "is_operational":null,
+                            "tag":"cash"
+                        }, {
+                            "id":2,
+                            "name":"Common Stock",
+                            "type":"equity",
+                            "is_current":null,
+                            "is_contra":false,
+                            "is_operational":null,
+                            "tag":null,
+                        }
+                    ]
+                    "periods":[
+                        {
+                            "id":1,
+                            "start":"2020-01-01",
+                            "end":"2020-03-31"
+                        }
+                    ],
+                    "journal_entries":[
+                        {
+                            "id":1,
+                            "period_id":1,
+                            "date":"2020-01-15",
+                            "memo":"Investors invested."
+                        }
+                    ]
+                    "journal_entry_lines":[
+                        {
+                            "id":1,
+                            "journal_entry_id":1,
+                            "account_id":1,
+                            "type":"debit",
+                            "amount":100000
+                        }, {
+                            "id":2,
+                            "journal_entry_id":1,
+                            "account_id":2,
+                            "type":"credit",
+                            "amount":100000
+                        }
+                    ]
+                }
+            </code>
+        </p>
+        <p>
+            The next step is to convert the unsecured JSON text into a JSON web token (<a href="https://jwt.io">JWT</a>).
+            The scrambled output is seeded from SECRET_KEY_A.
+            Once encoded as a JWT, the company and its data is no longer human readable. It will look something like this:. 
+        </p>
+        <p>
+            <p>
+                <code>
+                    eydfhdsSFGAHGDSafdgsher436ytENdgmYKUN.efsvfgkgfdecWrabvgRTtbrnutko,uymiopzwxvlASDascwnuavEEVSAFWCfsh65crgt45wb.fagsaf4231zgcarxEEXs
+                </code>
+            </p>
+            <p>
+                Users will not be able to read or modify the JWT unless they also know SECRET_KEY_A, which is hidden away on a MetalAccounting server.
+            </p>
+        </p>
+        <p>
+            Finally the encoded claims and meta data is signed with SECRET_KEY_B, this adds a secure checksum to the and of JWT.
+            <code>
+                eydfhdsSFGAHGDSafdgsher436ytENdgmYKUN.efsvfgkgfdecWrabvgRTtbrnutko,uymiopzwxvlASDascwnuavEEVSAFWCfsh65crgt45wb.fagsaf4231zgcarxEEXs:SECURE_CHECK_SUM
+            </code>
+        </p>
+    </p>
+{% endblock %}

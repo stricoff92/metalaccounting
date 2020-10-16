@@ -1,0 +1,31 @@
+{% extends 'base_docs.html' %} 
+{% block 'body' %}
+    <p class="heading-2">
+        Account Tags
+    </p>
+    <p>
+        Account tags are a concept specific to MetalAccounting. Account tags are important for assembling
+        financial reports based on specific types of accounts.
+    </p>
+    <hr>
+    <p>
+        <p class=heading-3>Cash Tag</p>
+        The cash tag can be assigned to a current non-contra asset account representing cash or cash equivolents.
+        This tag is required for generating the cash flow worksheet and statement of cash flows. All journal entries that
+        involve an account tagged as cash will appear on the cash flow worksheet for that period.
+    </p>
+    <hr>
+    <p>
+        <p class=heading-3>Retained Earnings Tag</p>
+        The retained earnings tag can be assigned to a non-contra equity account representing retained earnings.
+        This tag is required for generating the statement of retained earnings.
+    </p>
+    <hr>
+    <p>
+        <p class=heading-3>Cost of Goods Sold Tag</p>
+        The cost of goods sold tag can be assigned to a non-contra operating expense account,
+        or a contra operating revenue account.
+        This tag is optionally used when generating the income statement. If 1 or more accounts are assigned
+        the cost of goods sold tag, the income statement will show gross profit separatly from operating income.
+    </p>
+{% endblock %}
