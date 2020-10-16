@@ -5,22 +5,28 @@ import csv
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.urls import reverse
 from django.http import HttpResponseNotAllowed, HttpResponse, HttpResponseBadRequest
+from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
 
-from api.models import Company, Account, Period, JournalEntry, JournalEntryLine
+from api.models import Company, Account, Period, JournalEntry, JournalEntryLine, UserProfile
 from api.models.account import DEFAULT_ACCOUNTS
 from api.utils import (
+    get_slug_from_account_activation_token,
     generate_slug,
     get_report_page_breadcrumbs,
     is_valid_slug
 )
-from api.lib import reports as reports_lib, company_export
+from api.lib import reports as reports_lib, company_export, email
 from api import utils
-from website.forms import LoginForm
+from website.forms import LoginForm, RegisterNewUser
 
 
 def anon_landing(request):
@@ -1010,10 +1016,67 @@ def login_user(request):
         return render(request, 'anon_landing.html', data)
 
 
-@require_POST
+@api_view(['POST'])
 def register(request):
     if request.user.is_authenticated:
-        raise NotImplementedError()
+        return Response("You must log out first.", status.HTTP_400_BAD_REQUEST)
+    
+    form = RegisterNewUser(request.data)
+    if not form.is_valid():
+        return Response(form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
+    
+    email = form.cleaned_data['email']
+    password1 = form.cleaned_data['password1']
+    password2 = form.cleaned_data['password2']
+
+    User = get_user_model()
+    if User.objects.filter(email=email).exists():
+        return Response("This email is already in use.", status.HTTP_400_BAD_REQUEST)
+    
+    if password1 != password2:
+        return Response("Passwords do not match.", status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        validate_password(password1)
+    except ValidationError:
+        return Response("Invalid Password.", status.HTTP_400_BAD_REQUEST)
+    
+    new_user = User.objects.create_user(email, email=email, password=password1)
+    try:
+        validate_password(password1, user=new_user)
+    except ValidationError:
+        new_user.delete()
+        return Response("Invalid Password.", status.HTTP_400_BAD_REQUEST)
+
+    new_user.is_active = False
+    new_user.save(update_fields=['is_active'])
+    userprofile = UserProfile.objects.create(user=new_user)
+
+    activate_user_token = utils.get_account_activation_token(userprofile.slug)
+    email.send_account_activation_email(new_user, activate_user_token)
+
+    return Response("User Created.", status.HTTP_201_CREATED)
+
+
+def activate_new_account(request, slug):
+    token = request.GET.get("token")
+    if not token:
+        return HttpResponseBadRequest("Missing Token")
+    
+    try:
+        slug_from_token = get_slug_from_account_activation_token(token)
+    except Exception:
+        return HttpResponseBadRequest("Invalid Token Format")
+    if slug_from_token != slug:
+       return HttpResponseBadRequest("Invalid Token Data")
+
+    userprofile = get_object_or_404(UserProfile, slug=slug, user__is_active=False)
+    user = userprofile.user
+    user.is_active = True
+    user.save(update_fields=['is_active'])
+
+    login(request, user)
+    return redirect('app-landing')
 
 
 @login_required

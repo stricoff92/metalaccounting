@@ -67,7 +67,9 @@ urlpatterns = [
     path('app/profile/', views.app_profile, name="app-profile"),
     path('login/', views.login_user, name="login"),
     path('logout/', views.logout_user, name="logout"),
+
     path('register/', views.register, name="register"),
+    path('activate/<slug:slug>/', views.activate_new_account, name="app-activate-user"),
 
     # Send Password Email
     path('reset-password-send-email/',
