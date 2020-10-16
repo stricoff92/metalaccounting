@@ -16,10 +16,40 @@
 
     <body>
         <div class="container">
-            <div class="jumbotron pt-4 pb-2 mt-2">
+            <div class="jumbotron pt-4 pb-2 mt-2 mb-2">
                 <p class="heading-1">Metal Accounting</p>
                 <p class="heading-2">Documentation</p>
             </div>
+            {% if breadcrumbs %}
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        {% for breadcrumb in breadcrumbs %}
+                            {% if breadcrumb.href %}
+                                <li class="breadcrumb-item">
+                                    <a
+                                        href="{{ breadcrumb.href }}"
+                                        {% if breadcrumb.elementid %}
+                                            id="{{ breadcrumb.elementid }}"
+                                        {% endif %}
+                                    >
+                                        {{ breadcrumb.value }}
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li 
+                                    class="breadcrumb-item active"
+                                    aria-current="page"
+                                    {% if breadcrumb.elementid %}
+                                        id="{{ breadcrumb.elementid }}"
+                                    {% endif %}
+                                >
+                                    {{ breadcrumb.value }}
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ol>
+                </nav>
+            {% endif %}
             <div class="m-2">
                 {% block 'body' %}
                 {% endblock %}

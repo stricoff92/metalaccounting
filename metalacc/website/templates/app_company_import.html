@@ -4,6 +4,14 @@
     <p class="heading-2">
         Import a Company
     </p>
+    <p>
+        <a 
+            href="{% url 'docs-company-export' %}"
+            {{ user.userprofile.target_attr }}
+        >
+            <i class="fas fa-question-circle"></i> About Snapshots
+        </a>
+    </p>
     {% if at_object_limit %}
         <div class="alert alert-warning mt-3 p-3">
             <i class="fas fa-exclamation-triangle"></i>

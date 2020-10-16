@@ -33,17 +33,22 @@
                 <td class="border-left">{{ default_account.name }}</td>
                 <td class="border-left">
                     {% if default_account.tag != None %}
-                        <i class="fas fa-question-circle"></i>
+                        <a
+                            href="{% url 'docs-account-tags' %}"
+                            {{ user.userprofile.target_attr }}
+                        >
+                            <i class="fas fa-question-circle"></i>
+                        </a>
                         <span class="badge badge-pill badge-warning">{{ default_account.tag }}</span>
                     {% endif %}
                 </td>
                 <td class="border-left">{{ default_account.number }}</td>
                 <td class="border-left">
-                        {% if default_account.is_contra %}
-                            <span class="badge badge-pill badge-info">
-                                Contra
-                            </span>
-                        {% endif %}
+                    {% if default_account.is_contra %}
+                        <span class="badge badge-pill badge-info">
+                            Contra
+                        </span>
+                    {% endif %}
                 </td>
                 <td class="border-left">
                     {% if default_account.is_current != None %}

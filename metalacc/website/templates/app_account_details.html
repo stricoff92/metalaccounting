@@ -82,7 +82,13 @@
         {% if available_tag_options %}
             <div class="mt-3">
                 <div>
-                    Account Tag <i class="fas fa-question-circle"></i>
+                    Account Tag
+                    <a
+                        href="{% url 'docs-account-tags' %}"
+                        {{ user.userprofile.target_attr }}
+                    >
+                        <i class="fas fa-question-circle"></i>
+                    </a>
                 </div>
                 <select id="account-tag-input" class="form-control text-input-max-400">
                     <option value="">
@@ -101,7 +107,6 @@
             <div class="mt-3" id="is-current-input-wrapper">
                 <p class="mb-1">
                     <strong>Current or Non-Current Account</strong>
-                    <i class="fas fa-question-circle"></i>
                 </p>
                 <div class="form-check">
                     <input 
@@ -136,7 +141,21 @@
             <div class="mt-3" id="is-current-input-wrapper">
                 <p class="mb-1">
                     <strong>Operating or Non-Operating Account</strong>
-                    <i class="fas fa-question-circle"></i>
+                    {% if account.type == "revenue" %}
+                        <a
+                            {{ user.userprofile.target_attr }}
+                            href="{% url 'docs-revenue' %}"
+                        >
+                            <i class="fas fa-question-circle"></i>
+                        </a>
+                    {% else %}
+                        <a
+                            {{ user.userprofile.target_attr }}
+                            href="{% url 'docs-expense' %}"
+                        >
+                            <i class="fas fa-question-circle"></i>
+                        </a>
+                    {% endif %}
                 </p>
                 <div class="form-check">
                     <input

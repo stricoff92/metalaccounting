@@ -17,42 +17,121 @@ def documentation_homepage(request):
         {"name":"Account Tags", "href":reverse("docs-account-tags")},
         {"name":"Import and Export Company Snapshots", "href":reverse("docs-company-export")},
     ], key=lambda item: item['name'].lower())
-
-    return render(request, "docs_root.html", {'index_items':index_items})
+    breadcrumbs = [{
+        "value":"Docs",
+    }]
+    if request.user.is_authenticated:
+        breadcrumbs.insert(0, {
+            'value':'Main Menu',
+            'href':reverse("app-main-menu"),
+        })
+    return render(request, "docs_root.html", {'index_items':index_items, 'breadcrumbs':breadcrumbs})
 
 
 def assets(request):
-    return render(request, "assets.html", {})
+    breadcrumbs = [{
+        "value":"Docs",
+        "href":reverse("docs-home"),
+    },{
+        "value":"Asset",
+    }]
+    return render(request, "assets.html", {'breadcrumbs':breadcrumbs})
 
 def liabilities(request):
-    return render(request, "liabilities.html", {})
+    breadcrumbs = [{
+        "value":"Docs",
+        "href":reverse("docs-home"),
+    },{
+        "value":"Liability",
+    }]
+    return render(request, "liabilities.html", {'breadcrumbs':breadcrumbs})
 
 def equity(request):
-    return render(request, "equity.html", {})
+    breadcrumbs = [{
+        "value":"Docs",
+        "href":reverse("docs-home"),
+    },{
+        "value":"Equity",
+    }]
+    return render(request, "equity.html", {'breadcrumbs':breadcrumbs})
 
 def revenue(request):
-    return render(request, "revenue.html", {})
+    breadcrumbs = [{
+        "value":"Docs",
+        "href":reverse("docs-home"),
+    },{
+        "value":"Revenue",
+    }]
+    return render(request, "revenue.html", {'breadcrumbs':breadcrumbs})
 
 def expense(request):
-    return render(request, "expense.html", {})
+    breadcrumbs = [{
+        "value":"Docs",
+        "href":reverse("docs-home"),
+    },{
+        "value":"Expense",
+    }]
+    return render(request, "expense.html", {'breadcrumbs':breadcrumbs})
 
 def balance_sheet(request):
-    return render(request, "balance_sheet.html", {})
+    breadcrumbs = [{
+        "value":"Docs",
+        "href":reverse("docs-home"),
+    },{
+        "value":"Balance Sheet",
+    }]
+    return render(request, "balance_sheet.html", {'breadcrumbs':breadcrumbs})
 
 def income_statement(request):
-    return render(request, "income_statement.html", {})
+    breadcrumbs = [{
+        "value":"Docs",
+        "href":reverse("docs-home"),
+    },{
+        "value":"Income Statement",
+    }]
+    return render(request, "income_statement.html", {'breadcrumbs':breadcrumbs})
 
 def cash_flow_statement(request):
-    return render(request, "cash_flow_statement.html", {})
+    breadcrumbs = [{
+        "value":"Docs",
+        "href":reverse("docs-home"),
+    },{
+        "value":"Cash Flow Statement",
+    }]
+    return render(request, "cash_flow_statement.html", {'breadcrumbs':breadcrumbs})
 
 def statement_of_retained_earnings(request):
-    return render(request, "statement_of_retained_earnings.html", {})
+    breadcrumbs = [{
+        "value":"Docs",
+        "href":reverse("docs-home"),
+    },{
+        "value":"Statement of Retained Earnings",
+    }]
+    return render(request, "statement_of_retained_earnings.html", {'breadcrumbs':breadcrumbs})
 
 def trial_balance(request):
-    return render(request, "trial_balance.html", {})
+    breadcrumbs = [{
+        "value":"Docs",
+        "href":reverse("docs-home"),
+    },{
+        "value":"Trial Balance",
+    }]
+    return render(request, "trial_balance.html", {'breadcrumbs':breadcrumbs})
 
 def account_tags(request):
-    return render(request, "account_tags.html", {})
+    breadcrumbs = [{
+        "value":"Docs",
+        "href":reverse("docs-home"),
+    },{
+        "value":"Account Tags",
+    }]
+    return render(request, "account_tags.html", {'breadcrumbs':breadcrumbs})
 
 def company_export(request):
-    return render(request, "company_export.html", {})
+    breadcrumbs = [{
+        "value":"Docs",
+        "href":reverse("docs-home"),
+    },{
+        "value":"Snapshots",
+    }]
+    return render(request, "company_export.html", {'breadcrumbs':breadcrumbs})
