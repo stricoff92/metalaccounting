@@ -5,22 +5,22 @@
         <p class="heading-3">Overview</p>
         MetalAccounting allows all users to capture the current state of a company and all its
         accounts, periods, and journal entries in a snapshot. This data is downloaded as
-        a plain text file and can subsiquently be imported as a carbon copy by you and others.
+        a plain text file and can subsequently be imported as a carbon copy by you and others.
     </p>
     <p>
         <p class="heading-3">Security</p>
         The downloaded text file is not readable or editable by humans. The text data is first obfuscated with a
         cryptographically secure hashing algorithm (sha-2) then digitally signed with a separate key.
         No computerized system is 100% secure from bad actors; however, <strong>snapshots are prohibitively difficult to tamper with</strong>.
-        If MetalAccounting successfully imports a company from a snapshot you can be sure that the text data had not been modified.
+        If MetalAccounting successfully imports a company from a snapshot you can be sure that the text data has not been modified.
     </p>
     <p>
         <p class="heading-3">Using Snapshots For Graded Assignments and Exams</p>
-        Spapshots are a suitable medium for submitting graded work due in part to the security implementation described above. 
+        Snapshots are a suitable medium for submitting graded work due in part to the security implementation described above. 
         Additionally, snapshots maintain a history of when they were imported/exported and which user ID did the action.
-        Companies created from snapshots maintain this history when they are re-exported.
-        The timestamped history is set by the MetalAccounting server (not the web browser)
-        and is baked into the snapshot's scrambled text data. Timestamps are based on UTC and offset to match your browser's
+        Companies created from snapshots maintain this history if they are re-exported.
+        The timestamped history is set by a MetalAccounting server (not the web browser)
+        and is baked into the snapshot's scrambled text data. Timestamps are based on UTC and offset to match your local
         timezone settings. Like snapshots, the history of user activity is prohibitively tamper-proof.
         MetalAccounting offers a simple tool for viewing a snapshots history of user actions.
     </p>
@@ -104,8 +104,8 @@
         </p>
         <p><strong>Note:</strong> Understanding how snapshots are created is not required to use them.</p>
         <p>
-            First, your company, its associated accounts, periods, jounral entries, and meta data is serialized as JSON.
-            JSON is a simple, human readale data format that represents arbitrary data as plain text.
+            First, your company, its associated accounts, periods, journal entries, and meta data is serialized as JSON.
+            JSON is a simple, human readable data format that represents arbitrary data as plain text.
             A company encoded as JSON text might look something like this: 
         </p>
         <p>
@@ -179,7 +179,7 @@
         </p>
         <p>
             The next step is to convert the unsecured JSON text into a JSON web token (<a href="https://jwt.io">JWT</a>).
-            The scrambled output is seeded from SECRET_KEY_A. Undoing the scrampble is not trivial to do without knowing SECRET_KEY_A.
+            The scrambled output is seeded from SECRET_KEY_A.
             Once encoded as a JWT, the company and its data is no longer human readable. It will look something like this:. 
         </p>
         <p>
@@ -193,7 +193,7 @@
             </p>
         </p>
         <p>
-            Finally the encoded claims and meta data signed with SECRET_KEY_B, adding a small secure checksum to the and of JWT.
+            Finally the encoded claims and meta data is signed with SECRET_KEY_B, this adds a secure checksum to the and of JWT.
             <code>
                 eydfhdsSFGAHGDSafdgsher436ytENdgmYKUN.efsvfgkgfdecWrabvgRTtbrnutko,uymiopzwxvlASDascwnuavEEVSAFWCfsh65crgt45wb.fagsaf4231zgcarxEEXs:SECURE_CHECK_SUM
             </code>
