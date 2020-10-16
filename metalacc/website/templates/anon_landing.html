@@ -63,10 +63,63 @@
                     </div>
                     <div class="mt-3">
                         <input class="btn btn-primary" type="submit" value="login">
+                        <a href="#" id="open-reset-password-form">
+                            Forgot Your Password?
+                        </a>
+                    </div>
+                    <script>
+                        $(document).ready(()=>{
+                            $("#open-reset-password-form").click(()=>{
+                                $("#reset-password-form").slideDown(350)
+                            })
+                        })
+                    </script>
+                </form>
+            </div>
+            <div class="mt-3" style="display:none;" id="reset-password-form">
+                <hr>
+                <p>Reset Your Password</p>
+                <form
+                    method="POST"
+                    action="{% url 'password_reset_send_email' %}"
+                    onsubmit="return validateSendPWResetEmailForm()"
+                >
+                    {% csrf_token %}
+                    <div class="alert alert-danger" id="reset-password-form-errors" style="display:none;">
+                    </div>
+                    <div>
+                        <input type="email" name="email" class="form-control text-input-max-400" placeholder="E-Mail" id="reset-pw-email-input">
+                    </div>
+                    <div class="mt-2">
+                        <button class="btn btn-primary">Reset Password</button>
                     </div>
                 </form>
             </div>
         </div>
+        <script>
+            function validateSendPWResetEmailForm() {
+                const email = $("#reset-pw-email-input").val().trim()
+                if (!isValidEmail(email)) {
+                    $("#reset-password-form-errors").text("Invalid Email Address")
+                    $("#reset-password-form-errors").css("display", "block")
+                    return false
+                }
+                return true
+            }
+            $(document).ready(()=>{
+                const search = location.search.substring(1)
+                if(search){
+                    const qp = JSON.parse('{"' + decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"') + '"}')
+                    if(qp.reset_errors) {
+                        console.log(qp.reset_errors)
+                        $("#login-form").css("display", "block");
+                        $("#reset-password-form").css("display", "block")
+                        $("#reset-password-form-errors").text(qp.reset_errors)
+                        $("#reset-password-form-errors").css("display", "block")
+                    }
+                }
+            })
+        </script>
         <div class="card p-3 mt-3">
             <div>
                 <p class="heading-2">
@@ -103,7 +156,7 @@
         </div>
     </div>
     <script>
-        window.onload = ()=>{
+        $(document).ready(()=>{
             $("#open-login-form-link").click(()=>{
                 if ($("#login-form").css("display") === "none") {
                     $("#login-form").slideDown(350);
@@ -114,7 +167,7 @@
                     $("#register-form").slideDown(350);
                 }
             })
-        }
+        })
         function isValidEmail(email) {
             if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
                 return true

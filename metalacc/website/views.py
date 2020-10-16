@@ -1021,5 +1021,9 @@ def logout_user(request):
     logout(request)
     return redirect("anon-landing")
 
+
+def password_reset_email_sent(request):
+    return render(request, 'password_reset/anon_password_reset_email_sent.html', {})
+
 def handler404(request, *args, **argv):
     return render(request, "404.html", {})
