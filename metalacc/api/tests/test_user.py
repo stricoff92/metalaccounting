@@ -12,7 +12,7 @@ from api.lib import email as email_lib
 from api.utils import get_account_activation_token
 
 
-class PeriodViewTests(BaseTestBase):
+class UserViewTests(BaseTestBase):
 
     def setUp(self):
         super().setUp()
