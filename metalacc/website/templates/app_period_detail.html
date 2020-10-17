@@ -203,7 +203,13 @@
             </div>
             <div id="type-input-container" class="mt-3">
                 <p class="mb-1">
-                    Entry Type <i class="fas fa-question-circle"></i>
+                    Entry Type
+                    <a
+                        {{ user.userprofile.target_attr }}
+                        href="{% url 'docs-entry-types' %}"
+                    >
+                        <i class="fas fa-question-circle"></i>
+                    </a>
                 </p>
                 <div class="form-check">
                     <input

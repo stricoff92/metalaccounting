@@ -15,6 +15,8 @@ urlpatterns = [
     path("income-statement/", views.income_statement, name="docs-income-statement"),
     path("cash-flow-statement/", views.cash_flow_statement, name="docs-cash-flow-statement"),
     path("trial-balance/", views.trial_balance, name="docs-trial-balance"),
+    path("entry-types/", views.entry_types, name="docs-entry-types"),
+    path("quick-start-guide/", views.quickstart_guide, name="docs-quick-start-guide"),
     path(
         "statement-of-retained-earnings/",
         views.statement_of_retained_earnings,

@@ -126,7 +126,7 @@ def get_photo_gallery_images():
         'Pacioli.jpg',
         'Visicalc.jpg',
         'Abacus.jpg',
-        "Ledger.jpg",
+        'Ledger.jpg',
         'Calculator.png',
     ]
 

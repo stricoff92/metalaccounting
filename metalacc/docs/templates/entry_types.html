@@ -1,0 +1,92 @@
+{% extends 'base_docs.html' %} 
+{% block 'body' %}
+    <style>
+        th, td {
+            padding:4px;
+            border:1px solid gray;
+        }
+    </style>
+    <p class="heading-2">
+        Entry Types
+    </p>
+    <hr>
+    <p class="heading-3">
+        Regular Entries
+    </p>
+    <p>
+    </p>
+    <p>
+        Where are regular entries represented?
+        <table>
+            <tr>
+                <th></th><th>Current Period</th><th>Previous Period</th>
+            </tr>
+            <tr>
+                <td>On Income Statement</td><td>Yes</td><td>Yes</td>
+            </tr>
+            <tr>
+                <td>On Balance Sheet</td><td>Yes</td><td>Yes</td>
+            </tr>
+            <tr>
+                <td>On Unadjusted Trial Balance</td><td>Yes</td><td>Yes</td>
+            </tr>
+            <tr>
+                <td>On Adjusted Trial Balance</td><td>Yes</td><td>Yes</td>
+            </tr>
+        </table>
+    </p>
+    <hr>
+    <p class="heading-3">
+        Adjusting Entries
+    </p>
+    <p>
+    </p>
+    <p>
+        Where are adjusting entries represented?
+        <table>
+            <tr>
+                <th></th><th>Current Period</th><th>Previous Period</th>
+            </tr>
+            <tr>
+                <td>On Income Statement</td><td>Yes</td><td>Yes</td>
+            </tr>
+            <tr>
+                <td>On Balance Sheet</td><td>Yes</td><td>Yes</td>
+            </tr>
+            <tr>
+                <td>On Unadjusted Trial Balance</td><td>No</td><td>Yes</td>
+            </tr>
+            <tr>
+                <td>On Adjusted Trial Balance</td><td>Yes</td><td>Yes</td>
+            </tr>
+        </table>
+    </p>
+    <hr>
+    <p class="heading-3">
+        Closing Entries
+    </p>
+    <p>
+        A closing entry is one that resets the balance of one or more temporary accounts. Closing entries transfer the balance of a temporary account to a permanent account such as retained earnings.
+        Closing entries do not increase or decrease the amounts of assets, liabilities, or equity controlled by a company.
+    </p>
+    <p>
+        Where are closing entries represented?
+        <table>
+            <tr>
+                <th></th><th>Current Period</th><th>Previous Period</th>
+            </tr>
+            <tr>
+                <td>On Income Statement</td><td>No</td><td>Yes</td>
+            </tr>
+            <tr>
+                <td>On Balance Sheet</td><td>Yes</td><td>Yes</td>
+            </tr>
+            <tr>
+                <td>On Unadjusted Trial Balance</td><td>No</td><td>Yes</td>
+            </tr>
+            <tr>
+                <td>On Adjusted Trial Balance</td><td>No</td><td>Yes</td>
+            </tr>
+        </table>
+    </p>
+{% endblock %}
