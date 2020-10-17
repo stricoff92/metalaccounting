@@ -1032,11 +1032,16 @@ def register(request):
 
     User = get_user_model()
     if User.objects.filter(email=email).exists():
+        existing_user =  User.objects.filter(email=email).first()
+        # If user exists but hasn't been activated, resend an activation link.
+        if not existing_user.is_active:
+            activate_user_token = utils.get_account_activation_token(existing_user.userprofile.slug)
+            email_lib.send_account_activation_email(existing_user, activate_user_token)
         return Response("This email is already in use.", status.HTTP_400_BAD_REQUEST)
     
+
     if password1 != password2:
         return Response("Passwords do not match.", status.HTTP_400_BAD_REQUEST)
-    
     try:
         validate_password(password1)
     except ValidationError:
