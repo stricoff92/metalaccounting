@@ -123,7 +123,7 @@ def get_photo_gallery_images():
         'Apple2.jpg',
         'Excel.png',
         'Lotus123.jpg',
-        'Pacioli.jpg', # w
+        'Pacioli.jpg',
         'Visicalc.jpg',
         'Abacus.jpg',
         "Ledger.jpg",

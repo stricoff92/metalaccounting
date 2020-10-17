@@ -33,7 +33,7 @@ def anon_landing(request):
     if request.user.is_authenticated:
         return redirect("app-landing")
     return render(request, "anon_landing.html", {
-        'gallery_image':sorted(utils.get_photo_gallery_images(), key=lambda a: random.random())[0]
+        'gallery_image':next(iter(sorted(utils.get_photo_gallery_images(), key=lambda a: random.random()))),
     })
 
 @login_required

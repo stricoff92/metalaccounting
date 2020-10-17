@@ -216,7 +216,11 @@
                     contentType: 'application/json',
                     success:(data, status, xhr)=>{
                         if(xhr.status == 201) {
-                            setSuccessMessage("Check your email for an activation link.")
+                            $("#register-new-user-email").val("")
+                            $("#register-new-user-pass-1").val("")
+                            $("#register-new-user-pass-2").val("")
+                            return setSuccessMessage(
+                                `Check your email ${newUserEmail} for an activation link.`)
                         }
                     },
                     error:(data, status, xhr)=>{
