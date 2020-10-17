@@ -7,6 +7,7 @@ from django.conf.urls import url
 from django.contrib.auth import views as auth_views
 from django.views.decorators.http import require_POST
 from django.shortcuts import redirect
+from django.views.generic.base import TemplateView
 
 from website import views
 
@@ -35,6 +36,8 @@ def get_reset_password_response(func):
 
 urlpatterns = [
     path('', views.anon_landing, name="anon-landing"),
+    path('robots.txt', TemplateView.as_view(template_name="robots.txt", content_type="text/plain"), name="anon-robots-txt"),
+
     path('app/', views.app_main_menu, name="app-main-menu"),
 
     path('app/export-tools/', views.app_export_tools_menu, name="app-export-tools-menu"),
