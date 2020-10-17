@@ -110,71 +110,71 @@
         </p>
         <p>
             <code>
-                {
-                    "meta":{
-                        jtw_claims:...
-                        "version":1,
-                        "user_history":[
-                            {
-                                "user":"AB49FFCA",
-                                "event":"export",
-                                "timestamp":"2020-01-01T09:23:15-00:00"
-                            }
-                        ]
-                    },
-                    "company":{
-                        "name":"XYZ Corp."
-                    },
-                    "accounts":[
-                        {
-                            "id":1,
-                            "name":"cash",
-                            "type":"asset",
-                            "is_current":true,
-                            "is_contra":false,
-                            "is_operational":null,
-                            "tag":"cash"
-                        }, {
-                            "id":2,
-                            "name":"Common Stock",
-                            "type":"equity",
-                            "is_current":null,
-                            "is_contra":false,
-                            "is_operational":null,
-                            "tag":null,
-                        }
-                    ]
-                    "periods":[
-                        {
-                            "id":1,
-                            "start":"2020-01-01",
-                            "end":"2020-03-31"
-                        }
-                    ],
-                    "journal_entries":[
-                        {
-                            "id":1,
-                            "period_id":1,
-                            "date":"2020-01-15",
-                            "memo":"Investors invested."
-                        }
-                    ]
-                    "journal_entry_lines":[
-                        {
-                            "id":1,
-                            "journal_entry_id":1,
-                            "account_id":1,
-                            "type":"debit",
-                            "amount":100000
-                        }, {
-                            "id":2,
-                            "journal_entry_id":1,
-                            "account_id":2,
-                            "type":"credit",
-                            "amount":100000
-                        }
-                    ]
-                }
+<pre>{
+    "meta":{
+        jwt_claims:...
+        "version":1,
+        "user_history":[
+            {
+                "user":"AB49FFCA",
+                "event":"export",
+                "timestamp":"2020-01-01T09:23:15-00:00"
+            }
+        ]
+    },
+    "company":{
+        "name":"XYZ Corp."
+    },
+    "accounts":[
+        {
+            "id":1,
+            "name":"cash",
+            "type":"asset",
+            "is_current":true,
+            "is_contra":false,
+            "is_operational":null,
+            "tag":"cash"
+        }, {
+            "id":2,
+            "name":"Common Stock",
+            "type":"equity",
+            "is_current":null,
+            "is_contra":false,
+            "is_operational":null,
+            "tag":null,
+        }
+    ],
+    "periods":[
+        {
+            "id":1,
+            "start":"2020-01-01",
+            "end":"2020-03-31"
+        }
+    ],
+    "journal_entries":[
+        {
+            "id":1,
+            "period_id":1,
+            "date":"2020-01-15",
+            "memo":"Investors invested."
+        }
+    ],
+    "journal_entry_lines":[
+        {
+            "id":1,
+            "journal_entry_id":1,
+            "account_id":1,
+            "type":"debit",
+            "amount":100000
+        }, {
+            "id":2,
+            "journal_entry_id":1,
+            "account_id":2,
+            "type":"credit",
+            "amount":100000
+        }
+    ]
+}</pre>
             </code>
         </p>
         <p>
@@ -193,7 +193,7 @@
             </p>
         </p>
         <p>
-            Finally the encoded claims and meta data is signed with SECRET_KEY_B, this adds a secure checksum to the and of JWT.
+            The encoded claims are further signed with SECRET_KEY_B, this adds a second secure checksum to the end of JWT.
             <code>
                 eydfhdsSFGAHGDSafdgsher436ytENdgmYKUN.efsvfgkgfdecWrabvgRTtbrnutko,uymiopzwxvlASDascwnuavEEVSAFWCfsh65crgt45wb.fagsaf4231zgcarxEEXs:SECURE_CHECK_SUM
             </code>
