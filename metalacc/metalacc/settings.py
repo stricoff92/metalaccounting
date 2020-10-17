@@ -42,6 +42,12 @@ else:
     ALLOWED_HOSTS = ADDITIONAL_ALLOWED_HOSTS
 
 
+protocol = "http://" if DEBUG else "https://"
+BASE_ABSOLUTE_URL = protocol + ALLOWED_HOSTS[0]
+if DEBUG:
+    BASE_ABSOLUTE_URL += ":8000"
+
+
 # Application definition
 
 INSTALLED_APPS = [

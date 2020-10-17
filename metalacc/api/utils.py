@@ -1,11 +1,13 @@
 
+import os.path
 import re
 import uuid
 
 from django.conf import settings
 from django.db.models import Q, Max
 from django.urls import reverse
-
+from django.utils import timezone
+import jwt
 
 def some(args):
     return any(args) and not all(args)
@@ -127,3 +129,23 @@ def get_photo_gallery_images():
         "Ledger.jpg",
         'Calculator.png',
     ]
+
+
+def get_account_activation_token(slug:str) -> str:
+    claims = {
+        'created_at':timezone.now().strftime("%s"),
+        'slug':slug,
+    }
+    return jwt.encode(claims, settings.OBJECT_SERIALIZATION_KEY, algorithm=settings.JWT_ALGORITHM).decode()
+
+
+def get_account_activation_url(slug:str, token:str) -> str:
+    return os.path.join(settings.BASE_ABSOLUTE_URL, 'activate', slug) + "?token=" + token
+
+
+def get_slug_from_account_activation_token(token:str) -> str:
+    data = jwt.decode(
+        token,
+        settings.OBJECT_SERIALIZATION_KEY,
+        algorithms=[settings.JWT_ALGORITHM])
+    return data['slug']
