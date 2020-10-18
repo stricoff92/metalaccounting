@@ -38,6 +38,9 @@ urlpatterns = [
     path('', views.anon_landing, name="anon-landing"),
     path('robots.txt', TemplateView.as_view(template_name="robots.txt", content_type="text/plain"), name="anon-robots-txt"),
 
+    path('tos/', views.anon_tos, name="anon-tos"),
+    path('pp/', views.anon_pp, name="anon-pp"),
+
     path('app/', views.app_main_menu, name="app-main-menu"),
 
     path('app/export-tools/', views.app_export_tools_menu, name="app-export-tools-menu"),

@@ -36,6 +36,12 @@ def anon_landing(request):
         'gallery_image':next(iter(sorted(utils.get_photo_gallery_images(), key=lambda a: random.random()))),
     })
 
+def anon_tos(request):
+    return render(request, "tos.html", {})
+
+def anon_pp(request):
+    return render(request, "pp.html", {})
+
 @login_required
 def app_main_menu(request):
     data = {
