@@ -1,4 +1,5 @@
-{% extends 'base_docs.html' %} 
+{% extends 'base_docs.html' %}
+{% load static %}
 {% block 'body' %}
     <style>
         th, td {
@@ -122,5 +123,9 @@
                 <td class="center-text">Yes</td>
             </tr>
         </table>
+    </p>
+    <p class="mt-4">
+        <strong>An Example of a closing entry</strong>. Note there is no overall change to assets, liabilities, or equity. 
+        <img class="mt-3" src="{% static 'closing-entry-example.png' %}" style="max-width:100%;display:block;">
     </p>
 {% endblock %}

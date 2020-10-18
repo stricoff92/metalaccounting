@@ -741,21 +741,22 @@ def income_statement(request, slug):
                 current_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total'] + current_is_data[reports_lib.KEY_COST_OF_GOODS_SOLD]['total']),
         })
 
-        operating_income_row = {
-            'padding':4,
-            'border':'border-top',
-            'col1value':"Operating Income",
-            "col3value": (
-                current_is_data[reports_lib.KEY_OPERATING_REVENUE]['total']
-                - (current_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total'] + current_is_data[reports_lib.KEY_COST_OF_GOODS_SOLD]['total'])
-            )
-        }
-        if previous_is_data:
-            operating_income_row['col2value'] = (
-                previous_is_data[reports_lib.KEY_OPERATING_REVENUE]['total']
-                - (previous_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total'] + previous_is_data[reports_lib.KEY_COST_OF_GOODS_SOLD]['total'])
-            )
-        rows.append(operating_income_row)
+    # Operating Income
+    operating_income_row = {
+        'padding':4,
+        'border':'border-top',
+        'col1value':"Operating Income",
+        "col3value": (
+            current_is_data[reports_lib.KEY_OPERATING_REVENUE]['total']
+            - (current_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total'] + current_is_data[reports_lib.KEY_COST_OF_GOODS_SOLD]['total'])
+        )
+    }
+    if previous_is_data:
+        operating_income_row['col2value'] = (
+            previous_is_data[reports_lib.KEY_OPERATING_REVENUE]['total']
+            - (previous_is_data[reports_lib.KEY_OPERATING_EXPENSE]['total'] + previous_is_data[reports_lib.KEY_COST_OF_GOODS_SOLD]['total'])
+        )
+    rows.append(operating_income_row)
 
 
     # Non Operating

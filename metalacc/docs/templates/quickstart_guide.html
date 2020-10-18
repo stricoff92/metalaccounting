@@ -1,0 +1,99 @@
+{% extends 'base_docs.html' %}
+{% load static %}
+{% block 'body' %}
+    <style>
+        img.walkthrough-img {
+            max-width:100%;
+            display:block;
+            margin:4px;
+            padding:4px;
+            border:1px solid #540062;
+        }
+    </style>
+    <p class="heading-2">Quick Start Guide</p>
+    <p>
+        The purpose of this guide is to provide a visual walkthrough of using MetalAccounting.
+    </p>
+    <hr>
+    <p class="heading-3">
+        1) Create a Company
+    </p>
+    <p>
+        MetalAccounting provides a sandbox to create financial statements from journal entries. The base object in this sandbox is the Company object.
+    </p>
+    <p>
+        From the main menu, navigate to the <em>companies</em> page.
+        <img src="{% static 'walkthrough-1.png' %}" class="walkthrough-img">
+    </p>
+    <p>
+        From the companies page, select <em>New Company</em>
+        <img src="{% static 'walkthrough-2.png' %}" class="walkthrough-img">
+    </p>
+    <p>
+        Enter the name for your new company, then click <em>Save</em>
+        <img src="{% static 'walkthrough-3.png' %}" class="walkthrough-img">
+    </p>
+
+    <hr>
+    <p class="heading-3">
+        2) Edit a Company
+    </p>
+    <p>
+        You are now looking at the company's menu. You can edit the company name by clicking <em>Edit</em>
+        <img src="{% static 'walkthrough-4.png' %}" class="walkthrough-img">
+    </p>
+    <p>
+        <img src="{% static 'walkthrough-5.png' %}" class="walkthrough-img">
+    </p>
+
+    <hr>
+    <p class="heading-3">
+        3) Add Accounts
+    </p>
+    <p>
+        From the company menu, click <em>Open</em> next to Accounts.
+        <img src="{% static 'walkthrough-6.png' %}" class="walkthrough-img">
+    </p>
+    <p>
+        From the company's account menu, click <em>Add Default Accounts</em>. This option is only available for companies with zero accounts.
+        <img src="{% static 'walkthrough-7.png' %}" class="walkthrough-img">
+    </p>
+    <p>
+        You will see a preview of the default accounts. Click <em>Save Accounts</em> to add them to your company.
+        <img src="{% static 'walkthrough-8.png' %}" class="walkthrough-img">
+    </p>
+    <p>
+        Alternatively, you don't need to use default accounts. From the company accounts menu, click <em>New Account</em> to create a custom account from scratch.
+        <img src="{% static 'walkthrough-9.png' %}" class="walkthrough-img">
+    </p>
+
+    <hr>
+    <p class="heading-3">
+        4) Edit Accounts
+    </p>
+    <p>
+        From the company's account list, click <em>Open</em> next to the account you want to edit.
+        You can click <em>Delete</em> to remove an account. Accounts with associated journal entries cannot be deleted.
+        <img src="{% static 'walkthrough-10.png' %}" class="walkthrough-img">
+    </p>
+    <p>
+        From the account details page, click <em>Edit Account</em> to make changes. Not all account properties can be edited once created.
+        <img src="{% static 'walkthrough-11.png' %}" class="walkthrough-img">
+    </p>
+    <hr>
+    <p class="heading-3">
+        5) Add a Period
+    </p>
+    <p>
+        From the company menu, click <em>Open</em> next to Periods. Period objects are associated with a company and represent a block of time in which their company operated.
+        <img src="{% static 'walkthrough-12.png' %}" class="walkthrough-img">
+    </p>
+    <p>
+        From the period list page, click <em>New Period</em>
+        <img src="{% static 'walkthrough-13.png' %}" class="walkthrough-img">
+    </p>
+    <p>
+        Pick a start and end date then click <em>Save</em>. Period start and end dates cannot overlap with other periods associated with the same company.
+        <img src="{% static 'walkthrough-14.png' %}" class="walkthrough-img">
+    </p>
+{% endblock %}
