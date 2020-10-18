@@ -23,6 +23,8 @@ class StaticViewSitemap(sitemaps.Sitemap):
         'docs-trial-balance':0.7,
         'docs-statement-of-retained-earnings':0.7,
         'docs-entry-types':0.7,
+        'anon-pp':0.5,
+        'anon-tos':0.5,
     }
 
     def items(self):
