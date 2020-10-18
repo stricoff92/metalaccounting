@@ -11,3 +11,6 @@ class NewAuthedContactUsSubmissionThrottle(UserRateThrottle):
 
 class NewRegistrationSubmissionThrottle(AnonRateThrottle):
     rate = "3/min"
+
+class NewRegistrationDailySubmissionThrottle(AnonRateThrottle):
+    rate = "6/day"

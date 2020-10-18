@@ -31,6 +31,7 @@ from api.throttles import (
     NewAnonContactUsSubmissionThrottle,
     NewAuthedContactUsSubmissionThrottle,
     NewRegistrationSubmissionThrottle,
+    NewRegistrationDailySubmissionThrottle,
 )
 from website.forms import LoginForm, RegisterNewUser, ContactUsForm
 
@@ -1057,7 +1058,9 @@ def login_user(request):
 
 @api_view(['POST'])
 @permission_classes([])
-@throttle_classes([NewRegistrationSubmissionThrottle])
+@throttle_classes([
+    NewRegistrationSubmissionThrottle, 
+    NewRegistrationDailySubmissionThrottle])
 def register(request):
     if request.user.is_authenticated:
         return Response("You must log out first.", status.HTTP_400_BAD_REQUEST)
