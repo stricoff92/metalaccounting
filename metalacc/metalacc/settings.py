@@ -30,7 +30,7 @@ OBJECT_SERIALIZATION_VERSION = 1
 OBJECT_SERIALIZATION_SUPPORTED_VERSIONS = (1, )
 JWT_ALGORITHM = "HS256"
 
-DEBUG = ENV == 'DEV'
+DEBUG = ENV == 'DEV' or ENV == 'TESTING'
 
 
 SESSION_COOKIE_SECURE = not DEBUG
@@ -118,6 +118,22 @@ DATABASES = {
     }
 }
 
+if DEBUG:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+            'LOCATION': '/var/tmp/django_cache',
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'redis_cache.RedisCache',
+            'LOCATION': 'localhost:6379',
+            'KEY_PREFIX':f'metalacc-{ENV}',
+        },
+    }
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -151,7 +167,7 @@ REST_FRAMEWORK = {
 
 
 # EMAIL SETTINGS
-if ENV == 'DEV':
+if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 

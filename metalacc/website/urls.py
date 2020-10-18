@@ -40,6 +40,8 @@ urlpatterns = [
 
     path('tos/', views.anon_tos, name="anon-tos"),
     path('pp/', views.anon_pp, name="anon-pp"),
+    path('contact-us/', views.anon_contact_us, name="anon-contact-us"),
+    path('process-contact-us/', views.anon_process_contact_us, name="anon-submit-contact-us"),
 
     path('app/', views.app_main_menu, name="app-main-menu"),
 

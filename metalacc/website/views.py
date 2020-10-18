@@ -3,6 +3,7 @@ from collections import defaultdict
 import random
 import csv
 
+from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -12,11 +13,11 @@ from django.urls import reverse
 from django.http import HttpResponseNotAllowed, HttpResponse, HttpResponseBadRequest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
 from rest_framework import status
 
-from api.models import Company, Account, Period, JournalEntry, JournalEntryLine, UserProfile
+from api.models import Company, Account, Period, JournalEntry, JournalEntryLine, UserProfile, ContactUsSubmission
 from api.models.account import DEFAULT_ACCOUNTS
 from api.utils import (
     get_slug_from_account_activation_token,
@@ -26,7 +27,12 @@ from api.utils import (
 )
 from api.lib import reports as reports_lib, company_export, email as email_lib
 from api import utils
-from website.forms import LoginForm, RegisterNewUser
+from api.throttles import (
+    NewAnonContactUsSubmissionThrottle,
+    NewAuthedContactUsSubmissionThrottle,
+    NewRegistrationSubmissionThrottle,
+)
+from website.forms import LoginForm, RegisterNewUser, ContactUsForm
 
 
 def anon_landing(request):
@@ -35,6 +41,30 @@ def anon_landing(request):
     return render(request, "anon_landing.html", {
         'gallery_image':next(iter(sorted(utils.get_photo_gallery_images(), key=lambda a: random.random()))),
     })
+
+
+def anon_contact_us(request):
+    return render(request, "anon_contact_us.html", {})
+
+
+@api_view(['POST'])
+@permission_classes([])
+@throttle_classes([
+    NewAnonContactUsSubmissionThrottle,
+    NewAuthedContactUsSubmissionThrottle])
+def anon_process_contact_us(request):
+    form = ContactUsForm(request.data)
+    if not form.is_valid():
+        return Response(form.errors, status.HTTP_400_BAD_REQUEST)
+    message = form.cleaned_data['message']
+    user_email = form.cleaned_data.get('email')
+    user = None if not user_email else get_user_model().objects.filter(email=user_email).first()
+
+    ContactUsSubmission.objects.create(
+        user=user, user_email=user_email, message=message, created_at=timezone.now())
+
+    return Response({}, status.HTTP_201_CREATED)
+
 
 def anon_tos(request):
     return render(request, "tos.html", {})
@@ -1027,6 +1057,7 @@ def login_user(request):
 
 @api_view(['POST'])
 @permission_classes([])
+@throttle_classes([NewRegistrationSubmissionThrottle])
 def register(request):
     if request.user.is_authenticated:
         return Response("You must log out first.", status.HTTP_400_BAD_REQUEST)
