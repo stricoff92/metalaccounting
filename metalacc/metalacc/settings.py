@@ -190,7 +190,7 @@ if ENV == "STAGING":
     STATIC_ROOT = os.path.join(BASE_DIR, "staging_static_root")
 elif ENV == "PROD":
     # Directory for webserver to serve static files from.
-    STATIC_ROOT = "/var/www/metalacc/"
+    STATIC_ROOT = "/var/www/metalacc/static/"
 
 
 # Number of characters in each slug
