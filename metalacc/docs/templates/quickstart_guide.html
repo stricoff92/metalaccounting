@@ -96,4 +96,56 @@
         Pick a start and end date then click <em>Save</em>. Period start and end dates cannot overlap with other periods associated with the same company.
         <img src="{% static 'walkthrough-14.png' %}" class="walkthrough-img">
     </p>
+    <hr>
+    <p class="heading-3">
+        6) Edit a Period
+    </p>
+    <p>
+        From the period list, click <em>Edit</em>.
+        <img src="{% static 'walkthrough-15.png' %}" class="walkthrough-img">
+    </p>
+    <p>
+        A period's start and end date can be modified. A period cannot be edited to overlap with another period associated with the same company.
+        Additionally a period cannot be modified such that a journal entry associated with the period is dated outside the bounds of its host period.
+        <img src="{% static 'walkthrough-16.png' %}" class="walkthrough-img">
+    </p>
+    <hr>
+    <p class="heading-3">
+        7) Create Regular Journal Entries
+    </p>
+    <p>
+        From the period list, click <em>Open</em>.
+        <img src="{% static 'walkthrough-17.png' %}" class="walkthrough-img">
+    </p>
+    <p>
+        This is the period detail page. You can download reports and create journal entries.
+        <img src="{% static 'walkthrough-18.png' %}" class="walkthrough-img">
+    </p>
+    <p>
+        Scroll down to the general ledger section, and click <em>New Entry</em>
+        <img src="{% static 'walkthrough-19.png' %}" class="walkthrough-img">
+    </p>
+    <p>
+        Create Entries
+        <img src="{% static 'walkthrough-20.png' %}" class="walkthrough-img">
+    </p>
+
+    <hr>
+    <p class="heading-3">
+        9) Create Closing Journal Entries
+    </p>
+    <p>
+        View the trial balance for the period, note the temporary accounts with balances.
+        <img src="{% static 'walkthrough-21.png' %}" class="walkthrough-img p-3">
+    </p>
+    <p>
+        Create a closing entry that will zero out all temporary accounts. Any excess in credits or debits
+        should be dumped to retained earnings.
+        <img src="{% static 'walkthrough-22.png' %}" class="walkthrough-img p-3">
+    </p>
+
+    <hr>
+    <p class="heading-3">
+        10) View Financial Statements
+    </p>
 {% endblock %}

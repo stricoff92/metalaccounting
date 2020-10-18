@@ -144,14 +144,16 @@ def app_period_detail(request, slug):
             'value':f'{period.start.strftime(date_format)} -> {period.end.strftime(date_format)}',
         }
     ]
-    has_closing_entries = period.journalentry_set.filter(is_closing_entry=True)
-    has_adjusting_entries = period.journalentry_set.filter(is_adjusting_entry=True)
+    has_entries = period.journalentry_set.exists()
+    has_closing_entries = period.journalentry_set.filter(is_closing_entry=True).exists()
+    has_adjusting_entries = period.journalentry_set.filter(is_adjusting_entry=True).exists()
     data = {
         'period':period,
         'company':company,
         'default_date':default_date,
         'breadcrumbs':breadcrumbs,
         'include_select2':True,
+        'has_entries':has_entries,
         'has_closing_entries':has_closing_entries,
         'has_adjusting_entries':has_adjusting_entries,
     }
