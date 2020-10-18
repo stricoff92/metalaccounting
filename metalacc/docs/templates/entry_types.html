@@ -1,0 +1,131 @@
+{% extends 'base_docs.html' %}
+{% load static %}
+{% block 'body' %}
+    <style>
+        th, td {
+            padding:4px;
+            border:1px solid gray;
+        }
+        td.center-text {
+            text-align: center;
+        }
+    </style>
+    <p class="heading-2">
+        Entry Types
+    </p>
+    <hr>
+    <p class="heading-3">
+        Regular Entries
+    </p>
+    <p>
+        A regular journal entry is one that is made to record a normal business transaction.
+        Examples of regular journal entries include entries that record sales, record adjustments to inventory, and record expenses.
+        Regular journal entries are immediately reflected on all financial statements for the period they are recorded in.
+    </p>
+    <p>
+        Where are regular entries represented?
+        <table>
+            <tr>
+                <th></th><th>Current Period</th><th>Previous Period</th>
+            </tr>
+            <tr>
+                <td>On Income Statement</td>
+                <td class="center-text">Yes</td>
+                <td class="center-text">Yes</td>
+            </tr>
+            <tr>
+                <td>On Balance Sheet</td>
+                <td class="center-text">Yes</td>
+                <td class="center-text">Yes</td>
+            </tr>
+            <tr>
+                <td>On Unadjusted Trial Balance</td>
+                <td class="center-text">Yes</td>
+                <td class="center-text">Yes</td>
+            </tr>
+            <tr>
+                <td>On Adjusted Trial Balance</td>
+                <td class="center-text">Yes</td>
+                <td class="center-text">Yes</td>
+            </tr>
+        </table>
+    </p>
+    <hr>
+    <p class="heading-3">
+        Adjusting Entries
+    </p>
+    <p>
+        An adjusting journal entry is one made at the end of a period that records revenues/expenses from the current period that have not yet been recognized.
+        Typically adjusting entries are cashless.
+        Examples of adjusting entries include recording depreciation expense, adjusting prepaid expenses, and splitting up revenue/expenses such that they are allocated to multiple periods.
+    </p>
+    <p>
+        Where are adjusting entries represented?
+        <table>
+            <tr>
+                <th></th><th>Current Period</th><th>Previous Period</th>
+            </tr>
+            <tr>
+                <td>On Income Statement</td>
+                <td class="center-text">Yes</td>
+                <td class="center-text">Yes</td>
+            </tr>
+            <tr>
+                <td>On Balance Sheet</td>
+                <td class="center-text">Yes</td>
+                <td class="center-text">Yes</td>
+            </tr>
+            <tr>
+                <td>On Unadjusted Trial Balance</td>
+                <td class="center-text"><strong>No</strong></td>
+                <td class="center-text">Yes</td>
+            </tr>
+            <tr>
+                <td>On Adjusted Trial Balance</td>
+                <td class="center-text">Yes</td>
+                <td class="center-text">Yes</td>
+            </tr>
+        </table>
+    </p>
+    <hr>
+    <p class="heading-3">
+        Closing Entries
+    </p>
+    <p>
+        A closing journal entry is one made at the end of a period that resets the balance of one or more temporary accounts.
+        Closing entries transfer the balance of a temporary account to a permanent account such as retained earnings.
+        Closing entries do not increase or decrease the amounts of assets, liabilities, or equity controlled by a company.
+    </p>
+    <p>
+        Where are closing entries represented?
+        <table>
+            <tr>
+                <th></th><th>Current Period</th><th>Previous Period</th>
+            </tr>
+            <tr>
+                <td>On Income Statement</td>
+                <td class="center-text"><strong>No</strong></td>
+                <td class="center-text">Yes</td>
+            </tr>
+            <tr>
+                <td>On Balance Sheet</td>
+                <td class="center-text">Yes</td>
+                <td class="center-text">Yes</td>
+            </tr>
+            <tr>
+                <td>On Unadjusted Trial Balance</td>
+                <td class="center-text"><strong>No</strong></td>
+                <td class="center-text">Yes</td>
+            </tr>
+            <tr>
+                <td>On Adjusted Trial Balance</td>
+                <td class="center-text"><strong>No</strong></td>
+                <td class="center-text">Yes</td>
+            </tr>
+        </table>
+    </p>
+    <p class="mt-4">
+        <strong>An Example of a closing entry</strong>. Note there is no overall change to assets, liabilities, or equity. 
+        <img class="mt-3" src="{% static 'closing-entry-example.png' %}" style="max-width:100%;display:block;">
+    </p>
+{% endblock %}

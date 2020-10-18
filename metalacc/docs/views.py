@@ -16,6 +16,7 @@ def documentation_homepage(request):
         {"name":"Trial Balance", "href":reverse("docs-trial-balance")},
         {"name":"Account Tags", "href":reverse("docs-account-tags")},
         {"name":"Import and Export Company Snapshots", "href":reverse("docs-company-export")},
+        {"name":"Entry Types", "href":reverse("docs-entry-types")},
     ], key=lambda item: item['name'].lower())
     breadcrumbs = [{
         "value":"Docs",
@@ -135,3 +136,21 @@ def company_export(request):
         "value":"Snapshots",
     }]
     return render(request, "company_export.html", {'breadcrumbs':breadcrumbs})
+
+def entry_types(request):
+    breadcrumbs = [{
+        "value":"Docs",
+        "href":reverse("docs-home"),
+    },{
+        "value":"Entry Types",
+    }]
+    return render(request, "entry_types.html", {'breadcrumbs':breadcrumbs})
+
+def quickstart_guide(request):
+    breadcrumbs = [{
+        "value":"Docs",
+        "href":reverse("docs-home"),
+    },{
+        "value":"Quickstart Guide",
+    }]
+    return render(request, "quickstart_guide.html", {'breadcrumbs':breadcrumbs})

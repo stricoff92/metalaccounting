@@ -203,7 +203,13 @@
             </div>
             <div id="type-input-container" class="mt-3">
                 <p class="mb-1">
-                    Entry Type <i class="fas fa-question-circle"></i>
+                    Entry Type
+                    <a
+                        {{ user.userprofile.target_attr }}
+                        href="{% url 'docs-entry-types' %}"
+                    >
+                        <i class="fas fa-question-circle"></i>
+                    </a>
                 </p>
                 <div class="form-check">
                     <input
@@ -256,7 +262,11 @@
         </div>
         <div id="journal-entries-container" class="mt-3">
             <p class="heading-2">Journal Entries</p>
-
+            {% if not has_entries %}
+                <div class="alert alert-info" id="no-entries-alert">
+                    No Journal Entries Yet
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -305,6 +315,7 @@ $(document).ready(()=>{
                     addSuccessToast("Journal Entry Created")
                     resetNewJournalEntryForm()
                     addJournalEntry(data)
+                    $("#no-entries-alert").css("display", "none")
                 }
             }, (data, status, xhr)=>{
                 alert("an error occured")
@@ -444,6 +455,7 @@ function addAccountRowLine(isDebit, disableDeleteBtn) {
     `)
     $("#drop-row-btn-" + rowUID).click(()=>{
         $("#account-input-row-" + rowUID).remove()
+        updateDrCrTotals()
     })
     $('#amount-input-' + rowUID).keydown(()=>{
         setTimeout(updateDrCrTotals)

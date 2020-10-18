@@ -8,6 +8,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
     protocol = 'https' if not settings.DEBUG else 'http'
     static_priorities = {
         'anon-landing': 1.0,
+        'docs-quick-start-guide':0.9,
         'docs-home':0.7,
         'docs-company-export':0.7,
         'docs-account-tags':0.7,
@@ -21,6 +22,7 @@ class StaticViewSitemap(sitemaps.Sitemap):
         'docs-cash-flow-statement':0.7,
         'docs-trial-balance':0.7,
         'docs-statement-of-retained-earnings':0.7,
+        'docs-entry-types':0.7,
     }
 
     def items(self):
