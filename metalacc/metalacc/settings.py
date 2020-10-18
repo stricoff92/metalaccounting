@@ -189,8 +189,8 @@ if ENV == "STAGING":
     # Directory for whitenoise to serve static files from.
     STATIC_ROOT = os.path.join(BASE_DIR, "staging_static_root")
 elif ENV == "PROD":
-    # Directory for NGINX to serve static files from.
-    pass
+    # Directory for webserver to serve static files from.
+    STATIC_ROOT = "/var/www/metalacc/"
 
 
 # Number of characters in each slug
