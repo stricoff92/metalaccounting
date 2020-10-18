@@ -1,0 +1,65 @@
+{% extends 'base_anon.html' %} 
+{% block 'body' %}
+<div class='container'>
+    <div class="jumbotron pt-3 pb-2 mt-3 mb-3 text-center">
+        <p class="heading-1">Metal Accounting</p>
+        <p class="heading-2">Contact Us</p>
+    </div>
+    <div class="m-3 alert alert-success" style="display:none" id="success-message">
+        Thanks. Your message was received and a response will be sent if appropriate.
+    </div>
+    <div>
+        <input
+            id="email-inp"
+            class="form-control"
+            placeholder="email"
+            type="email"
+            value="{% if user.is_authenticated %}{{ user.email }}{% endif %}">
+        <textarea id="msg-inp" class="form-control mt-3" placeholder="message"></textarea>
+        <button id="send-btn" class="btn btn-success mt-3">Send</button>
+    </div>
+<div>
+<div id="app-footer" class="jumbotron mt-5 pt-4 pb-4 mb-2">
+    <div style="display:flex;">
+        <i class="fas fa-balance-scale"></i>
+        <div class="ml-3">
+            <a href="/">Home</a>
+        </div>
+        <div class="ml-3">
+            <a href="{% url 'anon-tos' %}">Terms of Service</a>
+        </div>
+        <div class="ml-3">
+            <a href="{% url 'anon-pp' %}">Privacy Policy</a>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(()=>{
+        $("#send-btn").click(()=>{
+            const message = $("#msg-inp").val().trim()
+            if (!message || message == "") {
+                return
+            }
+            const data = {
+                email:$("#email-inp").val().trim(),
+                message,
+            }
+            $.ajax({
+                url:"{% url 'anon-submit-contact-us' %}",
+                type:'POST',
+                data:JSON.stringify(data),
+                contentType: 'application/json',
+                success:(data, status, xhr)=>{
+                    if(xhr.status == 201) {
+                        $("#msg-inp").val("")
+                        $("#success-message").slideDown(350)
+                    }
+                },
+                error:(data, status, xhr)=>{
+                    return setRegisterUserErrors(data.responseJSON)
+                },
+            })
+        })
+    })
+</script>
+{% endblock %}

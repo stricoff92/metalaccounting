@@ -286,7 +286,7 @@
                 Check out our <a href="{% url 'anon-pp' %}">privacy policy</a> and <a href="{% url 'anon-tos' %}">terms of service</a>.
             </p>
         </div>
-        <div class="card p-3 mt-3 mb-3">
+        <div class="card p-3 mt-3">
             <p class="heading-2">
                 Thanks to
             </p>
@@ -302,6 +302,23 @@
             <p>
                 All the open-source developers who made this site possible
             </p>
+        </div>
+    </div>
+    <div id="app-footer" class="jumbotron mt-5 pt-4 pb-4 mb-2">
+        <div style="display:flex;">
+            <i class="fas fa-balance-scale"></i>
+            <div class="ml-3">
+                <a href="/">Home</a>
+            </div>
+            <div class="ml-3">
+                <a href="{% url 'anon-contact-us' %}">Contact Us</a>
+            </div>
+            <div class="ml-3">
+                <a href="{% url 'anon-tos' %}">Terms of Service</a>
+            </div>
+            <div class="ml-3">
+                <a href="{% url 'anon-pp' %}">Privacy Policy</a>
+            </div>
         </div>
     </div>
 </div>

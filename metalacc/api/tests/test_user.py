@@ -8,9 +8,11 @@ from rest_framework import status
 from freezegun import freeze_time
 
 from .base import BaseTestBase
-from api.models import Period, CashFlowWorksheet
+from api.models import Period, CashFlowWorksheet, ContactUsSubmission
 from api.lib import email as email_lib
 from api.utils import get_account_activation_token
+
+from website.views import 
 
 
 @freeze_time("2012-01-14 03:21:34")
@@ -98,3 +100,20 @@ class UserViewTests(BaseTestBase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue("email is already in use" in str(response.data))
         self.mock_send_account_activation_email.assert_called_once()
+
+
+    def test_user_can_submit_contact_us_submission(self):
+        url = reverse("anon-submit-contact-us")
+        data = {
+            'email':'derp@derp.io',
+            'message':'hello world',
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.assertEqual(ContactUsSubmission.objects.count(), 1)
+        submission = ContactUsSubmission.objects.first()
+        self.assertEqual(submission.user_email, "derp@derp.io")
+        self.assertEqual(submission.message, 'hello world')
+        self.assertIsNotNone(submission.created_at)
+        
