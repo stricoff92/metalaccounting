@@ -12,8 +12,6 @@ from api.models import Period, CashFlowWorksheet, ContactUsSubmission
 from api.lib import email as email_lib
 from api.utils import get_account_activation_token
 
-from website.views import 
-
 
 @freeze_time("2012-01-14 03:21:34")
 class UserViewTests(BaseTestBase):
@@ -105,7 +103,7 @@ class UserViewTests(BaseTestBase):
     def test_user_can_submit_contact_us_submission(self):
         url = reverse("anon-submit-contact-us")
         data = {
-            'email':'derp@derp.io',
+            'email':self.user.email,
             'message':'hello world',
         }
         response = self.client.post(url, data, format="json")
@@ -113,7 +111,8 @@ class UserViewTests(BaseTestBase):
 
         self.assertEqual(ContactUsSubmission.objects.count(), 1)
         submission = ContactUsSubmission.objects.first()
-        self.assertEqual(submission.user_email, "derp@derp.io")
+        self.assertEqual(submission.user_email, self.user.email)
         self.assertEqual(submission.message, 'hello world')
+        self.assertEqual(submission.user, self.user)
         self.assertIsNotNone(submission.created_at)
         
