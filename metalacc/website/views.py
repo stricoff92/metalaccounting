@@ -16,6 +16,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
 from rest_framework import status
+from ratelimit.decorators import ratelimit
 
 from api.models import Company, Account, Period, JournalEntry, JournalEntryLine, UserProfile, ContactUsSubmission
 from api.models.account import DEFAULT_ACCOUNTS
@@ -32,6 +33,7 @@ from api.throttles import (
     NewAuthedContactUsSubmissionThrottle,
     NewRegistrationSubmissionThrottle,
     NewRegistrationDailySubmissionThrottle,
+    LoginRequestThrottle,
 )
 from website.forms import LoginForm, RegisterNewUser, ContactUsForm
 
@@ -1025,7 +1027,7 @@ def statement_of_cash_flows(request, slug):
 
 # END OF REPORT PAGES
 
-
+@ratelimit(key='ip', rate='600/h', method=['POST'], block=True)
 def login_user(request):
     if request.method == 'GET':
         return redirect("anon-landing")

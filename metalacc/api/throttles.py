@@ -2,6 +2,8 @@
 
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
+class LoginRequestThrottle(AnonRateThrottle):
+    rate = "600/hour"
 
 class NewAnonContactUsSubmissionThrottle(AnonRateThrottle):
     rate = "3/min"
