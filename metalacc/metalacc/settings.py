@@ -103,6 +103,38 @@ TEMPLATES = [
 WSGI_APPLICATION = 'metalacc.wsgi.application'
 
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'timestamp': {
+            'format': '{asctime} {levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file_info': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, "logs", "django_info.log"),
+            'formatter': 'timestamp',
+        },
+        'file_error': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, "logs", "django_error.log"),
+            'formatter': 'timestamp',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file_info', 'file_error'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
