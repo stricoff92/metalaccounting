@@ -26,7 +26,7 @@ from api.utils import (
     get_report_page_breadcrumbs,
     is_valid_slug
 )
-from api.lib import reports as reports_lib, company_export, email as email_lib
+from api.lib import reports as reports_lib, company_export, email as email_lib, pushover
 from api import utils
 from api.throttles import (
     NewAnonContactUsSubmissionThrottle,
@@ -1128,6 +1128,8 @@ def activate_new_account(request, slug):
     user.save(update_fields=['is_active'])
 
     login(request, user)
+
+    pushover.send_admin_alert(f"New account activated {slug}")
     return redirect('app-landing')
 
 

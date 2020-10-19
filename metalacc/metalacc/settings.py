@@ -211,6 +211,10 @@ elif ENV == 'PROD':
     DEFAULT_FROM_EMAIL = 'noreply@metalaccounting.com'
 
 
+# Pushover notification settings
+PUSHOVER_APP_TOKEN = getattr(applocals, "PUSHOVER_APP_TOKEN", "")
+PUSHOVER_ADMIN_USER = getattr(applocals, "PUSHOVER_ADMIN_USER", "")
+
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
