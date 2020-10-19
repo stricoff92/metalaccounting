@@ -36,7 +36,7 @@ from api.throttles import (
     LoginRequestThrottle,
 )
 from website.forms import LoginForm, RegisterNewUser, ContactUsForm
-
+from metalacc import feature_flags as ff
 
 def anon_landing(request):
     if request.user.is_authenticated:
@@ -507,6 +507,7 @@ def app_export_tools_menu(request):
     ]
     data = {
         'breadcrumbs':breadcrumbs,
+        'grader_enabled':ff.grader_enabled(),
     }
     return render(request, "export_tools_menu.html", data)
 

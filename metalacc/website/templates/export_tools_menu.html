@@ -151,6 +151,7 @@ $(document).ready(()=>{
 </script>
 
 <!-- GRADER -->
+{% if grader_enabled %}
 <hr>
 <div class="card p-4 mt-5">
     <p class="heading-2">
@@ -243,6 +244,7 @@ $(document).ready(()=>{
 
     </div>
 </div>
+{% endif %}
 <script>
 function resetCompareCompaniesFormErrors(){
     $("#compare-companies-errors").text("")
