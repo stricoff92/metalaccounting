@@ -14,6 +14,7 @@ from api.forms.company import (
 )
 from api.lib import company_export
 from api.lib.grader import Grader
+from metalacc import feature_flags as ff
 
 
 @api_view(['POST'])
@@ -125,7 +126,8 @@ def company_delete(request, slug):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def company_compare(request):
-    print("request.data", request.data)
+    if not ff.grader_enabled():
+        return Response({}, status.HTTP_400_BAD_REQUEST)
 
     form = CompareCompanyDataForm(request.data)
     if not form.is_valid():
