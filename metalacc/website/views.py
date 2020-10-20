@@ -63,8 +63,9 @@ def anon_process_contact_us(request):
     user_email = form.cleaned_data.get('email')
     user = None if not user_email else get_user_model().objects.filter(email=user_email).first()
 
-    ContactUsSubmission.objects.create(
+    cus = ContactUsSubmission.objects.create(
         user=user, user_email=user_email, message=message, created_at=timezone.now())
+    pushover.send_admin_alert(f"New contact us submission {cus.id}")
 
     return Response({}, status.HTTP_201_CREATED)
 

@@ -214,6 +214,7 @@ elif ENV == 'PROD':
 # Pushover notification settings
 PUSHOVER_APP_TOKEN = getattr(applocals, "PUSHOVER_APP_TOKEN", "")
 PUSHOVER_ADMIN_USER = getattr(applocals, "PUSHOVER_ADMIN_USER", "")
+USE_PUSHOVER_NOTIFICATIONS = getattr(applocals, "USE_PUSHOVER_NOTIFICATIONS", True)
 
 
 LANGUAGE_CODE = 'en-us'

@@ -2,8 +2,12 @@ from django.conf import settings
 import requests
 
 def send_admin_alert(message:str):
-
+    if not settings.USE_PUSHOVER_NOTIFICATIONS:
+        return
     if settings.ENV == 'TESTING':
+        return
+    if settings.DEBUG:
+        print("pushover notification", message)
         return
 
     data = {
