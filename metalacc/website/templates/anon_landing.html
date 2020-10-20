@@ -180,6 +180,15 @@
             $("#register-user-success-msg").text(msg)
             $("#register-user-success-msg").css('display', 'block')
         }
+        function disableRegisterBtn() {
+            $("#register-new-user-btn").prop("disabled", true)
+        }
+        function enableRegisterBtn() {
+            $("#register-new-user-btn").prop("disabled", false)
+        }
+        function registerBtnIsDisabled() {
+            $("#register-new-user-btn").prop("disabled")
+        }
         $(document).ready(()=>{
             $("#open-login-form-link").click(()=>{
                 if ($("#login-form").css("display") === "none") {
@@ -192,6 +201,10 @@
                 }
             })
             $("#register-new-user-btn").click(()=>{
+                if(registerBtnIsDisabled()) {
+                    return
+                }
+                disableRegisterBtn()
                 resetRegisterUserErrors()
                 const newUserEmail = $("#register-new-user-email").val().trim()
                 const newUserPass1 = $("#register-new-user-pass-1").val().trim()
@@ -210,6 +223,7 @@
                     errors.push("Passwords don't match.")
                 }
                 if(errors.length > 0){
+                    enableRegisterBtn()
                     return setRegisterUserErrors(errors.join(" "))
                 }
                 const data = {
@@ -227,11 +241,13 @@
                             $("#register-new-user-email").val("")
                             $("#register-new-user-pass-1").val("")
                             $("#register-new-user-pass-2").val("")
+                            enableRegisterBtn()
                             return setSuccessMessage(
                                 `Check your email ${newUserEmail} for an activation link.`)
                         }
                     },
                     error:(data, status, xhr)=>{
+                        enableRegisterBtn()
                         return setRegisterUserErrors(data.responseJSON)
                     },
                 })
